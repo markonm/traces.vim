@@ -1,0 +1,63 @@
+*traces.txt*	Range and pattern preview for Command-line mode
+
+Version 0.0.0
+
+CONTENTS					*traces-contents*
+Introduction            |traces-introduction|
+Requirements            |traces-requirements|
+Settings                |traces-settings|
+Bugs                    |traces-bugs|
+Changelog               |traces-changelog|
+
+
+==============================================================================
+INTRODUCTION					*traces-introduction*
+
+This plugin will highlight {pattern} and *:range* for Ex-commands.
+
+Ranges which are composed of only absolute specifiers ({number}, ., $, %) will
+not be highlighted until the command that support them is specified. 
+There are many commands which use ranges other than lines in buffer and it
+would be distracting to highlight selections for them. To force immediate
+feedback for ranges composed of only absolute specifiers enter and delete '//'
+or some other pattern or mark specifier.
+
+Ranges which are composed of at least one pattern or mark specifier will be
+highlighted immediately.
+
+Patterns for the following commands will be highlighted immediatelly as typed:
+
+  `:substitute`
+  `:smagic`
+  `:snomagic`
+  `:global`
+  `:vglobal`
+
+==============================================================================
+REQUIREMENTS					*traces-requirements*
+
+Vim v8.0.1067+
+
+==============================================================================
+SETTINGS					*traces-settings*
+
+This plugin doesn't have any settings.
+
+==============================================================================
+BUGS						*traces-bugs*
+ - \& range specifier is not supported
+ - if range is one blank line it will not be highlighted
+ - highlighting is disabled for *:terminal* windows because of redrawing issues
+ - on Windows, cursor is not blinking because of high frequency timer this
+   plugin is using
+
+
+ - If you have any problems or suggestions, please let me know at:
+
+==============================================================================
+CHANGELOG					*traces-changelog*
+
+0.0.0	September 18, 2017			traces-changelog-0.0.0
+	- Initial version.
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:fen:fdl=0:fdm=marker:
