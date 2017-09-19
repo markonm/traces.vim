@@ -85,7 +85,7 @@ function! s:offset_to_num(string) abort
   let offset = 0
   let copy = a:string
   let input = [copy]
-  let pattern = '\m^\%(+\d\+\|-\d\+\|\d\+\|-\+\|+\+\)'
+  let pattern = '\m^\%(+\d\+\|-\d\+\|\d\+\|-\+\ze-\d\|+\+\ze+\d\|-\+\|+\+\)'
 
   let while_limit = 0
   while input[0] !=# ''
