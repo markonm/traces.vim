@@ -13,7 +13,7 @@ Changelog               |traces-changelog|
 ==============================================================================
 INTRODUCTION					*traces-introduction*
 
-This plugin will highlight `pattern` and `:range` for Ex-commands.
+This plugin will highlight |pattern| and |:range| for Ex-commands.
 
 Ranges which are composed of only absolute specifiers ({number}, ., $, %) will
 not be highlighted until the command that support them is specified. 
@@ -27,11 +27,11 @@ highlighted immediately.
 
 Patterns for the following commands will be highlighted immediatelly as typed:
 
-  `:substitute`
-  `:smagic`
-  `:snomagic`
-  `:global`
-  `:vglobal`
+  |:substitute|
+  |:smagic|
+  |:snomagic|
+  |:global|
+  |:vglobal|
 
 ==============================================================================
 REQUIREMENTS					*traces-requirements*
@@ -47,7 +47,7 @@ This plugin doesn't have any settings.
 BUGS						*traces-bugs*
  - \& range specifier is not supported
  - if range is one blank line it will not be highlighted
- - highlighting is disabled for `:terminal` windows because of redrawing issues
+ - highlighting is disabled for |:terminal| windows because of redrawing issues
  - on Windows, cursor is not blinking because of high frequency timer this
    plugin is using
 
