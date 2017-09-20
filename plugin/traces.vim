@@ -215,7 +215,7 @@ function! s:mark_to_absolute(address, last_position) abort
   if len(result.range) > 0 && !has_key(a:address, 'address')
     let result.range[0] = result.range[0] + s:offset_to_num(a:address.offset)
   elseif len(result.range) > 0 && has_key(a:address, 'offset') &&
-     \ a:address.address !~# '%\|\$'
+     \ a:address.address !~# '%'
     let result.range[0] = result.range[0] + s:offset_to_num(a:address.offset)
   endif
 
