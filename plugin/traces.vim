@@ -124,7 +124,7 @@ function! s:mark_to_absolute(address, last_position) abort
 
     if     a:address.address =~# '^\d\+'
       let lnum = str2nr(a:address.address)
-      call add(result.range, lnum > getpos('$')[1] ? getpos('$')[1] : lnum)
+      call add(result.range, lnum)
 
     elseif a:address.address ==  '.'
       call add(result.range, a:last_position)
@@ -284,6 +284,10 @@ endfunction
 function! s:get_selection_regexp(range) abort
   " don't draw selection if range is whole file or one line
   if len(a:range) == 0
+    return ''
+  endif
+
+  if a:range[len(a:range) - 1] > line('$') || a:range[len(a:range) - 2] > line('$')
     return ''
   endif
 
