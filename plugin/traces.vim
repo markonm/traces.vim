@@ -221,6 +221,11 @@ function! s:mark_to_absolute(address, last_position) abort
     let result.range[0] = result.range[0] + s:offset_to_num(a:address.offset)
   endif
 
+  " treat specifier 0 as 1
+  if len(result.range) == 1 && result.range[0] == 0
+    let result.range[0] = 1
+  endif
+
   return result
 endfunction
 
