@@ -159,6 +159,7 @@ function! s:mark_to_absolute(address, last_position) abort
       let pattern = substitute(pattern, '^/', '', '')
       let pattern = substitute(pattern, '/$', '', '')
       call cursor(a:last_position + 1, 1)
+      let s:show_range = 1
       call add(result.range, search(pattern, 'nc'))
 
     elseif a:address.address =~# '^?.*[^\\]?$\|^??$'
@@ -167,6 +168,7 @@ function! s:mark_to_absolute(address, last_position) abort
       let pattern = substitute(pattern, '?$', '', '')
       let pattern = substitute(pattern, '\\?', '?', '')
       call cursor(a:last_position, 1)
+      let s:show_range = 1
       call add(result.range, search(pattern, 'nb'))
 
     elseif a:address.address =~# '^/.*$'
