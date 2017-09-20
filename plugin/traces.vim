@@ -160,7 +160,11 @@ function! s:mark_to_absolute(address, last_position) abort
       let pattern = substitute(pattern, '/$', '', '')
       call cursor(a:last_position + 1, 1)
       let s:show_range = 1
-      call add(result.range, search(pattern, 'nc'))
+      let query = search(pattern, 'nc')
+      if query == 0
+        let result.valid = 0
+      endif
+      call add(result.range, query)
 
     elseif a:address.address =~# '^?.*[^\\]?$\|^??$'
       let pattern = a:address.address
@@ -169,7 +173,11 @@ function! s:mark_to_absolute(address, last_position) abort
       let pattern = substitute(pattern, '\\?', '?', '')
       call cursor(a:last_position, 1)
       let s:show_range = 1
-      call add(result.range, search(pattern, 'nb'))
+      let query = search(pattern, 'nb')
+      if query == 0
+        let result.valid = 0
+      endif
+      call add(result.range, query)
 
     elseif a:address.address =~# '^/.*$'
       let pattern = a:address.address
@@ -179,7 +187,11 @@ function! s:mark_to_absolute(address, last_position) abort
         let result.skip = 1
       endif
       call cursor(a:last_position + 1, 1)
-      call add(result.range, search(pattern, 'nc'))
+      let query = search(pattern, 'nc')
+      if query == 0
+        let result.valid = 0
+      endif
+      call add(result.range, query)
       let s:show_range = 1
       let result.regex = pattern
 
@@ -192,20 +204,32 @@ function! s:mark_to_absolute(address, last_position) abort
         let result.skip = 1
       endif
       call cursor(a:last_position, 1)
-      call add(result.range, search(pattern, 'nb'))
+      let query = search(pattern, 'nb')
+      if query == 0
+        let result.valid = 0
+      endif
+      call add(result.range, query)
       let s:show_range = 1
       let result.regex = pattern
 
     elseif a:address.address ==  '\/'
       let pattern = @/
       call cursor(a:last_position + 1, 1)
-      call add(result.range, search(pattern, 'nc'))
+      let query = search(pattern, 'nc')
+      if query == 0
+        let result.valid = 0
+      endif
+      call add(result.range, query)
       let s:show_range = 1
 
     elseif a:address.address ==  '\?'
       let pattern = @?
       call cursor(a:last_position, 1)
-      call add(result.range, search(pattern, 'nb'))
+      let query = search(pattern, 'nb')
+      if query == 0
+        let result.valid = 0
+      endif
+      call add(result.range, query)
       let s:show_range = 1
     endif
 
