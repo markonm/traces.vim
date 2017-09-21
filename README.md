@@ -7,7 +7,7 @@ This plugin will highlight patterns and ranges for Ex-commands.
 Vim v8.0.1067+
 
 ## Example
-![example](img/example.gif?raw=true)
+![example](img/example2.gif?raw=true)
 
 ## Inspiration
 [vim-over](https://github.com/osyo-manga/vim-over)
