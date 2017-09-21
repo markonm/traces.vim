@@ -347,7 +347,7 @@ endfunction
 
 function! s:get_command(cmd_line) abort
   call s:trim(a:cmd_line)
-  let result = matchstrpos(a:cmd_line[0], '\m\w\+!\=')
+  let result = matchstrpos(a:cmd_line[0], '\m\w\+!\=\|[<>!#]')
   if result[2] != -1
     call s:trim(a:cmd_line, result[2])
 
