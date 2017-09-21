@@ -9,6 +9,9 @@ Vim v8.0.1067+
 ## Example
 ![example](img/example2.gif?raw=true)
 
+## How to install?
+[Tutorial](https://gist.github.com/manasthakur/ab4cf8d32a28ea38271ac0d07373bb53)
+
 ## Inspiration
 [vim-over](https://github.com/osyo-manga/vim-over)
 
