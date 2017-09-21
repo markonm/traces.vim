@@ -112,7 +112,7 @@ function! s:offset_to_num(string) abort
   return offset
 endfunction
 
-function! s:mark_to_absolute(address, last_position) abort
+function! s:mark_to_absolute(address, last_position, range_size) abort
   let result = {}
   let result.range = []
   let result.valid = 1
@@ -182,16 +182,19 @@ function! s:mark_to_absolute(address, last_position) abort
     elseif a:address.address =~# '^/.*$'
       let pattern = a:address.address
       let pattern = substitute(pattern, '^/', '', '')
-      if len(pattern) == 0
-        let pattern = @/
-        let result.skip = 1
-      endif
       call cursor(a:last_position + 1, 1)
       let query = search(pattern, 'nc')
-      if query == 0
-        let result.valid = 0
+
+      " stay at the same position if pattern is not provided
+      if len(pattern) == 0
+        if a:range_size == 0
+          let result.skip = 1
+        endif
+        call add(result.range, a:last_position)
+      else
+        call add(result.range, query)
       endif
-      call add(result.range, query)
+
       let s:show_range = 1
       let result.regex = pattern
 
@@ -199,16 +202,19 @@ function! s:mark_to_absolute(address, last_position) abort
       let pattern = a:address.address
       let pattern = substitute(pattern, '^?', '', '')
       let pattern = substitute(pattern, '\\?', '?', '')
-      if len(pattern) == 0
-        let pattern = @/
-        let result.skip = 1
-      endif
       call cursor(a:last_position, 1)
       let query = search(pattern, 'nb')
-      if query == 0
-        let result.valid = 0
+
+      " stay at the same position if pattern is not provided
+      if len(pattern) == 0
+        if a:range_size == 0
+          let result.skip = 1
+        endif
+        call add(result.range, a:last_position)
+      else
+        call add(result.range, query)
       endif
-      call add(result.range, query)
+
       let s:show_range = 1
       let result.regex = pattern
 
@@ -246,7 +252,7 @@ function! s:mark_to_absolute(address, last_position) abort
   endif
 
   " treat specifier 0 as 1
-  if len(result.range) == 1 && result.range[0] == 0
+  if exists('lnum') && result.range[0] == 0
     let result.range[0] = 1
   endif
 
@@ -255,7 +261,6 @@ endfunction
 
 function! s:range_to_apsolute(range_structure) abort
   let last_delimiter = ''
-  " let range = []
   let result = { 'range': []}
   let valid = 1
   let last_position = getpos('.')[1]
@@ -274,7 +279,7 @@ function! s:range_to_apsolute(range_structure) abort
 
     for address in specifier.addresses
       let query = s:mark_to_absolute(address,
-            \ use_temp_position ? temp_position : last_position)
+            \ use_temp_position ? temp_position : last_position, len(result.range))
       if query.valid
         let temp_position = query.range[len(query.range) - 1]
         let use_temp_position = 1
