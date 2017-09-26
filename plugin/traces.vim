@@ -522,7 +522,6 @@ function! s:highlight(pattern_regex, selection_regex, last_specifier_pattern, ab
   endtry
 endfunction
 
-
 function! s:clean() abort
     if exists('s:old_cmd_line')
       silent! unlet s:old_cmd_line
@@ -539,9 +538,22 @@ function! s:clean() abort
     endif
 endfunction
 
-function! s:main(...) abort
-  if getcmdtype() ==# ':' && &buftype != 'terminal'
+function! s:start_traces() abort
+  if !exists('s:initial_timer')
+    let s:initial_timer = timer_start(15,function('s:main'),{'repeat':-1})
+  endif
+endfunction
 
+function! s:main(...) abort
+  " stop timer inside terminal window
+  if &buftype ==# 'terminal'
+    if exists('s:initial_timer')
+      silent! call timer_stop(s:initial_timer)
+      unlet s:initial_timer
+    endif
+  endif
+
+  if getcmdtype() ==# ':'
     " continue only if command line is changed
     let cmd_line = [getcmdline()]
     if get(s:, 'old_cmd_line', '') == cmd_line[0]
@@ -589,14 +601,11 @@ function! s:main(...) abort
   endif
 endfunction
 
-augroup traces_cleanup
+augroup traces_augroup
+  autocmd!
+  autocmd VimEnter,WinEnter * call s:start_traces()
   autocmd WinLeave * call s:clean()
 augroup END
-
-if exists('s:initial_timer')
-  call timer_stop(s:initial_timer)
-endif
-let s:initial_timer = timer_start(15,function('s:main'),{'repeat':-1})
 
 let &cpo = s:cpo_save
 unlet s:cpo_save
