@@ -6,6 +6,10 @@ let g:loaded_traces_plugin = 1
 let s:cpo_save = &cpo
 set cpo-=C
 
+if !exists('g:traces_whole_file_range')
+  let g:traces_whole_file_range = 1
+endif
+
 function! s:trim(...) abort
   if a:0 == 2
     let a:1[0] = strcharpart(a:1[0], a:2)
@@ -508,7 +512,9 @@ function! s:highlight(pattern_regex, selection_regex, last_specifier_pattern, ab
   endif
 
   try
-    let w:traces_selection_index = matchadd('Visual', a:selection_regex, 100)
+    if !(s:dont_move == 1 && g:traces_whole_file_range == 0)
+      let w:traces_selection_index = matchadd('Visual', a:selection_regex, 100)
+    endif
     if a:last_specifier_pattern != ''
       let w:traces_pattern_index   = matchadd('Search', a:last_specifier_pattern, 101)
     else
