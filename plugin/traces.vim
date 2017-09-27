@@ -512,7 +512,7 @@ function! s:highlight(pattern_regex, selection_regex, last_specifier_pattern, ab
   endif
 
   try
-    if !(s:dont_move == 1 && g:traces_whole_file_range == 0)
+    if !(get(s:, 'dont_move') && g:traces_whole_file_range == 0)
       let w:traces_selection_index = matchadd('Visual', a:selection_regex, 100)
     endif
     if a:last_specifier_pattern != ''
