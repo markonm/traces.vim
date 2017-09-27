@@ -41,7 +41,10 @@ Vim v8.0.1067+
 ==============================================================================
 SETTINGS					*traces-settings*
 
-This plugin doesn't have any settings.
+                                                *g:traces_whole_file_range*
+If value is 0, range for |:%| specifier will not be shown. >
+<
+  Default value: 1
 
 ==============================================================================
 BUGS						*traces-bugs*
