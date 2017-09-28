@@ -609,7 +609,7 @@ endfunction
 
 augroup traces_augroup
   autocmd!
-  autocmd VimEnter,WinEnter * call s:start_traces()
+  autocmd VimEnter,BufEnter * call s:start_traces()
   autocmd WinLeave * call s:clean()
 augroup END
 
