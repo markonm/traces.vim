@@ -164,7 +164,7 @@ function! s:mark_to_absolute(address, last_position, range_size) abort
       let pattern = substitute(pattern, '/$', '', '')
       call cursor(a:last_position + 1, 1)
       let s:show_range = 1
-      let query = search(pattern, 'nc')
+      silent! let query = search(pattern, 'nc')
       if query == 0
         let result.valid = 0
       endif
@@ -177,7 +177,7 @@ function! s:mark_to_absolute(address, last_position, range_size) abort
       let pattern = substitute(pattern, '\\?', '?', '')
       call cursor(a:last_position, 1)
       let s:show_range = 1
-      let query = search(pattern, 'nb')
+      silent! let query = search(pattern, 'nb')
       if query == 0
         let result.valid = 0
       endif
@@ -187,7 +187,7 @@ function! s:mark_to_absolute(address, last_position, range_size) abort
       let pattern = a:address.address
       let pattern = substitute(pattern, '^/', '', '')
       call cursor(a:last_position + 1, 1)
-      let query = search(pattern, 'nc')
+      silent! let query = search(pattern, 'nc')
 
       " stay at the same position if pattern is not provided
       if len(pattern) == 0
@@ -207,7 +207,7 @@ function! s:mark_to_absolute(address, last_position, range_size) abort
       let pattern = substitute(pattern, '^?', '', '')
       let pattern = substitute(pattern, '\\?', '?', '')
       call cursor(a:last_position, 1)
-      let query = search(pattern, 'nb')
+      silent! let query = search(pattern, 'nb')
 
       " stay at the same position if pattern is not provided
       if len(pattern) == 0
@@ -225,7 +225,7 @@ function! s:mark_to_absolute(address, last_position, range_size) abort
     elseif a:address.address ==  '\/'
       let pattern = @/
       call cursor(a:last_position + 1, 1)
-      let query = search(pattern, 'nc')
+      silent! let query = search(pattern, 'nc')
       if query == 0
         let result.valid = 0
       endif
@@ -235,7 +235,7 @@ function! s:mark_to_absolute(address, last_position, range_size) abort
     elseif a:address.address ==  '\?'
       let pattern = @?
       call cursor(a:last_position, 1)
-      let query = search(pattern, 'nb')
+      silent! let query = search(pattern, 'nb')
       if query == 0
         let result.valid = 0
       endif
