@@ -511,21 +511,19 @@ function! s:highlight(pattern_regex, selection_regex, last_specifier_pattern, ab
     unlet w:traces_pattern_index
   endif
 
-  try
-    if !(get(s:, 'dont_move') && g:traces_whole_file_range == 0)
-      let w:traces_selection_index = matchadd('Visual', a:selection_regex, 100)
-    endif
-    if a:last_specifier_pattern != ''
-      let w:traces_pattern_index   = matchadd('Search', a:last_specifier_pattern, 101)
-    else
-      let w:traces_pattern_index   = matchadd('Search', a:pattern_regex, 101)
-    endif
-    if !get(s:, 'dont_move', 0) || a:pattern_regex != ''
-      call s:set_cursor_position(a:pattern_regex, a:selection_regex, a:abs_range)
-    endif
-    redraw
-  catch
-  endtry
+  " highlight selection
+  if !(get(s:, 'dont_move') && g:traces_whole_file_range == 0)
+    silent! let w:traces_selection_index = matchadd('Visual', a:selection_regex, 100)
+  endif
+  " highlight pattern
+  silent! let w:traces_pattern_index   = matchadd('Search', 
+        \ (a:last_specifier_pattern == '' ? a:pattern_regex : a:last_specifier_pattern), 101)
+  " position cursor before redraw
+  if !get(s:, 'dont_move', 0) || a:pattern_regex != ''
+    silent! call s:set_cursor_position(a:pattern_regex, a:selection_regex, a:abs_range)
+  endif
+
+  redraw
 endfunction
 
 function! s:clean() abort
