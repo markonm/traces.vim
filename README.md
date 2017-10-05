@@ -4,7 +4,7 @@
 This plugin will highlight patterns and ranges for Ex-commands.
 
 ## Requirements
-Vim v8.0.1067+
+Vim v8.0.1067+ or Neovim v0.1.6+
 
 ## Example
 ![example](img/example2.gif?raw=true)
