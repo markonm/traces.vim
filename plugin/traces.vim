@@ -1,4 +1,4 @@
-if !(v:version > 800 || v:version == 800 && has("patch1067") || has('nvim')) || exists("g:loaded_traces_plugin") || &cp
+if !(v:version > 800 || v:version == 800 && has("patch1067") || has('nvim-0.1.6')) || exists("g:loaded_traces_plugin") || &cp
   finish
 endif
 let g:loaded_traces_plugin = 1
