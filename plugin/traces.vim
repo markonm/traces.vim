@@ -523,6 +523,9 @@ function! s:highlight(pattern_regex, selection_regex, last_specifier_pattern, ab
     silent! call s:set_cursor_position(a:pattern_regex, a:selection_regex, a:abs_range)
   endif
 
+  if get(g:, 'traces_preserve_view_state')
+    call cursor(s:cursor_initial_pos)
+  endif
   redraw
 endfunction
 

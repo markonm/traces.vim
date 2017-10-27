@@ -46,6 +46,13 @@ If value is 0, range for |:%| specifier will not be shown. >
 <
   Default value: 1
 
+                                                *g:traces_preserve_view_state*
+If value is 1, view position  will not be changed when highlighting ranges or
+patterns outside initial view position.
+<
+  Default value: 0
+
+
 ==============================================================================
 BUGS						*traces-bugs*
  - \& range specifier is not supported
