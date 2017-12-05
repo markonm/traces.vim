@@ -1,6 +1,7 @@
-if !(v:version > 800 || v:version == 800 && has("patch1067") || has('nvim-0.2.1')) || exists("g:loaded_traces_plugin") || &cp
+if !exists('##CmdlineEnter') || exists("g:loaded_traces_plugin") || &cp
   finish
 endif
+
 let g:loaded_traces_plugin = 1
 
 let s:cpo_save = &cpo
