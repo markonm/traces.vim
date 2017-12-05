@@ -10,6 +10,10 @@ if !exists('g:traces_whole_file_range')
   let g:traces_whole_file_range = 1
 endif
 
+augroup traces_augroup
+  autocmd!
+augroup END
+
 function! s:trim(...) abort
   if a:0 == 2
     let a:1[0] = strcharpart(a:1[0], a:2)
@@ -530,88 +534,85 @@ function! s:highlight(pattern_regex, selection_regex, last_specifier_pattern, ab
 endfunction
 
 function! s:clean() abort
-    if exists('s:old_cmd_line')
-      silent! unlet s:old_cmd_line
-      silent! unlet s:show_range
-      silent! unlet s:cursor_initial_pos
-      silent! unlet s:cursor_temp_pos
-      silent! unlet s:old_pattern_regex
-      silent! unlet s:old_selection_regex
-      silent! unlet s:old_last_specifier_pattern
-      silent! call  matchdelete(w:traces_selection_index)
-      silent! unlet w:traces_selection_index
-      silent! call  matchdelete(w:traces_pattern_index)
-      silent! unlet w:traces_pattern_index
-    endif
-endfunction
-
-function! s:start_traces() abort
-  if !exists('s:initial_timer')
-    let s:initial_timer = timer_start(15,function('s:main'),{'repeat':-1})
-  endif
+  silent! unlet s:show_range
+  silent! unlet s:cursor_initial_pos
+  silent! unlet s:cursor_temp_pos
+  silent! unlet s:old_pattern_regex
+  silent! unlet s:old_selection_regex
+  silent! unlet s:old_last_specifier_pattern
+  silent! call  matchdelete(w:traces_selection_index)
+  silent! unlet w:traces_selection_index
+  silent! call  matchdelete(w:traces_pattern_index)
+  silent! unlet w:traces_pattern_index
 endfunction
 
 function! s:main(...) abort
-  " stop timer inside terminal window
   if &buftype ==# 'terminal'
-    if exists('s:initial_timer')
-      silent! call timer_stop(s:initial_timer)
-      unlet s:initial_timer
-    endif
+    return
   endif
 
-  if getcmdtype() ==# ':'
-    " continue only if command line is changed
-    let cmd_line = [getcmdline()]
-    if get(s:, 'old_cmd_line', '') == cmd_line[0]
-      return
-    endif
-    let s:old_cmd_line = cmd_line[0]
+  let cmd_line = [s:cmd]
 
-    " save cursor positions
-    if !exists('s:cursor_initial_pos')
-      let s:cursor_initial_pos = [getpos('.')[1], getpos('.')[2]]
-      let s:cursor_temp_pos = s:cursor_initial_pos
-    endif
+  " save cursor positions
+  if !exists('s:cursor_initial_pos')
+    let s:cursor_initial_pos = [getpos('.')[1], getpos('.')[2]]
+    let s:cursor_temp_pos = s:cursor_initial_pos
+  endif
 
-    let range = s:get_range([], cmd_line)
-    let selection = s:range_to_apsolute(range)
-    let abs_range = selection.range
-    let last_specifier_pattern = selection.pattern
-    let last_specifier_pattern = s:get_pattern_regexp('g',
-          \ len(abs_range) > 0 ? [abs_range[len(abs_range) - 1]] : [], last_specifier_pattern)
-    let command = s:get_command(cmd_line)
-    let pattern = s:get_pattern(command, cmd_line)
+  let range = s:get_range([], cmd_line)
+  let selection = s:range_to_apsolute(range)
+  let abs_range = selection.range
+  let last_specifier_pattern = selection.pattern
+  let last_specifier_pattern = s:get_pattern_regexp('g',
+        \ len(abs_range) > 0 ? [abs_range[len(abs_range) - 1]] : [], last_specifier_pattern)
+  let command = s:get_command(cmd_line)
+  let pattern = s:get_pattern(command, cmd_line)
 
-    let pattern_regex =  s:get_pattern_regexp(command, abs_range, pattern)
-    let selection_regex =  s:get_selection_regexp(abs_range)
+  let pattern_regex =  s:get_pattern_regexp(command, abs_range, pattern)
+  let selection_regex =  s:get_selection_regexp(abs_range)
 
-    " redraw only when regular expressions are changed
-    if get({'s': 1, 'sno': 1, 'sm': 1, 'g': 1, 'c': 1}, command, 0) || exists('s:show_range')
-      if exists('s:old_selection_regex')
-        if s:old_selection_regex != selection_regex || s:old_pattern_regex != pattern_regex
-              \ || s:old_last_specifier_pattern != last_specifier_pattern
-          call s:highlight(pattern_regex, selection_regex, last_specifier_pattern, abs_range)
-        endif
-      else
+  " redraw only when regular expressions are changed
+  if get({'s': 1, 'sno': 1, 'sm': 1, 'g': 1, 'c': 1}, command, 0) || exists('s:show_range')
+    if exists('s:old_selection_regex')
+      if s:old_selection_regex != selection_regex || s:old_pattern_regex != pattern_regex
+            \ || s:old_last_specifier_pattern != last_specifier_pattern
         call s:highlight(pattern_regex, selection_regex, last_specifier_pattern, abs_range)
       endif
-      let s:old_pattern_regex = pattern_regex
-      let s:old_selection_regex = selection_regex
-      let s:old_last_specifier_pattern = last_specifier_pattern
+    else
+      call s:highlight(pattern_regex, selection_regex, last_specifier_pattern, abs_range)
     endif
+    let s:old_pattern_regex = pattern_regex
+    let s:old_selection_regex = selection_regex
+    let s:old_last_specifier_pattern = last_specifier_pattern
+  endif
 
-    " restore initial cursor position
-    call cursor(s:cursor_initial_pos)
-  else
-    call s:clean()
+  " restore initial cursor position
+  call cursor(s:cursor_initial_pos)
+endfunction
+
+function! s:track(...) abort
+  let current_cmd = getcmdline()
+  if s:cmd !=# current_cmd
+    let s:cmd = current_cmd
+    doautocmd User CmdlineChanged
   endif
 endfunction
 
+function! s:cmd_enter() abort
+    let s:cmd = getcmdline()
+    let s:track_cmd = timer_start(15,function('s:track'),{'repeat':-1})
+endfunction
+
+function! s:cmd_leave() abort
+    unlet s:cmd
+    call timer_stop(s:track_cmd)
+endfunction
+
 augroup traces_augroup
-  autocmd!
-  autocmd VimEnter,BufEnter * call s:start_traces()
-  autocmd WinLeave * call s:clean()
+  autocmd CmdlineEnter,CmdwinLeave : call s:cmd_enter()
+  autocmd CmdlineLeave,CmdwinEnter : call s:cmd_leave()
+  autocmd User CmdlineChanged call s:main()
+  autocmd CmdlineLeave : call s:clean()
 augroup END
 
 let &cpo = s:cpo_save
