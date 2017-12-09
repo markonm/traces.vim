@@ -1,7 +1,6 @@
 if !exists('##CmdlineEnter') || exists("g:loaded_traces_plugin") || &cp
   finish
 endif
-
 let g:loaded_traces_plugin = 1
 
 let s:cpo_save = &cpo
@@ -10,10 +9,6 @@ set cpo-=C
 if !exists('g:traces_whole_file_range')
   let g:traces_whole_file_range = 1
 endif
-
-augroup traces_augroup
-  autocmd!
-augroup END
 
 function! s:trim(...) abort
   if a:0 == 2
@@ -510,9 +505,7 @@ function! s:highlight(pattern, selection, spc_pattern, abs_range) abort
   if !(get(s:, 'pattern', '') != a:pattern || get(s:, 'selection', '') != a:selection || get(s:, 'spc_pattern', '') != a:spc_pattern)
     return
   endif
-  let s:pattern = a:pattern
-  let s:selection = a:selection
-  let s:spc_pattern = a:spc_pattern
+  let [s:pattern, s:selection, s:spc_pattern] = [a:pattern, a:selection, a:spc_pattern]
 
   if exists('w:traces_selection_index') && w:traces_selection_index != -1 
     call matchdelete(w:traces_selection_index)
@@ -555,7 +548,6 @@ function! s:clean() abort
   silent! unlet w:traces_pattern_index
 endfunction
 
-
 function! s:evaluate_cmdl(cmdl) abort
   let x = s:evaluate_range(s:parse_range([], a:cmdl))
   let specifier_pattern = s:get_pattern_regexp('g', len(x.range) > 0 ? [x.range[len(x.range) - 1]] : [], x.pattern)
@@ -564,7 +556,6 @@ function! s:evaluate_cmdl(cmdl) abort
   let selection =  s:get_selection_regexp(x.range)
   return [x.range, specifier_pattern, command, pattern, selection]
 endfunction
-
 
 function! s:main(...) abort
   if &buftype ==# 'terminal'
@@ -606,6 +597,7 @@ function! s:cmdl_leave() abort
 endfunction
 
 augroup traces_augroup
+  autocmd!
   autocmd CmdlineEnter,CmdwinLeave : call s:cmdl_enter()
   autocmd CmdlineLeave,CmdwinEnter : call s:cmdl_leave()
   autocmd User CmdlineChanged call s:main()
