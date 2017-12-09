@@ -506,6 +506,7 @@ function! s:highlight(pattern, selection, spc_pattern, abs_range) abort
     return
   endif
   let [s:pattern, s:selection, s:spc_pattern] = [a:pattern, a:selection, a:spc_pattern]
+  let &hlsearch = 0
 
   if exists('w:traces_selection_index') && w:traces_selection_index != -1 
     call matchdelete(w:traces_selection_index)
@@ -546,6 +547,8 @@ function! s:clean() abort
   silent! unlet w:traces_selection_index
   silent! call  matchdelete(w:traces_pattern_index)
   silent! unlet w:traces_pattern_index
+  let &hlsearch = s:hlsearch
+  silent! unlet s:hlsearch
 endfunction
 
 function! s:evaluate_cmdl(cmdl) abort
@@ -587,13 +590,14 @@ function! s:track(...) abort
 endfunction
 
 function! s:cmdl_enter() abort
-    let s:cmdl = getcmdline()
-    let s:track_cmd = timer_start(15,function('s:track'),{'repeat':-1})
+  let s:hlsearch = &hlsearch
+  let s:cmdl = getcmdline()
+  let s:track_cmd = timer_start(15,function('s:track'),{'repeat':-1})
 endfunction
 
 function! s:cmdl_leave() abort
-    unlet s:cmdl
-    call timer_stop(s:track_cmd)
+  unlet s:cmdl
+  call timer_stop(s:track_cmd)
 endfunction
 
 augroup traces_augroup
