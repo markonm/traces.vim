@@ -23,7 +23,7 @@ function! s:trim(...) abort
   endif
 endfunction
 
-function! s:get_range(range, cmd_line) abort
+function! s:parse_range(range, cmdl) abort
   let specifier = {}
   let specifier.addresses = []
 
@@ -31,28 +31,28 @@ function! s:get_range(range, cmd_line) abort
   let flag = 1
   while flag
     " address part
-    call s:trim(a:cmd_line)
+    call s:trim(a:cmdl)
     let entry = {}
     " regexp for pattern specifier
     let pattern = '/\%(\\/\|[^/]\)*/\=\|?\%(\\?\|[^?]\)*?\='
     if len(specifier.addresses) == 0
       " \& is not supported
-      let address = matchstrpos(a:cmd_line[0],
+      let address = matchstrpos(a:cmdl[0],
             \ '\m^\%(\d\+\|\.\|\$\|%\|\*\|''.\|'. pattern . '\|\\/\|\\?\)')
     else
-      let address = matchstrpos(a:cmd_line[0],
+      let address = matchstrpos(a:cmdl[0],
             \ '\m^\%(' . pattern . '\)' )
     endif
     if address[2] != -1
-      call s:trim(a:cmd_line, address[2])
+      call s:trim(a:cmdl, address[2])
       let entry.address = address[0]
     endif
 
     " offset
-    call s:trim(a:cmd_line)
-    let offset = matchstrpos(a:cmd_line[0], '\m^\%(\d\|\s\|+\|-\)\+')
+    call s:trim(a:cmdl)
+    let offset = matchstrpos(a:cmdl[0], '\m^\%(\d\|\s\|+\|-\)\+')
     if offset[2] != -1
-      call s:trim(a:cmd_line, offset[2])
+      call s:trim(a:cmdl, offset[2])
       let entry.offset = offset[0]
     endif
 
@@ -68,10 +68,10 @@ function! s:get_range(range, cmd_line) abort
   endwhile
 
   " delimiter
-  call s:trim(a:cmd_line)
-  let delimiter = matchstrpos(a:cmd_line[0], '\m^\%(,\|;\)')
+  call s:trim(a:cmdl)
+  let delimiter = matchstrpos(a:cmdl[0], '\m^\%(,\|;\)')
   if delimiter[2] != -1
-    call s:trim(a:cmd_line, delimiter[2])
+    call s:trim(a:cmdl, delimiter[2])
     let specifier.delimiter = delimiter[0]
   endif
 
@@ -83,7 +83,7 @@ function! s:get_range(range, cmd_line) abort
   endif
 
   if delimiter[2] != -1
-    return s:get_range(a:range, a:cmd_line)
+    return s:parse_range(a:range, a:cmdl)
   else
     return a:range
   endif
@@ -268,7 +268,7 @@ function! s:mark_to_absolute(address, last_position, range_size) abort
   return result
 endfunction
 
-function! s:range_to_apsolute(range_structure) abort
+function! s:evaluate_range(range_structure) abort
   let last_delimiter = ''
   let result = { 'range': []}
   let valid = 1
@@ -354,11 +354,11 @@ function! s:get_selection_regexp(range) abort
   return pattern
 endfunction
 
-function! s:get_command(cmd_line) abort
-  call s:trim(a:cmd_line)
-  let result = matchstrpos(a:cmd_line[0], '\m\w\+!\=\|[<>!#]')
+function! s:get_command(cmdl) abort
+  call s:trim(a:cmdl)
+  let result = matchstrpos(a:cmdl[0], '\m\w\+!\=\|[<>!#]')
   if result[2] != -1
-    call s:trim(a:cmd_line, result[2])
+    call s:trim(a:cmdl, result[2])
 
     if match(result[0], '\m^\<s\ze\%[ubstitute]\>') != -1
       return 's'
@@ -379,10 +379,10 @@ function! s:get_command(cmd_line) abort
   return ''
 endfunction
 
-function! s:get_pattern(command, cmd_line) abort
-  call s:trim(a:cmd_line)
+function! s:get_pattern(command, cmdl) abort
+  call s:trim(a:cmdl)
   if get({'s': 1, 'sno': 1, 'sm': 1, 'g': 1}, a:command, 0)
-    let delimiter = strcharpart(a:cmd_line[0], 0, 1)
+    let delimiter = strcharpart(a:cmdl[0], 0, 1)
     if delimiter !~ '\W'
       return ''
     endif
@@ -390,13 +390,13 @@ function! s:get_pattern(command, cmd_line) abort
           \ . '\|[^' . delimiter . ']\)*' . delimiter . '\='
 
     try
-      let pattern = matchstrpos(a:cmd_line[0], regexp)
+      let pattern = matchstrpos(a:cmdl[0], regexp)
     catch
       return ''
     endtry
 
     if pattern[2] != -1
-      call s:trim(a:cmd_line, pattern[2])
+      call s:trim(a:cmdl, pattern[2])
     endif
     let pattern = substitute(pattern[0], '^.', '', '')
     let pattern = substitute(pattern, '\%([^\\]\|^\)\zs' . delimiter . '$', '', '')
@@ -505,7 +505,15 @@ function! s:set_cursor_position(pattern_regex, range, abs_range) abort
   call cursor(s:cursor_temp_pos, 1)
 endfunction
 
-function! s:highlight(pattern_regex, selection_regex, last_specifier_pattern, abs_range) abort
+function! s:highlight(pattern, selection, spc_pattern, abs_range) abort
+  " redraw only when regular expressions are changed
+  if !(get(s:, 'pattern', '') != a:pattern || get(s:, 'selection', '') != a:selection || get(s:, 'spc_pattern', '') != a:spc_pattern)
+    return
+  endif
+  let s:pattern = a:pattern
+  let s:selection = a:selection
+  let s:spc_pattern = a:spc_pattern
+
   if exists('w:traces_selection_index') && w:traces_selection_index != -1 
     call matchdelete(w:traces_selection_index)
     unlet w:traces_selection_index
@@ -518,14 +526,14 @@ function! s:highlight(pattern_regex, selection_regex, last_specifier_pattern, ab
 
   " highlight selection
   if !(get(s:, 'dont_move') && g:traces_whole_file_range == 0)
-    silent! let w:traces_selection_index = matchadd('Visual', a:selection_regex, 100)
+    silent! let w:traces_selection_index = matchadd('Visual', a:selection, 100)
   endif
   " highlight pattern
   silent! let w:traces_pattern_index   = matchadd('Search', 
-        \ (a:last_specifier_pattern == '' ? a:pattern_regex : a:last_specifier_pattern), 101)
+        \ (a:spc_pattern == '' ? a:pattern : a:spc_pattern), 101)
   " position cursor before redraw
-  if !get(s:, 'dont_move', 0) || a:pattern_regex != ''
-    silent! call s:set_cursor_position(a:pattern_regex, a:selection_regex, a:abs_range)
+  if !get(s:, 'dont_move', 0) || a:pattern != ''
+    silent! call s:set_cursor_position(a:pattern, a:selection, a:abs_range)
   endif
 
   if get(g:, 'traces_preserve_view_state')
@@ -538,53 +546,41 @@ function! s:clean() abort
   silent! unlet s:show_range
   silent! unlet s:cursor_initial_pos
   silent! unlet s:cursor_temp_pos
-  silent! unlet s:old_pattern_regex
-  silent! unlet s:old_selection_regex
-  silent! unlet s:old_last_specifier_pattern
+  silent! unlet s:pattern
+  silent! unlet s:selection
+  silent! unlet s:spc_pattern
   silent! call  matchdelete(w:traces_selection_index)
   silent! unlet w:traces_selection_index
   silent! call  matchdelete(w:traces_pattern_index)
   silent! unlet w:traces_pattern_index
 endfunction
 
+
+function! s:evaluate_cmdl(cmdl) abort
+  let x = s:evaluate_range(s:parse_range([], a:cmdl))
+  let specifier_pattern = s:get_pattern_regexp('g', len(x.range) > 0 ? [x.range[len(x.range) - 1]] : [], x.pattern)
+  let command = s:get_command(a:cmdl)
+  let pattern =  s:get_pattern_regexp(command, x.range, s:get_pattern(command, a:cmdl))
+  let selection =  s:get_selection_regexp(x.range)
+  return [x.range, specifier_pattern, command, pattern, selection]
+endfunction
+
+
 function! s:main(...) abort
   if &buftype ==# 'terminal'
     return
   endif
 
-  let cmd_line = [s:cmd]
-
   " save cursor positions
   if !exists('s:cursor_initial_pos')
-    let s:cursor_initial_pos = [getpos('.')[1], getpos('.')[2]]
+    let s:cursor_initial_pos = [line('.'), col('.')]
     let s:cursor_temp_pos = s:cursor_initial_pos
   endif
 
-  let range = s:get_range([], cmd_line)
-  let selection = s:range_to_apsolute(range)
-  let abs_range = selection.range
-  let last_specifier_pattern = selection.pattern
-  let last_specifier_pattern = s:get_pattern_regexp('g',
-        \ len(abs_range) > 0 ? [abs_range[len(abs_range) - 1]] : [], last_specifier_pattern)
-  let command = s:get_command(cmd_line)
-  let pattern = s:get_pattern(command, cmd_line)
+  let [range, spc_pattern, command, pattern, selection] = s:evaluate_cmdl([s:cmdl])
 
-  let pattern_regex =  s:get_pattern_regexp(command, abs_range, pattern)
-  let selection_regex =  s:get_selection_regexp(abs_range)
-
-  " redraw only when regular expressions are changed
-  if get({'s': 1, 'sno': 1, 'sm': 1, 'g': 1, 'c': 1}, command, 0) || exists('s:show_range')
-    if exists('s:old_selection_regex')
-      if s:old_selection_regex != selection_regex || s:old_pattern_regex != pattern_regex
-            \ || s:old_last_specifier_pattern != last_specifier_pattern
-        call s:highlight(pattern_regex, selection_regex, last_specifier_pattern, abs_range)
-      endif
-    else
-      call s:highlight(pattern_regex, selection_regex, last_specifier_pattern, abs_range)
-    endif
-    let s:old_pattern_regex = pattern_regex
-    let s:old_selection_regex = selection_regex
-    let s:old_last_specifier_pattern = last_specifier_pattern
+  if get({'s': 1, 'sno': 1, 'sm': 1, 'g': 1, 'c': 1}, command) || exists('s:show_range')
+    call s:highlight(pattern, selection, spc_pattern, range)
   endif
 
   " restore initial cursor position
@@ -593,25 +589,25 @@ endfunction
 
 function! s:track(...) abort
   let current_cmd = getcmdline()
-  if s:cmd !=# current_cmd
-    let s:cmd = current_cmd
+  if s:cmdl !=# current_cmd
+    let s:cmdl = current_cmd
     doautocmd User CmdlineChanged
   endif
 endfunction
 
-function! s:cmd_enter() abort
-    let s:cmd = getcmdline()
+function! s:cmdl_enter() abort
+    let s:cmdl = getcmdline()
     let s:track_cmd = timer_start(15,function('s:track'),{'repeat':-1})
 endfunction
 
-function! s:cmd_leave() abort
-    unlet s:cmd
+function! s:cmdl_leave() abort
+    unlet s:cmdl
     call timer_stop(s:track_cmd)
 endfunction
 
 augroup traces_augroup
-  autocmd CmdlineEnter,CmdwinLeave : call s:cmd_enter()
-  autocmd CmdlineLeave,CmdwinEnter : call s:cmd_leave()
+  autocmd CmdlineEnter,CmdwinLeave : call s:cmdl_enter()
+  autocmd CmdlineLeave,CmdwinEnter : call s:cmdl_leave()
   autocmd User CmdlineChanged call s:main()
   autocmd CmdlineLeave : call s:clean()
 augroup END
