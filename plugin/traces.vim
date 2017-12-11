@@ -533,9 +533,7 @@ function! s:highlight(pattern, selection, spc_pattern, abs_range) abort
   if get(g:, 'traces_preserve_view_state')
     call cursor(s:cursor_initial_pos)
   endif
-  if has('nvim')
-    redraw
-  endif
+  redraw
 endfunction
 
 function! s:clean() abort
