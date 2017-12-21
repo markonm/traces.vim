@@ -36,7 +36,7 @@ Patterns for the following commands will be highlighted immediatelly as typed:
 ==============================================================================
 REQUIREMENTS					*traces-requirements*
 
-Vim v8.0.1067+ or Neovim v0.2.1+
+Vim v8.0.1206+ or Neovim v0.2.3+
 
 ==============================================================================
 SETTINGS					*traces-settings*
@@ -44,7 +44,7 @@ SETTINGS					*traces-settings*
                                                 *g:traces_whole_file_range*
 If value is 0, range for |:%| specifier will not be highlighted.
 
-  Default value: 1
+  Default value: 0
 
                                                 *g:traces_preserve_view_state*
 If value is 1, view position  will not be changed when highlighting ranges or
@@ -67,7 +67,17 @@ BUGS						*traces-bugs*
 ==============================================================================
 CHANGELOG					*traces-changelog*
 
-0.0.0	September 18, 2017			traces-changelog-0.0.0
+0.1.0   December 21, 2017                       *traces-changelog-0.1.0*
+        - Increased Vim/Neovim requirements
+        - Use |CmdlineEnter| and |CmdlineLeave| events
+        - Disable |hlsearch| when highlighting patterns
+        - Highlight all windows that contain current buffer
+        - New options
+          - |g:traces_whole_file_range|
+          - |g:traces_preserve_view_state|
+        - Various bugs fixed
+
+0.0.0	September 18, 2017			*traces-changelog-0.0.0*
 	- Initial version.
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:fen:fdl=0:fdm=marker:
