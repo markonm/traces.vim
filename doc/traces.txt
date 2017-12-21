@@ -44,7 +44,7 @@ SETTINGS					*traces-settings*
                                                 *g:traces_whole_file_range*
 If value is 0, range for |:%| specifier will not be highlighted.
 
-  Default value: 1
+  Default value: 0
 
                                                 *g:traces_preserve_view_state*
 If value is 1, view position  will not be changed when highlighting ranges or

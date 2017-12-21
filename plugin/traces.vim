@@ -7,7 +7,7 @@ let s:cpo_save = &cpo
 set cpo-=C
 
 if !exists('g:traces_whole_file_range')
-  let g:traces_whole_file_range = 1
+  let g:traces_whole_file_range = 0
 endif
 
 if !exists('g:traces_preserve_view_state')
