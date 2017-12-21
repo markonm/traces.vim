@@ -10,6 +10,10 @@ if !exists('g:traces_whole_file_range')
   let g:traces_whole_file_range = 1
 endif
 
+if !exists('g:traces_preserve_view_state')
+  let g:traces_preserve_view_state = 0
+endif
+
 function! s:trim(...) abort
   if a:0 == 2
     let a:1[0] = strcharpart(a:1[0], a:2)
@@ -122,7 +126,7 @@ function! s:mark_to_absolute(address, last_position, range_size) abort
   let result.valid = 1
   let result.skip  = 0
   let result.regex = ''
-  let s:dont_move  = 0
+  let s:keep_pos  = 0
 
   if has_key(a:address, 'address')
 
@@ -139,7 +143,7 @@ function! s:mark_to_absolute(address, last_position, range_size) abort
     elseif a:address.address ==  '%'
       call add(result.range, 1)
       call add(result.range, getpos('$')[1])
-      let s:dont_move = 1
+      let s:keep_pos = 1
 
     elseif a:address.address ==  '*'
       call add(result.range, getpos('''<')[1])
@@ -455,8 +459,8 @@ function! s:get_pattern_regexp(command, range, pattern) abort
       let start = a:range[len(a:range) - 1] - 1
       let end   = a:range[len(a:range) - 1] + 1
     else
-      let start = s:cursor_initial_pos[0] - 1
-      let end   = s:cursor_initial_pos[0] + 1
+      let start = s:cur_init_pos[0] - 1
+      let end   = s:cur_init_pos[0] + 1
     endif
     let range = '\m\%>'. start .'l' . '\%<' . end . 'l'
 
@@ -487,77 +491,77 @@ function! s:get_pattern_regexp(command, range, pattern) abort
   return ''
 endfunction
 
-function! s:set_cursor_position(pattern_regex, range, abs_range) abort
-  if a:pattern_regex != ''
-    let position =  search(a:pattern_regex, 'c')
+function! s:position(input) abort
+  if type(a:input) == 1 && a:input != ''
+    let position =  search(a:input, 'c')
     if position != 0
-      let s:cursor_temp_pos =  position
+      let s:cur_temp_pos =  [position, 1]
     endif
-  elseif len(a:abs_range) > 0
-    call cursor(a:abs_range[len(a:abs_range) - 1], 1)
-    let s:cursor_temp_pos =  a:abs_range[len(a:abs_range) - 1]
+  elseif type(a:input) == 3 && len(a:input) > 0
+    let s:cur_temp_pos =  [a:input[len(a:input) - 1], 1]
   endif
-  call cursor(s:cursor_temp_pos, 1)
+
+  if g:traces_preserve_view_state
+    call cursor(s:cur_init_pos)
+  else
+    call cursor(s:cur_temp_pos)
+  endif
 endfunction
 
-function! s:highlight(pattern, selection, spc_pattern, abs_range) abort
-  " redraw only when regular expressions are changed
-  if !(get(s:, 'pattern', '') != a:pattern || get(s:, 'selection', '') != a:selection || get(s:, 'spc_pattern', '') != a:spc_pattern)
-    return
+function! s:highlight(type, regex, priority) abort
+  if &hlsearch && a:regex !=# ''
+    let &hlsearch = 0
   endif
-  let [s:pattern, s:selection, s:spc_pattern] = [a:pattern, a:selection, a:spc_pattern]
-  let &hlsearch = 0
-
-  if exists('w:traces_selection_index') && w:traces_selection_index != -1 
-    call matchdelete(w:traces_selection_index)
-    unlet w:traces_selection_index
+  if !exists('w:traces_highlights')
+    let w:traces_highlights = {}
   endif
 
-  if exists('w:traces_pattern_index') && w:traces_pattern_index != -1
-    call matchdelete(w:traces_pattern_index)
-    unlet w:traces_pattern_index
+  if !exists('w:traces_highlights[a:type]')
+    let x = {}
+    let x.regex = a:regex
+    silent! let x.index = matchadd(a:type, a:regex, a:priority)
+    let w:traces_highlights[a:type] = x
+  elseif w:traces_highlights[a:type].regex !=# a:regex
+    if w:traces_highlights[a:type].index !=# -1
+      call matchdelete(w:traces_highlights[a:type].index)
+    endif
+    let w:traces_highlights[a:type].regex = a:regex
+    silent! let w:traces_highlights[a:type].index = matchadd(a:type, a:regex, a:priority)
   endif
-
-  " highlight selection
-  if !(get(s:, 'dont_move') && g:traces_whole_file_range == 0)
-    silent! let w:traces_selection_index = matchadd('Visual', a:selection, 100)
-  endif
-  " highlight pattern
-  silent! let w:traces_pattern_index   = matchadd('Search', 
-        \ (a:spc_pattern == '' ? a:pattern : a:spc_pattern), 101)
-  " position cursor before redraw
-  if !get(s:, 'dont_move', 0) || a:pattern != ''
-    silent! call s:set_cursor_position(a:pattern, a:selection, a:abs_range)
-  endif
-
-  if get(g:, 'traces_preserve_view_state')
-    call cursor(s:cursor_initial_pos)
-  endif
-  redraw
 endfunction
 
 function! s:clean() abort
+  if exists('s:cur_init_pos')
+    call cursor(s:cur_init_pos)
+  endif
   silent! unlet s:show_range
-  silent! unlet s:cursor_initial_pos
-  silent! unlet s:cursor_temp_pos
-  silent! unlet s:pattern
-  silent! unlet s:selection
-  silent! unlet s:spc_pattern
-  silent! call  matchdelete(w:traces_selection_index)
-  silent! unlet w:traces_selection_index
-  silent! call  matchdelete(w:traces_pattern_index)
-  silent! unlet w:traces_pattern_index
+  silent! unlet s:cur_init_pos
+  silent! unlet s:cur_temp_pos
+
+  if exists('w:traces_highlights')
+    for key in keys(w:traces_highlights)
+      if w:traces_highlights[key].index !=# - 1
+        call matchdelete(w:traces_highlights[key].index)
+      endif
+    endfor
+    unlet w:traces_highlights
+  endif
+
   let &hlsearch = s:hlsearch
   silent! unlet s:hlsearch
 endfunction
 
 function! s:evaluate_cmdl(cmdl) abort
-  let x = s:evaluate_range(s:parse_range([], a:cmdl))
-  let specifier_pattern = s:get_pattern_regexp('g', len(x.range) > 0 ? [x.range[len(x.range) - 1]] : [], x.pattern)
-  let command = s:get_command(a:cmdl)
-  let pattern =  s:get_pattern_regexp(command, x.range, s:get_pattern(command, a:cmdl))
-  let selection =  s:get_selection_regexp(x.range)
-  return [x.range, specifier_pattern, command, pattern, selection]
+  let r                 = s:evaluate_range(s:parse_range([], a:cmdl))
+  let c                 = {}
+  let c.range           = {}
+  let c.range.abs       = r.range
+  let c.range.pattern   = s:get_selection_regexp(r.range)
+  let c.range.specifier = s:get_pattern_regexp('g', len(r.range) > 0 ? [r.range[len(r.range) - 1]] : [], r.pattern)
+  let c.cmd             = {}
+  let c.cmd.name        = s:get_command(a:cmdl)
+  let c.cmd.pattern     = s:get_pattern_regexp(c.cmd.name, r.range, s:get_pattern(c.cmd.name, a:cmdl))
+  return c
 endfunction
 
 function! s:main(...) abort
@@ -566,19 +570,28 @@ function! s:main(...) abort
   endif
 
   " save cursor positions
-  if !exists('s:cursor_initial_pos')
-    let s:cursor_initial_pos = [line('.'), col('.')]
-    let s:cursor_temp_pos = s:cursor_initial_pos
+  if !exists('s:cur_init_pos')
+    let s:cur_init_pos = [line('.'), col('.')]
+    let s:cur_temp_pos = s:cur_init_pos
   endif
-
-  let [range, spc_pattern, command, pattern, selection] = s:evaluate_cmdl([s:cmdl])
-
-  if get({'s': 1, 'sno': 1, 'sm': 1, 'g': 1, 'c': 1}, command) || exists('s:show_range')
-    call s:highlight(pattern, selection, spc_pattern, range)
-  endif
-
   " restore initial cursor position
-  call cursor(s:cursor_initial_pos)
+  call cursor(s:cur_init_pos)
+
+  let cmdl = s:evaluate_cmdl([s:cmdl])
+
+  " range
+  if (cmdl.cmd.name !=# '' || exists('s:show_range')) && !(get(s:, 'keep_pos') && g:traces_whole_file_range == 0)
+    call s:highlight('Visual', cmdl.range.pattern, 100)
+    call s:highlight('Search', cmdl.range.specifier, 101)
+    call s:position(cmdl.range.abs)
+  endif
+
+  if cmdl.range.specifier == ''
+    call s:highlight('Search', cmdl.cmd.pattern, 101)
+    call s:position(cmdl.cmd.pattern)
+  endif
+
+  call winline()
 endfunction
 
 function! s:track(...) abort
