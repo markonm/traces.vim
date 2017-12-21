@@ -512,22 +512,30 @@ function! s:highlight(type, regex, priority) abort
   if &hlsearch && a:regex !=# '' && a:type ==# 'Search'
     let &hlsearch = 0
   endif
-  if !exists('w:traces_highlights')
-    let w:traces_highlights = {}
-  endif
 
-  if !exists('w:traces_highlights[a:type]')
-    let x = {}
-    let x.regex = a:regex
-    silent! let x.index = matchadd(a:type, a:regex, a:priority)
-    let w:traces_highlights[a:type] = x
-  elseif w:traces_highlights[a:type].regex !=# a:regex
-    if w:traces_highlights[a:type].index !=# -1
-      call matchdelete(w:traces_highlights[a:type].index)
+  let cur_win = win_getid()
+  let prev_win = win_getid(winnr('#'))
+  let windows =  win_findbuf(bufnr('%'))
+  for window in windows
+    call win_gotoid(window)
+    if !exists('w:traces_highlights')
+      let w:traces_highlights = {}
     endif
-    let w:traces_highlights[a:type].regex = a:regex
-    silent! let w:traces_highlights[a:type].index = matchadd(a:type, a:regex, a:priority)
-  endif
+    if !exists('w:traces_highlights[a:type]')
+      let x = {}
+      let x.regex = a:regex
+      silent! let x.index = matchadd(a:type, a:regex, a:priority)
+      let w:traces_highlights[a:type] = x
+    elseif w:traces_highlights[a:type].regex !=# a:regex
+      if w:traces_highlights[a:type].index !=# -1
+        call matchdelete(w:traces_highlights[a:type].index)
+      endif
+      let w:traces_highlights[a:type].regex = a:regex
+      silent! let w:traces_highlights[a:type].index = matchadd(a:type, a:regex, a:priority)
+    endif
+  endfor
+  call win_gotoid(prev_win)
+  call win_gotoid(cur_win)
 endfunction
 
 function! s:clean() abort
@@ -538,14 +546,22 @@ function! s:clean() abort
   silent! unlet s:cur_init_pos
   silent! unlet s:cur_temp_pos
 
-  if exists('w:traces_highlights')
-    for key in keys(w:traces_highlights)
-      if w:traces_highlights[key].index !=# - 1
-        call matchdelete(w:traces_highlights[key].index)
-      endif
-    endfor
-    unlet w:traces_highlights
-  endif
+  let cur_win = win_getid()
+  let prev_win = win_getid(winnr('#'))
+  let windows =  win_findbuf(bufnr('%'))
+  for window in windows
+    call win_gotoid(window)
+    if exists('w:traces_highlights')
+      for key in keys(w:traces_highlights)
+        if w:traces_highlights[key].index !=# - 1
+          call matchdelete(w:traces_highlights[key].index)
+        endif
+      endfor
+      unlet w:traces_highlights
+    endif
+  endfor
+  call win_gotoid(prev_win)
+  call win_gotoid(cur_win)
 
   let &hlsearch = s:hlsearch
   silent! unlet s:hlsearch
