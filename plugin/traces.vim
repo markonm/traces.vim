@@ -532,6 +532,7 @@ function! s:highlight(type, regex, priority) abort
       endif
       let w:traces_highlights[a:type].regex = a:regex
       silent! let w:traces_highlights[a:type].index = matchadd(a:type, a:regex, a:priority)
+      let s:highlighted = 1
     endif
   endfor
   noautocmd call win_gotoid(prev_win)
@@ -584,6 +585,7 @@ function! s:main(...) abort
   if &buftype ==# 'terminal'
     return
   endif
+  let s:highlighted = 0
 
   " save cursor positions
   if !exists('s:cur_init_pos')
@@ -607,7 +609,11 @@ function! s:main(...) abort
     call s:position(cmdl.cmd.pattern)
   endif
 
-  call winline()
+  if !has('nvim')
+    call winline()
+  elseif s:highlighted
+    redraw
+  endif
 endfunction
 
 function! s:track(...) abort
