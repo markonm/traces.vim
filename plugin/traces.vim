@@ -493,7 +493,7 @@ endfunction
 
 function! s:position(input) abort
   if type(a:input) == 1 && a:input != ''
-    let position =  search(a:input, 'c')
+    silent! let position = search(a:input, 'c')
     if position != 0
       let s:cur_temp_pos =  [position, 1]
     endif
