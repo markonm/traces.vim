@@ -1,6 +1,6 @@
 *traces.txt*	Range and pattern preview for Command-line mode
 
-Version 0.0.0
+Version 0.1.0
 
 CONTENTS					*traces-contents*
 Introduction            |traces-introduction|
