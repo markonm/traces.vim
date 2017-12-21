@@ -517,7 +517,7 @@ function! s:highlight(type, regex, priority) abort
   let prev_win = win_getid(winnr('#'))
   let windows =  win_findbuf(bufnr('%'))
   for window in windows
-    call win_gotoid(window)
+    noautocmd call win_gotoid(window)
     if !exists('w:traces_highlights')
       let w:traces_highlights = {}
     endif
@@ -534,8 +534,8 @@ function! s:highlight(type, regex, priority) abort
       silent! let w:traces_highlights[a:type].index = matchadd(a:type, a:regex, a:priority)
     endif
   endfor
-  call win_gotoid(prev_win)
-  call win_gotoid(cur_win)
+  noautocmd call win_gotoid(prev_win)
+  noautocmd call win_gotoid(cur_win)
 endfunction
 
 function! s:clean() abort
@@ -550,7 +550,7 @@ function! s:clean() abort
   let prev_win = win_getid(winnr('#'))
   let windows =  win_findbuf(bufnr('%'))
   for window in windows
-    call win_gotoid(window)
+    noautocmd call win_gotoid(window)
     if exists('w:traces_highlights')
       for key in keys(w:traces_highlights)
         if w:traces_highlights[key].index !=# - 1
@@ -560,8 +560,8 @@ function! s:clean() abort
       unlet w:traces_highlights
     endif
   endfor
-  call win_gotoid(prev_win)
-  call win_gotoid(cur_win)
+  noautocmd call win_gotoid(prev_win)
+  noautocmd call win_gotoid(cur_win)
 
   let &hlsearch = s:hlsearch
   silent! unlet s:hlsearch
