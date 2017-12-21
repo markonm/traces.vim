@@ -509,7 +509,7 @@ function! s:position(input) abort
 endfunction
 
 function! s:highlight(type, regex, priority) abort
-  if &hlsearch && a:regex !=# ''
+  if &hlsearch && a:regex !=# '' && a:type ==# 'Search'
     let &hlsearch = 0
   endif
   if !exists('w:traces_highlights')
