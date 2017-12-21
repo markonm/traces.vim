@@ -620,7 +620,7 @@ function! s:track(...) abort
   let current_cmd = getcmdline()
   if s:cmdl !=# current_cmd
     let s:cmdl = current_cmd
-    doautocmd User CmdlineChanged
+    call s:main()
   endif
 endfunction
 
@@ -639,7 +639,6 @@ augroup traces_augroup
   autocmd!
   autocmd CmdlineEnter,CmdwinLeave : call s:cmdl_enter()
   autocmd CmdlineLeave,CmdwinEnter : call s:cmdl_leave()
-  autocmd User CmdlineChanged call s:main()
   autocmd CmdlineLeave : call s:clean()
 augroup END
 
