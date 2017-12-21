@@ -67,7 +67,17 @@ BUGS						*traces-bugs*
 ==============================================================================
 CHANGELOG					*traces-changelog*
 
-0.0.0	September 18, 2017			traces-changelog-0.0.0
+0.1.0   December 21, 2017                       *traces-changelog-0.1.0*
+        - Increased Vim/Neovim requirements
+        - Use |CmdlineEnter| and |CmdlineLeave| events
+        - Disable |hlsearch| when highlighting patterns
+        - Highlight all windows that contain current buffer
+        - New options
+          - |g:traces_whole_file_range|
+          - |g:traces_preserve_view_state|
+        - Various bugs fixed
+
+0.0.0	September 18, 2017			*traces-changelog-0.0.0*
 	- Initial version.
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:fen:fdl=0:fdm=marker:
