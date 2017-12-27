@@ -515,7 +515,7 @@ function! s:highlight(type, regex, priority) abort
 
   let cur_win = win_getid()
   let prev_win = win_getid(winnr('#'))
-  let windows =  win_findbuf(bufnr('%'))
+  let windows = filter(win_findbuf(bufnr('%')), {_, val -> win_id2win(val)})
   for window in windows
     noautocmd call win_gotoid(window)
     if !exists('w:traces_highlights')
@@ -549,7 +549,7 @@ function! s:clean() abort
 
   let cur_win = win_getid()
   let prev_win = win_getid(winnr('#'))
-  let windows =  win_findbuf(bufnr('%'))
+  let windows = filter(win_findbuf(bufnr('%')), {_, val -> win_id2win(val)})
   for window in windows
     noautocmd call win_gotoid(window)
     if exists('w:traces_highlights')
