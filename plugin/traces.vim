@@ -459,8 +459,8 @@ function! s:get_pattern_regexp(command, range, pattern) abort
       let start = a:range[len(a:range) - 1] - 1
       let end   = a:range[len(a:range) - 1] + 1
     else
-      let start = s:cur_init_pos[0] - 1
-      let end   = s:cur_init_pos[0] + 1
+      let start = w:cur_init_pos[0] - 1
+      let end   = w:cur_init_pos[0] + 1
     endif
     let range = '\m\%>'. start .'l' . '\%<' . end . 'l'
 
@@ -495,16 +495,16 @@ function! s:position(input) abort
   if type(a:input) == 1 && a:input != ''
     silent! let position = search(a:input, 'c')
     if position != 0
-      let s:cur_temp_pos =  [position, 1]
+      let w:cur_temp_pos =  [position, 1]
     endif
   elseif type(a:input) == 3 && len(a:input) > 0
-    let s:cur_temp_pos =  [a:input[len(a:input) - 1], 1]
+    let w:cur_temp_pos =  [a:input[len(a:input) - 1], 1]
   endif
 
   if g:traces_preserve_view_state
-    call cursor(s:cur_init_pos)
+    call cursor(w:cur_init_pos)
   else
-    call cursor(s:cur_temp_pos)
+    call cursor(w:cur_temp_pos)
   endif
 endfunction
 
@@ -540,12 +540,12 @@ function! s:highlight(type, regex, priority) abort
 endfunction
 
 function! s:clean() abort
-  if exists('s:cur_init_pos')
-    call cursor(s:cur_init_pos)
+  if exists('w:cur_init_pos')
+    call cursor(w:cur_init_pos)
   endif
   silent! unlet s:show_range
-  silent! unlet s:cur_init_pos
-  silent! unlet s:cur_temp_pos
+  silent! unlet w:cur_init_pos
+  silent! unlet w:cur_temp_pos
 
   let cur_win = win_getid()
   let prev_win = win_getid(winnr('#'))
@@ -588,12 +588,12 @@ function! s:main(...) abort
   let s:highlighted = 0
 
   " save cursor positions
-  if !exists('s:cur_init_pos')
-    let s:cur_init_pos = [line('.'), col('.')]
-    let s:cur_temp_pos = s:cur_init_pos
+  if !exists('w:cur_init_pos')
+    let w:cur_init_pos = [line('.'), col('.')]
+    let w:cur_temp_pos = w:cur_init_pos
   endif
   " restore initial cursor position
-  call cursor(s:cur_init_pos)
+  call cursor(w:cur_init_pos)
 
   let cmdl = s:evaluate_cmdl([s:cmdl])
 
