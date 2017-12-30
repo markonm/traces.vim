@@ -6,13 +6,81 @@ let g:loaded_traces_plugin = 1
 let s:cpo_save = &cpo
 set cpo-=C
 
-if !exists('g:traces_whole_file_range')
-  let g:traces_whole_file_range = 0
-endif
+let g:traces_whole_file_range    = get(g:, 'traces_whole_file_range')
+let g:traces_preserve_view_state = get(g:, 'traces_preserve_view_state')
 
-if !exists('g:traces_preserve_view_state')
-  let g:traces_preserve_view_state = 0
-endif
+let s:cmd_pattern = '\v^%('
+                \ . '\!|'
+                \ . '\#|'
+                \ . '\<|'
+                \ . '\=|'
+                \ . '\>|'
+                \ . 'a%[ppend]\w@!\!=|'
+                \ . 'c%[hange]\w@!\!=|'
+                \ . 'cal%[l]\w@!|'
+                \ . 'ce%[nter]\w@!|'
+                \ . 'co%[py]\w@!|'
+                \ . 'd%[elete]\w@!|'
+                \ . 'diffg%[et]\w@!|'
+                \ . 'diffpu%[t]\w@!|'
+                \ . 'dj%[ump]\w@!\!=|'
+                \ . 'dli%[st]\w@!\!=|'
+                \ . 'ds%[earch]\w@!\!=|'
+                \ . 'dsp%[lit]\w@!\!=|'
+                \ . 'exi%[t]\w@!\!=|'
+                \ . 'fo%[ld]\w@!|'
+                \ . 'foldc%[lose]\w@!\!=|'
+                \ . 'foldd%[oopen]\w@!|'
+                \ . 'folddoc%[losed]\w@!|'
+                \ . 'foldo%[pen]\w@!\!=|'
+                \ . 'g%[lobal]\w@!\!=|'
+                \ . 'ha%[rdcopy]\w@!\!=|'
+                \ . 'i%[nsert]\w@!\!=|'
+                \ . 'ij%[ump]\w@!\!=|'
+                \ . 'il%[ist]\w@!\!=|'
+                \ . 'is%[earch]\w@!\!=|'
+                \ . 'isp%[lit]\w@!\!=|'
+                \ . 'j%[oin]\w@!\!=|'
+                \ . 'k\w@!|'
+                \ . 'l%[ist]\w@!|'
+                \ . 'le%[ft]\w@!|'
+                \ . 'le%[ft]\w@!|'
+                \ . 'luado\w@!|'
+                \ . 'luafile\w@!|'
+                \ . 'lua\w@!|'
+                \ . 'm%[ove]\w@!|'
+                \ . 'ma%[rk]\w@!|'
+                \ . 'mz%[scheme]\w@!|'
+                \ . 'mzf%[ile]\w@!|'
+                \ . 'norm%[al]\w@!\!=|'
+                \ . 'nu%[mber]\w@!|'
+                \ . 'p%[rint]\w@!|'
+                \ . 'perld%[o]\w@!|'
+                \ . 'ps%[earch]\w@!\!=|'
+                \ . 'py%[thon]\w@!|'
+                \ . 'py%[thon]\w@!|'
+                \ . 'pydo\w@!|'
+                \ . 'pyf%[ile]\w@!|'
+                \ . 'r%[ead]\w@!|'
+                \ . 'ri%[ght]\w@!|'
+                \ . 'rubyd%[o]\w@!|'
+                \ . 's%[ubstitute]\w@!|'
+                \ . 'sm%[agic]\w@!|'
+                \ . 'sno%[magic]\w@!|'
+                \ . 'sor%[t]\w@!\!=|'
+                \ . 'tc%[l]\w@!|'
+                \ . 'tcld%[o]\w@!|'
+                \ . 'ter%[minal]\w@!|'
+                \ . 't\w@!|'
+                \ . 'up%[date]\w@!\!=|'
+                \ . 'v%[global]\w@!|'
+                \ . 'w%[rite]\w@!\!=|'
+                \ . 'wq\w@!\!=|'
+                \ . 'x%[it]\w@!\!=|'
+                \ . 'y%[ank]\w@!|'
+                \ . 'z\#|'
+                \ . 'z\w@!'
+                \ . ')'
 
 function! s:trim(...) abort
   if a:0 == 2
@@ -355,59 +423,15 @@ endfunction
 
 function! s:get_command(cmdl) abort
   call s:trim(a:cmdl)
-  let result = matchstrpos(a:cmdl[0], '\m\w\+!\=\|[<>!#]')
+  let result = matchstrpos(a:cmdl[0], s:cmd_pattern)
   if result[2] != -1
     call s:trim(a:cmdl, result[2])
-
-    if match(result[0], '\m^\<s\ze\%[ubstitute]\>') != -1
-      return 's'
-    elseif match(result[0], '\m^\<sno\ze\%[magic]\>') != -1
-      return 'sno'
-    elseif match(result[0], '\m^\<sm\ze\%[agic]\>') != -1
-      return 'sm'
-    elseif match(result[0], '\m^\<g\ze\%[lobal]!\=\>') != -1
-      return 'g'
-    elseif match(result[0], '\m^\<v\ze\%[global]\>') != -1
-      return 'g'
-    elseif match(result[0], '\m^\%(d\%[elete]\|j\%[oin]!\=\|<\|le\%[ft]\|>\|y\%[ank]\|co\%[py]\|m\%[ove]\|ce\%[nter]\|ri\%[ght]\|le\%[ft]\|sor\%[t]!\=\|!\|diffg\%[et]\|diffpu\%[t]\|w\%[rite]!\=\|up\%[date]!\=\|wq!\=\|x\%[it]!\=\|exi\%[t]!\=\|cal\%[l]\|foldd\%[oopen]\|folddoc\%[losed]\|lua\|luado\|luafile\|mz\%[scheme]\|mzf\%[ile]\|perld\%[o]\|py\%[thon]\|py\%[thon]\|pydo\|pyf\%[ile]\|rubyd\%[o]\|tc\%[l]\|tcld\%[o]\|r\%[ead]\|ma\%[rk]\|k\|ha\%[rdcopy]!\=\|is\%[earch]!\=\|il\%[ist]!\=\|ij\%[ump]!\=\|isp\%[lit]!\=\|ds\%[earch]!\=\|dli\%[st]!\=\|dj\%[ump]!\=\|dsp\%[lit]!\=\|ter\%[minal]\|p\%[rint]\|l\%[ist]\|nu\%[mber]\|#\|ps\%[earch]!\=\|norm\%[al]!\=\|c\%[hange]!\=\|fo\%[ld]\|foldo\%[pen]!\=\|foldc\%[lose]!\=\|a\%[ppend]!\=\|i\%[nsert]!\=\|=\|z\|z#\|t\)') != -1
-      return 'c'
-    else
-      return ''
-    endif
+    return result[0]
   endif
   return ''
 endfunction
 
-function! s:get_pattern(command, cmdl) abort
-  call s:trim(a:cmdl)
-  if get({'s': 1, 'sno': 1, 'sm': 1, 'g': 1}, a:command, 0)
-    let delimiter = strcharpart(a:cmdl[0], 0, 1)
-    if delimiter !~ '\W'
-      return ''
-    endif
-    let regexp = '\m^' . delimiter . '\%(\\' . delimiter
-          \ . '\|[^' . delimiter . ']\)*' . delimiter . '\='
-
-    try
-      let pattern = matchstrpos(a:cmdl[0], regexp)
-    catch
-      return ''
-    endtry
-
-    if pattern[2] != -1
-      call s:trim(a:cmdl, pattern[2])
-    endif
-    let pattern = substitute(pattern[0], '^.', '', '')
-    let pattern = substitute(pattern, '\%([^\\]\|^\)\zs' . delimiter . '$', '', '')
-    if delimiter != '/'
-      let pattern = substitute(pattern, '\\' . delimiter, delimiter, 'g')
-    endif
-    return pattern
-  endif
-  return ''
-endfunction
-
-function! s:get_pattern_regexp(command, range, pattern) abort
+function! s:add_flags(pattern, cmdl, type) abort
   if !len(a:pattern)
     return ''
   endif
@@ -416,11 +440,13 @@ function! s:get_pattern_regexp(command, range, pattern) abort
   endif
 
   let option = ''
+  let group_start = '\%('
+  let group_end   = '\m\)'
 
   " magic
-  if a:command == 'sm'
+  if has_key(a:cmdl, 'cmd') && a:cmdl.cmd.name =~# '\v^sm%[agic]$'
     let option = '\m'
-  elseif a:command == 'sno'
+  elseif  has_key(a:cmdl, 'cmd') && a:cmdl.cmd.name =~# '\v^sno%[magic]$'
     let option = '\M'
   elseif &magic
     let option = '\m'
@@ -441,54 +467,77 @@ function! s:get_pattern_regexp(command, range, pattern) abort
     endif
   endif
 
-  let group_start = '\%('
-  let group_end   = '\m\)'
-
-  if get({'s': 1, 'sno': 1, 'sm': 1}, a:command, 0)
-    if len(a:range) > 1
-      let start = a:range[len(a:range) - 2]
-      let end   = a:range[len(a:range) - 1]
-      if end < start
-        let temp = start
-        let start = end
-        let end = temp
-      endif
-      let start = start - 1
-      let end   = end + 1
-    elseif len(a:range) == 1
-      let start = a:range[len(a:range) - 1] - 1
-      let end   = a:range[len(a:range) - 1] + 1
-    else
-      let start = w:cur_init_pos[0] - 1
-      let end   = w:cur_init_pos[0] + 1
+  if len(a:cmdl.range.abs) > 1
+    let start = a:cmdl.range.abs[-2]
+    let end   = a:cmdl.range.abs[-1]
+    if end < start
+      let temp = start
+      let start = end
+      let end = temp
     endif
-    let range = '\m\%>'. start .'l' . '\%<' . end . 'l'
-
-    return range . group_start . option . a:pattern . group_end
+    let start = start - 1
+    let end   = end + 1
+  elseif len(a:cmdl.range.abs) == 1
+    let start = a:cmdl.range.abs[-1] - 1
+    let end   = a:cmdl.range.abs[-1] + 1
+  elseif a:type ==# 1
+    return option . a:pattern
+  elseif a:type ==# 2
+    let start = w:cur_init_pos[0] - 1
+    let end   = w:cur_init_pos[0] + 1
   endif
 
-  if a:command == 'g'
-    if len(a:range) > 1
-      let start = a:range[len(a:range) - 2]
-      let end   = a:range[len(a:range) - 1]
-      if end < start
-        let temp = start
-        let start = end
-        let end = temp
-      endif
-      let start = start - 1
-      let end   = end + 1
-    elseif len(a:range) == 1
-      let start = a:range[len(a:range) - 1] - 1
-      let end   = a:range[len(a:range) - 1] + 1
-    else
-      return option . a:pattern
-    endif
-    let range = '\m\%>'. start .'l' . '\%<' . end . 'l'
-    return range . group_start . option . a:pattern . group_end
+  " range pattern specifer
+  if a:type == 3
+    let start = a:cmdl.range.abs[-1] - 1
+    let end   = a:cmdl.range.abs[-1] + 1
   endif
 
-  return ''
+  let range = '\m\%>'. start .'l' . '\%<' . end . 'l'
+  return range . group_start . option . a:pattern . group_end
+endfunction
+
+function! s:parse_global(cmdl) abort
+  call s:trim(a:cmdl.string)
+
+  let flag            = '\v^'
+  let first_delimiter = '([[:graph:]]&[^[:alnum:]\\"|])'
+  let pattern         = '(%(\\.|.){-})'
+  let second_delimiter = '%(\1|$)'
+
+  let args = {}
+  let args.pattern = ''
+  let r = matchlist(a:cmdl.string[0], flag . first_delimiter . pattern . second_delimiter)
+  if len(r)
+    let args.pattern = s:add_flags(r[2], a:cmdl, 1)
+  endif
+  return args
+endfunction
+
+function! s:parse_substitute(cmdl) abort
+  call s:trim(a:cmdl.string)
+
+  let flag            = '\v^'
+  let first_delimiter = '([[:graph:]]&[^[:alnum:]\\"|])'
+  let pattern         = '(%(\\.|.){-})'
+  let second_delimiter = '%(\1|$)'
+
+  let args = {}
+  let args.pattern = ''
+  let r = matchlist(a:cmdl.string[0], flag . first_delimiter . pattern . second_delimiter)
+  if len(r)
+    let args.pattern = s:add_flags(r[2], a:cmdl, 2)
+  endif
+  return args
+endfunction
+
+function! s:parse_command(cmdl) abort
+  let a:cmdl.cmd.name = s:get_command(a:cmdl.string)
+  if a:cmdl.cmd.name =~# '\v^%(g%[lobal]|v%[global])$'
+    let a:cmdl.cmd.args = s:parse_global(a:cmdl)
+  elseif a:cmdl.cmd.name =~# '\v^%(s%[ubstitute]|sm%[agic]|sno%[magic])$'
+    let a:cmdl.cmd.args = s:parse_substitute(a:cmdl)
+  endif
 endfunction
 
 function! s:position(input) abort
@@ -568,20 +617,23 @@ function! s:clean() abort
   silent! unlet s:hlsearch
 endfunction
 
-function! s:evaluate_cmdl(cmdl) abort
-  let r                 = s:evaluate_range(s:parse_range([], a:cmdl))
-  let c                 = {}
-  let c.range           = {}
-  let c.range.abs       = r.range
-  let c.range.pattern   = s:get_selection_regexp(r.range)
-  let c.range.specifier = s:get_pattern_regexp('g', len(r.range) > 0 ? [r.range[len(r.range) - 1]] : [], r.pattern)
-  let c.cmd             = {}
-  let c.cmd.name        = s:get_command(a:cmdl)
-  let c.cmd.pattern     = s:get_pattern_regexp(c.cmd.name, r.range, s:get_pattern(c.cmd.name, a:cmdl))
-  return c
+function! s:evaluate_cmdl(string) abort
+  let cmdl                 = {}
+  let cmdl.string          = a:string
+  let r                    = s:evaluate_range(s:parse_range([], cmdl.string))
+  let cmdl.range           = {}
+  let cmdl.range.abs       = r.range
+  let cmdl.range.pattern   = s:get_selection_regexp(r.range)
+  let cmdl.range.specifier = s:add_flags(r.pattern, cmdl, 3)
+
+  let cmdl.cmd             = {}
+  let cmdl.cmd.args        = {}
+  call s:parse_command(cmdl)
+
+  return cmdl
 endfunction
 
-function! s:main(...) abort
+function! s:init(...) abort
   if &buftype ==# 'terminal'
     return
   endif
@@ -598,15 +650,16 @@ function! s:main(...) abort
   let cmdl = s:evaluate_cmdl([s:cmdl])
 
   " range
-  if (cmdl.cmd.name !=# '' || exists('s:show_range')) && !(get(s:, 'keep_pos') && g:traces_whole_file_range == 0)
+  if (cmdl.cmd.name !=# '' || exists('s:show_range')) &&
+        \ !(get(s:, 'keep_pos') && g:traces_whole_file_range == 0)
     call s:highlight('Visual', cmdl.range.pattern, 100)
     call s:highlight('Search', cmdl.range.specifier, 101)
     call s:position(cmdl.range.abs)
   endif
 
-  if cmdl.range.specifier == ''
-    call s:highlight('Search', cmdl.cmd.pattern, 101)
-    call s:position(cmdl.cmd.pattern)
+  if cmdl.range.specifier == '' && has_key(cmdl.cmd.args, 'pattern')
+    call s:highlight('Search', cmdl.cmd.args.pattern, 101)
+    call s:position(cmdl.cmd.args.pattern)
   endif
 
   if !has('nvim')
@@ -616,23 +669,23 @@ function! s:main(...) abort
   endif
 endfunction
 
-function! s:track(...) abort
+function! s:track_cmdl(...) abort
   let current_cmd = getcmdline()
   if s:cmdl !=# current_cmd
     let s:cmdl = current_cmd
-    call s:main()
+    call s:init()
   endif
 endfunction
 
 function! s:cmdl_enter() abort
   let s:hlsearch = &hlsearch
   let s:cmdl = getcmdline()
-  let s:track_cmd = timer_start(15,function('s:track'),{'repeat':-1})
+  let s:track_cmdl = timer_start(15,function('s:track_cmdl'),{'repeat':-1})
 endfunction
 
 function! s:cmdl_leave() abort
   unlet s:cmdl
-  call timer_stop(s:track_cmd)
+  call timer_stop(s:track_cmdl)
 endfunction
 
 augroup traces_augroup
