@@ -722,6 +722,7 @@ function! s:clean() abort
     call cursor(pos)
   endif
   silent! unlet s:show_range
+  silent! unlet s:duration
 endfunction
 
 function! s:evaluate_cmdl(string) abort
@@ -754,15 +755,18 @@ endfunction
 
 function! s:restore_marks() abort
   let bufnr = bufnr('%')
-  for mark in keys(s:buf[bufnr].marks)
-    call setpos("'" . mark, s:buf[bufnr].marks[mark])
-  endfor
+  if exists('s:buf[bufnr].marks')
+    for mark in keys(s:buf[bufnr].marks)
+      call setpos("'" . mark, s:buf[bufnr].marks[mark])
+    endfor
+  endif
 endfunction
 
 function! s:init(...) abort
   if &buftype ==# 'terminal'
     return
   endif
+  call s:save_marks()
   let s:highlighted = 0
 
   let s:win_id = win_getid()
@@ -794,11 +798,15 @@ function! s:init(...) abort
     call s:position(cmdl.range.abs)
   endif
 
-  if cmdl.cmd.name =~# '\v^%(s%[ubstitute]|sm%[agic]|sno%[magic])$'
-    call s:live_substitute(cmdl)
-  endif
-  if cmdl.cmd.name =~# '\v^%(g%[lobal])$'
-    call s:live_global(cmdl)
+  if get(s:, 'duration') < 0.2
+    let start_time = reltime()
+    if cmdl.cmd.name =~# '\v^%(s%[ubstitute]|sm%[agic]|sno%[magic])$'
+      call s:live_substitute(cmdl)
+    endif
+    if cmdl.cmd.name =~# '\v^%(g%[lobal])$'
+      call s:live_global(cmdl)
+    endif
+    let s:duration = reltimefloat(reltime(start_time))
   endif
 
   if !has('nvim')
@@ -817,7 +825,6 @@ function! s:track_cmdl(...) abort
 endfunction
 
 function! s:cmdl_enter() abort
-  call s:save_marks()
   let s:hlsearch = &hlsearch
   let s:cmdl = getcmdline()
   let s:track_cmdl = timer_start(15,function('s:track_cmdl'),{'repeat':-1})
