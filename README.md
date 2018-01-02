@@ -10,6 +10,8 @@ It also provides live preview for the following EX commands:
 :snomagic
 ```
 
+**Note:** live preview is currently Vim-only feature.
+
 ## Requirements
 Vim v8.0.1206+ or Neovim v0.2.3+
 
