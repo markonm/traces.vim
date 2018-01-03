@@ -532,7 +532,7 @@ endfunction
 
 function! s:parse_command(cmdl) abort
   let a:cmdl.cmd.name = s:get_command(a:cmdl.string)
-  if a:cmdl.cmd.name =~# '\v^%(g%[lobal]|v%[global])$'
+  if a:cmdl.cmd.name =~# '\v^%(g%[lobal]\!=|v%[global])$'
     let a:cmdl.cmd.args = s:parse_global(a:cmdl)
   elseif a:cmdl.cmd.name =~# '\v^%(s%[ubstitute]|sm%[agic]|sno%[magic])$'
     let a:cmdl.cmd.args = s:parse_substitute(a:cmdl)
@@ -803,7 +803,7 @@ function! s:init(...) abort
     if cmdl.cmd.name =~# '\v^%(s%[ubstitute]|sm%[agic]|sno%[magic])$'
       call s:live_substitute(cmdl)
     endif
-    if cmdl.cmd.name =~# '\v^%(g%[lobal]|v%[global])$'
+    if cmdl.cmd.name =~# '\v^%(g%[lobal]\!=|v%[global])$'
       call s:live_global(cmdl)
     endif
     let s:duration = reltimefloat(reltime(start_time))
