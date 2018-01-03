@@ -10,7 +10,7 @@ let g:traces_whole_file_range    = get(g:, 'traces_whole_file_range')
 let g:traces_preserve_view_state = get(g:, 'traces_preserve_view_state')
 let g:traces_substitute_preview  = get(g:, 'traces_substitute_preview', 1)
 
-let s:cmd_pattern = '\v^%('
+let s:cmd_pattern = '\v\C^%('
                 \ . '\!|'
                 \ . '\#|'
                 \ . '\<|'
