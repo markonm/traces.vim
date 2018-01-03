@@ -25,3 +25,5 @@ Vim v8.0.1206+ or Neovim v0.2.3+
 [vim-over](https://github.com/osyo-manga/vim-over)
 
 [incsearch.vim](https://github.com/haya14busa/incsearch.vim)
+
+[Neovim's inccommand](https://neovim.io/doc/user/options.html#'inccommand')
