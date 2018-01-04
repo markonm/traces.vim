@@ -681,9 +681,6 @@ function! s:clean() abort
     endif
   endif
 
-  if exists('s:buf[bufnr]')
-    unlet s:buf[bufnr]
-  endif
 
   let cur_win = win_getid()
   if exists('s:win[cur_win]') && exists('s:win[cur_win].cur_init_pos')
@@ -721,8 +718,14 @@ function! s:clean() abort
   if exists('pos')
     call cursor(pos)
   endif
+  if exists('s:buf[bufnr].view')
+    call winrestview(s:buf[bufnr].view)
+  endif
   silent! unlet s:show_range
   silent! unlet s:duration
+  if exists('s:buf[bufnr]')
+    unlet s:buf[bufnr]
+  endif
 endfunction
 
 function! s:evaluate_cmdl(string) abort
@@ -825,6 +828,11 @@ function! s:track_cmdl(...) abort
 endfunction
 
 function! s:cmdl_enter() abort
+  let bufnr = bufnr('%')
+  let s:buf[bufnr] = get(s:buf, bufnr, {})
+  if !exists('s:buf[bufnr].view')
+    let s:buf[bufnr].view = winsaveview()
+  endif
   let s:hlsearch = &hlsearch
   let s:cmdl = getcmdline()
   let s:track_cmdl = timer_start(15,function('s:track_cmdl'),{'repeat':-1})
