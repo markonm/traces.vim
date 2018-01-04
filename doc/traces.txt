@@ -45,7 +45,16 @@ Live preview is implemented for the following commands:
 ==============================================================================
 REQUIREMENTS					*traces-requirements*
 
-Vim v8.0.1206+ or Neovim v0.2.3+
+Vim v8.0.1206+
+
+or
+
+Neovim v0.2.3+
+  Note:
+  - live preview currently does not work on Neovim
+  - the plugin uses recently introduced feature CmdlineLeave,
+    please update your Neovim to latest version
+  - the plugin is not compatible with Neovim's inccommand option
 
 ==============================================================================
 SETTINGS					*traces-settings*
@@ -66,8 +75,6 @@ If value is 1, |:substitute|, |:smagic| and |:snomagic| commands
 will use live preview.
 
   Default value: 1
-
-NOTE: This feature is currently Vim-only.
 
 ==============================================================================
 BUGS						*traces-bugs*

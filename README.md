@@ -10,10 +10,15 @@ It also provides live preview for the following EX commands:
 :snomagic
 ```
 
-**Note:** live preview is currently Vim-only feature.
-
 ## Requirements
-Vim v8.0.1206+ or Neovim v0.2.3+
+### Vim v8.0.1206+
+or
+### Neovim v0.2.3+
+#### Notes for Neovim users
+
+ - live preview currently does not work on Neovim
+ - the plugin uses recently introduced feature `CmdlineLeave`, please update your Neovim to latest version
+ - the plugin is not compatible with [inccommand](https://neovim.io/doc/user/options.html#'inccommand')
 
 ## Example
 ![example](img/traces_example.gif?raw=true)
@@ -22,8 +27,6 @@ Vim v8.0.1206+ or Neovim v0.2.3+
 [Tutorial](https://gist.github.com/manasthakur/ab4cf8d32a28ea38271ac0d07373bb53)
 
 ## Inspiration
-[vim-over](https://github.com/osyo-manga/vim-over)
-
-[incsearch.vim](https://github.com/haya14busa/incsearch.vim)
-
-[Neovim's inccommand](https://neovim.io/doc/user/options.html#'inccommand')
+ - [vim-over](https://github.com/osyo-manga/vim-over)
+ - [incsearch.vim](https://github.com/haya14busa/incsearch.vim)
+ - [inccommand](https://neovim.io/doc/user/options.html#'inccommand')
