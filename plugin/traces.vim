@@ -759,6 +759,7 @@ function! s:restore_marks() abort
 endfunction
 
 function! s:init(...) abort
+  let s:nr =  bufnr('%')
   if &buftype ==# 'terminal'
     return
   endif
