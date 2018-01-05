@@ -822,12 +822,12 @@ endfunction
 
 function! s:t_start() abort
   let s:cmdl = getcmdline()
-  let s:track_cmdl = timer_start(15,function('s:track_cmdl'),{'repeat':-1})
+  let s:track_cmdl_timer = timer_start(15,function('s:track_cmdl'),{'repeat':-1})
 endfunction
 
 function! s:t_stop() abort
   unlet s:cmdl
-  call timer_stop(s:track_cmdl)
+  call timer_stop(s:track_cmdl_timer)
 endfunction
 
 augroup traces_augroup
