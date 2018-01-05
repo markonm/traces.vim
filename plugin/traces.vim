@@ -226,7 +226,7 @@ function! s:mark_to_absolute(address, last_position, range_size) abort
       if match(&cpoptions, '\*') != -1
         let result.valid = 0
       endif
-      let s:show_range = 1
+      let s:buf[s:nr].show_range = 1
 
     elseif a:address.address =~# '^''.'
       let mark_position = getpos(a:address.address)
@@ -235,14 +235,14 @@ function! s:mark_to_absolute(address, last_position, range_size) abort
       else
         let result.valid = 0
       endif
-      let s:show_range = 1
+      let s:buf[s:nr].show_range = 1
 
     elseif a:address.address =~# '^/.*[^\\]/$\|^//$'
       let pattern = a:address.address
       let pattern = substitute(pattern, '^/', '', '')
       let pattern = substitute(pattern, '/$', '', '')
       call cursor(a:last_position + 1, 1)
-      let s:show_range = 1
+      let s:buf[s:nr].show_range = 1
       silent! let query = search(pattern, 'nc')
       if query == 0
         let result.valid = 0
@@ -255,7 +255,7 @@ function! s:mark_to_absolute(address, last_position, range_size) abort
       let pattern = substitute(pattern, '?$', '', '')
       let pattern = substitute(pattern, '\\?', '?', '')
       call cursor(a:last_position, 1)
-      let s:show_range = 1
+      let s:buf[s:nr].show_range = 1
       silent! let query = search(pattern, 'nb')
       if query == 0
         let result.valid = 0
@@ -278,7 +278,7 @@ function! s:mark_to_absolute(address, last_position, range_size) abort
         call add(result.range, query)
       endif
 
-      let s:show_range = 1
+      let s:buf[s:nr].show_range = 1
       let result.regex = pattern
 
     elseif a:address.address =~# '^?.*$'
@@ -298,7 +298,7 @@ function! s:mark_to_absolute(address, last_position, range_size) abort
         call add(result.range, query)
       endif
 
-      let s:show_range = 1
+      let s:buf[s:nr].show_range = 1
       let result.regex = pattern
 
     elseif a:address.address ==  '\/'
@@ -309,7 +309,7 @@ function! s:mark_to_absolute(address, last_position, range_size) abort
         let result.valid = 0
       endif
       call add(result.range, query)
-      let s:show_range = 1
+      let s:buf[s:nr].show_range = 1
 
     elseif a:address.address ==  '\?'
       let pattern = @?
@@ -319,7 +319,7 @@ function! s:mark_to_absolute(address, last_position, range_size) abort
         let result.valid = 0
       endif
       call add(result.range, query)
-      let s:show_range = 1
+      let s:buf[s:nr].show_range = 1
     endif
 
   else
@@ -563,7 +563,7 @@ function! s:highlight(group, pattern, priority) abort
 
   let cur_win = win_getid()
   let alt_win = win_getid(winnr('#'))
-  let windows = filter(win_findbuf(bufnr('%')), {_, val -> win_id2win(val)})
+  let windows = filter(win_findbuf(s:nr), {_, val -> win_id2win(val)})
   for id in windows
     noautocmd call win_gotoid(id)
     let s:win[id] = get(s:win, id, {})
@@ -590,8 +590,10 @@ function! s:highlight(group, pattern, priority) abort
       set concealcursor=c
     endif
   endfor
-  noautocmd call win_gotoid(alt_win)
-  noautocmd call win_gotoid(cur_win)
+  if bufname('%') !=# '[Command Line]'
+    noautocmd call win_gotoid(alt_win)
+    noautocmd call win_gotoid(cur_win)
+  endif
 endfunction
 
 function! s:format_command(cmdl) abort
@@ -634,13 +636,11 @@ function! s:live_substitute(cmdl) abort
     if g:traces_substitute_preview && !has('nvim')
       let c = 'noautocmd keepj ' . s:format_command(a:cmdl)
 
-      let bufnr = bufnr('%')
-      let s:buf[bufnr] = get(s:buf, bufnr, {})
-      if !exists('s:buf[bufnr].changed')
-        let s:buf[bufnr].changed = 0
-        let s:buf[bufnr].undo_file = tempname()
+      if !exists('s:buf[s:nr].changed')
+        let s:buf[s:nr].changed = 0
+        let s:buf[s:nr].undo_file = tempname()
         if bufname('%') !=# '[Command Line]'
-          noautocmd silent execute 'wundo ' . s:buf[bufnr].undo_file
+          noautocmd silent execute 'wundo ' . s:buf[s:nr].undo_file
         endif
       endif
 
@@ -654,7 +654,7 @@ function! s:live_substitute(cmdl) abort
         call winrestview(view)
       endif
       if tick != b:changedtick
-        let s:buf[bufnr].changed = 1
+        let s:buf[s:nr].changed = 1
       endif
     endif
   endif
@@ -667,30 +667,34 @@ function! s:live_global(cmdl) abort
   endif
 endfunction
 
-function! s:clean() abort
-  let bufnr = bufnr('%')
-  if exists('s:buf[bufnr].changed')
-    if s:buf[bufnr].changed
+function! s:cmdl_enter() abort
+  let s:nr =  bufnr('%')
+  let s:buf[s:nr] = {}
+  let s:buf[s:nr].view = winsaveview()
+  let s:buf[s:nr].show_range = 0
+  let s:buf[s:nr].duration = 0
+  let s:buf[s:nr].hlsearch = &hlsearch
+endfunction
+
+function! s:cmdl_leave() abort
+  let s:nr = bufnr('%')
+  " changes
+  if exists('s:buf[s:nr].changed')
+    if s:buf[s:nr].changed
       silent undo
     endif
     if bufname('%') !=# '[Command Line]'
       try
-        silent execute 'noautocmd rundo ' . s:buf[bufnr].undo_file
+        silent execute 'noautocmd rundo ' . s:buf[s:nr].undo_file
       catch
       endtry
     endif
   endif
 
-
-  let cur_win = win_getid()
-  if exists('s:win[cur_win]') && exists('s:win[cur_win].cur_init_pos')
-    let pos = s:win[cur_win].cur_init_pos
-  endif
-
-  " clean highlight
+  " highlights
   let cur_win = win_getid()
   let alt_win = win_getid(winnr('#'))
-  let windows = filter(win_findbuf(bufnr('%')), {_, val -> win_id2win(val)})
+  let windows = filter(win_findbuf(s:nr), {_, val -> win_id2win(val)})
   for id in windows
     noautocmd call win_gotoid(id)
     if exists('s:win[id]')
@@ -709,23 +713,14 @@ function! s:clean() abort
       unlet s:win[id]
     endif
   endfor
-  noautocmd call win_gotoid(alt_win)
-  noautocmd call win_gotoid(cur_win)
+  if bufname('%') !=# '[Command Line]'
+    noautocmd call win_gotoid(alt_win)
+    noautocmd call win_gotoid(cur_win)
+  endif
 
-  let &hlsearch = s:hlsearch
-  unlet s:hlsearch
-
-  if exists('pos')
-    call cursor(pos)
-  endif
-  if exists('s:buf[bufnr].view')
-    call winrestview(s:buf[bufnr].view)
-  endif
-  silent! unlet s:show_range
-  silent! unlet s:duration
-  if exists('s:buf[bufnr]')
-    unlet s:buf[bufnr]
-  endif
+  let &hlsearch = s:buf[s:nr].hlsearch
+  call winrestview(s:buf[s:nr].view)
+  unlet s:buf[s:nr]
 endfunction
 
 function! s:evaluate_cmdl(string) abort
@@ -745,22 +740,20 @@ function! s:evaluate_cmdl(string) abort
 endfunction
 
 function! s:save_marks() abort
-  let bufnr = bufnr('%')
-  let s:buf[bufnr] = get(s:buf, bufnr, {})
-  if !exists('s:buf[bufnr].marks')
+  let s:buf[s:nr] = get(s:buf, s:nr, {})
+  if !exists('s:buf[s:nr].marks')
     let types = ['[', ']']
-    let s:buf[bufnr].marks  = {}
+    let s:buf[s:nr].marks  = {}
     for mark in types
-      let s:buf[bufnr].marks[mark] = getpos("'" . mark)
+      let s:buf[s:nr].marks[mark] = getpos("'" . mark)
     endfor
   endif
 endfunction
 
 function! s:restore_marks() abort
-  let bufnr = bufnr('%')
-  if exists('s:buf[bufnr].marks')
-    for mark in keys(s:buf[bufnr].marks)
-      call setpos("'" . mark, s:buf[bufnr].marks[mark])
+  if exists('s:buf[s:nr].marks')
+    for mark in keys(s:buf[s:nr].marks)
+      call setpos("'" . mark, s:buf[s:nr].marks[mark])
     endfor
   endif
 endfunction
@@ -781,10 +774,9 @@ function! s:init(...) abort
     let s:win[s:win_id].cur_temp_pos = [line('.'), col('.')]
   endif
 
-  let bufnr = bufnr('%')
-  if exists('s:buf[bufnr].changed') && s:buf[bufnr].changed
+  if exists('s:buf[s:nr].changed') && s:buf[s:nr].changed
     noautocmd silent undo
-    let s:buf[bufnr].changed = 0
+    let s:buf[s:nr].changed = 0
   endif
   call s:restore_marks()
 
@@ -794,14 +786,14 @@ function! s:init(...) abort
   let cmdl = s:evaluate_cmdl([s:cmdl])
 
   " range
-  if (cmdl.cmd.name !=# '' || exists('s:show_range')) &&
+  if (cmdl.cmd.name !=# '' || s:buf[s:nr].show_range) &&
         \ !(get(s:, 'keep_pos') && g:traces_whole_file_range == 0)
     call s:highlight('Visual', cmdl.range.pattern, 100)
     call s:highlight('Search', cmdl.range.specifier, 101)
     call s:position(cmdl.range.abs)
   endif
 
-  if get(s:, 'duration') < 0.2
+  if s:buf[s:nr].duration < 0.2
     let start_time = reltime()
     if cmdl.cmd.name =~# '\v^%(s%[ubstitute]|sm%[agic]|sno%[magic])$'
       call s:live_substitute(cmdl)
@@ -809,7 +801,7 @@ function! s:init(...) abort
     if cmdl.cmd.name =~# '\v^%(g%[lobal]\!=|v%[global])$'
       call s:live_global(cmdl)
     endif
-    let s:duration = reltimefloat(reltime(start_time))
+    let s:buf[s:nr].duration = reltimefloat(reltime(start_time))
   endif
 
   if !has('nvim')
@@ -827,27 +819,22 @@ function! s:track_cmdl(...) abort
   endif
 endfunction
 
-function! s:cmdl_enter() abort
-  let bufnr = bufnr('%')
-  let s:buf[bufnr] = get(s:buf, bufnr, {})
-  if !exists('s:buf[bufnr].view')
-    let s:buf[bufnr].view = winsaveview()
-  endif
-  let s:hlsearch = &hlsearch
+function! s:t_start() abort
   let s:cmdl = getcmdline()
   let s:track_cmdl = timer_start(15,function('s:track_cmdl'),{'repeat':-1})
 endfunction
 
-function! s:cmdl_leave() abort
+function! s:t_stop() abort
   unlet s:cmdl
   call timer_stop(s:track_cmdl)
 endfunction
 
 augroup traces_augroup
   autocmd!
-  autocmd CmdlineEnter,CmdwinLeave : call s:cmdl_enter()
-  autocmd CmdlineLeave,CmdwinEnter : call s:cmdl_leave()
-  autocmd CmdlineLeave : call s:clean()
+  autocmd CmdlineEnter,CmdwinLeave : call s:t_start()
+  autocmd CmdlineLeave,CmdwinEnter : call s:t_stop()
+  autocmd CmdlineEnter : call s:cmdl_enter()
+  autocmd CmdlineLeave : call s:cmdl_leave()
 augroup END
 
 let &cpo = s:cpo_save
