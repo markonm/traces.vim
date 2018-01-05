@@ -628,7 +628,7 @@ function! s:live_substitute(cmdl) abort
     call s:position(a:cmdl.cmd.args.pattern)
     if a:cmdl.cmd.args.string != '' && g:traces_substitute_preview && !has('nvim')
       call s:highlight('Search', s:str_start . '.\{-}' . s:str_end, 101)
-      call s:highlight('Conceal', '[' . s:str_start . s:str_end . ']', 102)
+      call s:highlight('Conceal', s:str_start . '\|' . s:str_end, 102)
     else
       call s:highlight('Search', a:cmdl.cmd.args.pattern, 101)
     endif
