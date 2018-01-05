@@ -634,7 +634,7 @@ function! s:live_substitute(cmdl) abort
     endif
 
     if g:traces_substitute_preview && !has('nvim')
-      let c = 'noautocmd keepj ' . s:format_command(a:cmdl)
+      let c = 'noautocmd keepjumps keeppatterns ' . s:format_command(a:cmdl)
 
       if !exists('s:buf[s:nr].changed')
         let s:buf[s:nr].changed = 0
