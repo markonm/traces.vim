@@ -560,6 +560,10 @@ function! s:highlight(group, pattern, priority) abort
   if &hlsearch && a:pattern !=# '' && a:group ==# 'Search'
     let &hlsearch = 0
   endif
+  if &scrolloff !=# 0
+    let scrolloff = &scrolloff
+    let &scrolloff = 0
+  endif
 
   let cur_win = win_getid()
   let alt_win = win_getid(winnr('#'))
@@ -593,6 +597,9 @@ function! s:highlight(group, pattern, priority) abort
   if bufname('%') !=# '[Command Line]'
     noautocmd call win_gotoid(alt_win)
     noautocmd call win_gotoid(cur_win)
+  endif
+  if exists('scrolloff')
+    let &scrolloff = scrolloff
   endif
 endfunction
 
@@ -691,7 +698,12 @@ function! s:cmdl_leave() abort
     endif
   endif
 
+
   " highlights
+  if &scrolloff !=# 0
+    let scrolloff = &scrolloff
+    let &scrolloff = 0
+  endif
   let cur_win = win_getid()
   let alt_win = win_getid(winnr('#'))
   let windows = filter(win_findbuf(s:nr), {_, val -> win_id2win(val)})
@@ -716,6 +728,9 @@ function! s:cmdl_leave() abort
   if bufname('%') !=# '[Command Line]'
     noautocmd call win_gotoid(alt_win)
     noautocmd call win_gotoid(cur_win)
+  endif
+  if exists('scrolloff')
+    let &scrolloff = scrolloff
   endif
 
   let &hlsearch = s:buf[s:nr].hlsearch
