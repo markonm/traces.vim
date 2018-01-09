@@ -558,8 +558,7 @@ endfunction
 
 function! s:highlight(group, pattern, priority) abort
   let cur_win = win_getid()
-  if exists('s:win[cur_win].hlight[a:group]') && s:win[cur_win].hlight[a:group].pattern ==# a:pattern
-        \ || a:pattern ==# ''
+  if exists('s:win[cur_win].hlight[a:group].pattern') && s:win[cur_win].hlight[a:group].pattern ==# a:pattern
     return
   endif
 
@@ -810,7 +809,9 @@ function! s:init(...) abort
   if (cmdl.cmd.name !=# '' || s:buf[s:nr].show_range) &&
         \ !(get(s:, 'keep_pos') && g:traces_whole_file_range == 0)
     call s:highlight('Visual', cmdl.range.pattern, 100)
-    call s:highlight('Search', cmdl.range.specifier, 101)
+    if cmdl.cmd.name ==# ''
+      call s:highlight('Search', cmdl.range.specifier, 101)
+    endif
     call s:position(cmdl.range.abs)
   endif
 
