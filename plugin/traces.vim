@@ -557,6 +557,12 @@ function! s:position(input) abort
 endfunction
 
 function! s:highlight(group, pattern, priority) abort
+  let cur_win = win_getid()
+  if exists('s:win[cur_win].hlight[a:group]') && s:win[cur_win].hlight[a:group].pattern ==# a:pattern
+        \ || a:pattern ==# ''
+    return
+  endif
+
   if &hlsearch && a:pattern !=# '' && a:group ==# 'Search'
     let &hlsearch = 0
   endif
@@ -565,7 +571,6 @@ function! s:highlight(group, pattern, priority) abort
     let &scrolloff = 0
   endif
 
-  let cur_win = win_getid()
   let alt_win = win_getid(winnr('#'))
   let windows = filter(win_findbuf(s:nr), {_, val -> win_id2win(val)})
   for id in windows
