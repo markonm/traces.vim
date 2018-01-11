@@ -692,7 +692,7 @@ function! s:cmdl_leave() abort
   " changes
   if exists('s:buf[s:nr].changed')
     if s:buf[s:nr].changed
-      silent undo
+      noautocmd keepjumps silent undo
     endif
     if bufname('%') !=# '[Command Line]'
       try
@@ -795,7 +795,7 @@ function! s:init(...) abort
   endif
 
   if exists('s:buf[s:nr].changed') && s:buf[s:nr].changed
-    noautocmd silent undo
+    noautocmd keepjumps silent undo
     let s:buf[s:nr].changed = 0
   endif
   call s:restore_marks()
