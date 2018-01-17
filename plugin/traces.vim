@@ -25,7 +25,7 @@ endfunction
 function! s:get_pfile() abort
   let result = split(globpath(&path, s:buf[s:nr].cfile), '\n')
   if len(result) && len(s:buf[s:nr].cfile)
-    return split(globpath(&path, s:buf[s:nr].cfile), '\n')[-1]
+    return result[-1]
   endif
   return ''
 endfunction
