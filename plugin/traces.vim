@@ -10,6 +10,41 @@ let g:traces_whole_file_range    = get(g:, 'traces_whole_file_range')
 let g:traces_preserve_view_state = get(g:, 'traces_preserve_view_state')
 let g:traces_substitute_preview  = get(g:, 'traces_substitute_preview', 1)
 
+function! s:get_cword() abort
+  return s:buf[s:nr].cword
+endfunction
+
+function! s:get_cWORD() abort
+  return s:buf[s:nr].cWORD
+endfunction
+
+function! s:get_cfile() abort
+  return s:buf[s:nr].cfile
+endfunction
+
+function! s:get_pfile() abort
+  let result = split(globpath(&path, s:buf[s:nr].cfile), '\n')
+  if len(result) && len(s:buf[s:nr].cfile)
+    return split(globpath(&path, s:buf[s:nr].cfile), '\n')[-1]
+  endif
+  return ''
+endfunction
+
+silent! cnoremap <unique> <expr> <c-r><c-w> getcmdtype() == ':' ? <sid>get_cword() : "\<c-r>\<c-w>"
+silent! cnoremap <unique> <expr> <c-r><c-a> getcmdtype() == ':' ? <sid>get_cWORD() : "\<c-r>\<c-a>"
+silent! cnoremap <unique> <expr> <c-r><c-f> getcmdtype() == ':' ? <sid>get_cfile() : "\<c-r>\<c-f>"
+silent! cnoremap <unique> <expr> <c-r><c-p> getcmdtype() == ':' ? <sid>get_pfile() : "\<c-r>\<c-p>"
+
+silent! cnoremap <unique> <expr> <c-r><c-r><c-w> getcmdtype() == ':' ? "\<c-r>\<c-r>=\<sid>get_cword()\<cr>" : "\<c-r>\<c-r>\<c-w>"
+silent! cnoremap <unique> <expr> <c-r><c-r><c-a> getcmdtype() == ':' ? "\<c-r>\<c-r>=\<sid>get_cWORD()\<cr>" : "\<c-r>\<c-r>\<c-a>"
+silent! cnoremap <unique> <expr> <c-r><c-r><c-f> getcmdtype() == ':' ? "\<c-r>\<c-r>=\<sid>get_cfile()\<cr>" : "\<c-r>\<c-r>\<c-f>"
+silent! cnoremap <unique> <expr> <c-r><c-r><c-p> getcmdtype() == ':' ? "\<c-r>\<c-r>=\<sid>get_pfile()\<cr>" : "\<c-r>\<c-r>\<c-p>"
+
+silent! cnoremap <unique> <expr> <c-r><c-o><c-w> getcmdtype() == ':' ? "\<c-r>\<c-r>=\<sid>get_cword()\<cr>" : "\<c-r>\<c-o>\<c-w>"
+silent! cnoremap <unique> <expr> <c-r><c-o><c-a> getcmdtype() == ':' ? "\<c-r>\<c-r>=\<sid>get_cWORD()\<cr>" : "\<c-r>\<c-o>\<c-a>"
+silent! cnoremap <unique> <expr> <c-r><c-o><c-f> getcmdtype() == ':' ? "\<c-r>\<c-r>=\<sid>get_cfile()\<cr>" : "\<c-r>\<c-o>\<c-f>"
+silent! cnoremap <unique> <expr> <c-r><c-o><c-p> getcmdtype() == ':' ? "\<c-r>\<c-r>=\<sid>get_pfile()\<cr>" : "\<c-r>\<c-o>\<c-p>"
+
 let s:cmd_pattern = '\v\C^%('
                 \ . '\!|'
                 \ . '\#|'
@@ -685,6 +720,9 @@ function! s:cmdl_enter() abort
   let s:buf[s:nr].show_range = 0
   let s:buf[s:nr].duration = 0
   let s:buf[s:nr].hlsearch = &hlsearch
+  let s:buf[s:nr].cword = expand('<cword>')
+  let s:buf[s:nr].cWORD = expand('<cWORD>')
+  let s:buf[s:nr].cfile = expand('<cfile>')
 endfunction
 
 function! s:cmdl_leave() abort
