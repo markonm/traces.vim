@@ -815,12 +815,6 @@ endfunction
 
 function! s:init(...) abort
   let s:nr =  bufnr('%')
-  if &buftype ==# 'terminal'
-    return
-  endif
-  if has('nvim') && &inccommand !=# ''
-    return
-  endif
   call s:save_marks()
   let s:highlighted = 0
 
@@ -890,12 +884,22 @@ function! s:t_stop() abort
   call timer_stop(s:track_cmdl_timer)
 endfunction
 
+function! s:enabled() abort
+  if &buftype ==# 'terminal'
+    return 0
+  endif
+  if has('nvim') && &inccommand !=# ''
+    return 0
+  endif
+  return 1
+endfunction
+
 augroup traces_augroup
   autocmd!
-  autocmd CmdlineEnter,CmdwinLeave : call s:t_start()
-  autocmd CmdlineLeave,CmdwinEnter : call s:t_stop()
-  autocmd CmdlineEnter : call s:cmdl_enter()
-  autocmd CmdlineLeave : call s:cmdl_leave()
+  autocmd CmdlineEnter,CmdwinLeave : if s:enabled() | call s:t_start() | endif
+  autocmd CmdlineLeave,CmdwinEnter : if s:enabled() | call s:t_stop()  | endif
+  autocmd CmdlineEnter : if s:enabled() | call s:cmdl_enter() | endif
+  autocmd CmdlineLeave : if s:enabled() | call s:cmdl_leave() | endif
 augroup END
 
 let &cpo = s:cpo_save
