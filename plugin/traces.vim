@@ -779,6 +779,12 @@ function! s:restore_marks() abort
 endfunction
 
 function! s:init(...) abort
+  if &buftype ==# 'terminal' || (has('nvim') && &inccommand !=# '')
+    if exists('s:track_cmdl_timer')
+      call timer_stop(s:track_cmdl_timer)
+    endif
+    return
+  endif
   let s:nr =  bufnr('%')
   call s:save_marks()
   let s:highlighted = 0
@@ -833,7 +839,7 @@ endfunction
 
 function! s:track_cmdl(...) abort
   let current_cmd = getcmdline()
-  if s:cmdl !=# current_cmd
+  if get(s:, 'cmdl', '') !=# current_cmd
     let s:cmdl = current_cmd
     call s:init()
   endif
@@ -845,18 +851,12 @@ function! s:t_start() abort
 endfunction
 
 function! s:t_stop() abort
-  unlet s:cmdl
-  call timer_stop(s:track_cmdl_timer)
-endfunction
-
-function! s:enabled() abort
-  if &buftype ==# 'terminal'
-    return 0
+  if exists('s:cmdl')
+    unlet s:cmdl
   endif
-  if has('nvim') && &inccommand !=# ''
-    return 0
+  if exists('s:track_cmdl_timer')
+    call timer_stop(s:track_cmdl_timer)
   endif
-  return 1
 endfunction
 
 function! s:get_cword() abort
@@ -896,10 +896,10 @@ silent! cnoremap <unique> <expr> <c-r><c-o><c-p> getcmdtype() == ':' ? "\<c-r>\<
 
 augroup traces_augroup
   autocmd!
-  autocmd CmdlineEnter,CmdwinLeave : if s:enabled() | call s:t_start() | endif
-  autocmd CmdlineLeave,CmdwinEnter : if s:enabled() | call s:t_stop()  | endif
-  autocmd CmdlineEnter : if s:enabled() | call s:cmdl_enter() | endif
-  autocmd CmdlineLeave : if s:enabled() | call s:cmdl_leave() | endif
+  autocmd CmdlineEnter,CmdwinLeave : call s:t_start()
+  autocmd CmdlineLeave,CmdwinEnter : call s:t_stop()
+  autocmd CmdlineEnter : call s:cmdl_enter()
+  autocmd CmdlineLeave : call s:cmdl_leave()
 augroup END
 
 let &cpo = s:cpo_save
