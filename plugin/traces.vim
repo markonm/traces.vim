@@ -672,14 +672,14 @@ endfunction
 function! s:live_substitute(cmdl) abort
   if has_key(a:cmdl.cmd.args, 'string')
     call s:position(a:cmdl.cmd.args.pattern)
-    if a:cmdl.cmd.args.string != '' && g:traces_substitute_preview && !has('nvim')
+    if a:cmdl.cmd.args.string != '' && g:traces_substitute_preview
       call s:highlight('Search', s:str_start . '.\{-}' . s:str_end, 101)
       call s:highlight('Conceal', s:str_start . '\|' . s:str_end, 102)
     else
       call s:highlight('Search', a:cmdl.cmd.args.pattern, 101)
     endif
 
-    if g:traces_substitute_preview && !has('nvim')
+    if g:traces_substitute_preview
       let c = 'noautocmd keepjumps keeppatterns ' . s:format_command(a:cmdl)
 
       if !exists('s:buf[s:nr].changed')
@@ -698,6 +698,7 @@ function! s:live_substitute(cmdl) abort
         silent! execute c
         let &undolevels = ul
         call winrestview(view)
+        let s:highlighted = 1
       endif
       if tick != b:changedtick
         let s:buf[s:nr].changed = 1
@@ -733,10 +734,7 @@ function! s:cmdl_leave() abort
       noautocmd keepjumps silent undo
     endif
     if bufname('%') !=# '[Command Line]'
-      try
-        silent execute 'noautocmd rundo ' . s:buf[s:nr].undo_file
-      catch
-      endtry
+      silent! execute 'noautocmd rundo ' . s:buf[s:nr].undo_file
     endif
   endif
 
