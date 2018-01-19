@@ -801,6 +801,7 @@ function! s:init(...) abort
   if exists('s:buf[s:nr].changed') && s:buf[s:nr].changed
     noautocmd keepjumps silent undo
     let s:buf[s:nr].changed = 0
+    let s:highlighted = 1
   endif
   call s:restore_marks()
 
