@@ -51,10 +51,10 @@ or
 
 Neovim v0.2.3+
   Note:
-  - live preview currently does not work on Neovim
-  - the plugin uses recently introduced feature CmdlineLeave,
+  - this plugin uses recently introduced feature CmdlineLeave,
     please update your Neovim to latest version
-  - the plugin is not compatible with Neovim's inccommand option
+  - this plugin is not compatible with Neovim's inccommand option,
+    it will disable itself if inccommand is enabled
 
 ==============================================================================
 SETTINGS					*traces-settings*
