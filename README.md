@@ -16,9 +16,9 @@ or
 ### Neovim v0.2.3+
 #### Notes for Neovim users
 
- - live preview currently does not work on Neovim
- - the plugin uses recently introduced feature `CmdlineLeave`, please update your Neovim to latest version
- - the plugin is not compatible with [inccommand](https://neovim.io/doc/user/options.html#'inccommand')
+ - this plugin uses recently introduced feature `CmdlineLeave`, please update your Neovim to latest version
+ - this plugin is not compatible with [inccommand](https://neovim.io/doc/user/options.html#'inccommand'),
+   it will disable itself if inccommand is enabled
 
 ## Example
 ![example](img/traces_example.gif?raw=true)
