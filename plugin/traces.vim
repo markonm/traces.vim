@@ -818,6 +818,9 @@ function! s:init(...) abort
   if &buftype ==# 'terminal'
     return
   endif
+  if has('nvim') && &inccommand !=# ''
+    return
+  endif
   call s:save_marks()
   let s:highlighted = 0
 
