@@ -517,15 +517,16 @@ endfunction
 
 function! s:parse_substitute(cmdl) abort
   call s:trim(a:cmdl.string)
-  let pattern = '\v^([[:graph:]]&[^[:alnum:]\\"|])(%(\\\1|\1@!&.)*)%(\1%((%(\\\1|\1@!&.)*)%(\1([&cegiInp#lr]+)=)=)=)=$'
+  let pattern = '\v^([[:graph:]]&[^[:alnum:]\\"|])(%(\\\1|\1@!&.)*)%(\1%((%(\\\1|\1@!&.)*)%((\1)([&cegiInp#lr]+)=)=)=)=$'
   let args = {}
   let r = matchlist(a:cmdl.string[0], pattern)
   if len(r)
-    let args.delimiter   = r[1]
-    let args.pattern_org = r[2]
-    let args.pattern     = s:add_flags(r[2], a:cmdl, 2)
-    let args.string      = r[3]
-    let args.flags       = r[4]
+    let args.delimiter      = r[1]
+    let args.pattern_org    = r[2]
+    let args.pattern        = s:add_flags(r[2], a:cmdl, 2)
+    let args.string         = r[3]
+    let args.last_delimiter = r[4]
+    let args.flags          = r[5]
   endif
   return args
 endfunction
@@ -641,7 +642,7 @@ endfunction
 function! s:live_substitute(cmdl) abort
   if has_key(a:cmdl.cmd.args, 'string')
     call s:position(a:cmdl.cmd.args.pattern)
-    if a:cmdl.cmd.args.string != '' && g:traces_substitute_preview
+    if (a:cmdl.cmd.args.string != '' || a:cmdl.cmd.args.last_delimiter !=# '') && g:traces_substitute_preview
       call s:highlight('Search', s:str_start . '.\{-}' . s:str_end, 101)
       call s:highlight('Conceal', s:str_start . '\|' . s:str_end, 102)
     else
@@ -660,7 +661,7 @@ function! s:live_substitute(cmdl) abort
       endif
 
       let tick = b:changedtick
-      if a:cmdl.cmd.args.string != ''
+      if a:cmdl.cmd.args.string != '' || a:cmdl.cmd.args.last_delimiter !=# ''
         let view = winsaveview()
         let ul = &undolevels
         let &undolevels = 0
