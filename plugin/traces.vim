@@ -795,8 +795,8 @@ function! s:init(...) abort
   " save cursor positions
   if !exists('s:win[s:win_id].cur_init_pos')
     let s:win[s:win_id].cur_init_pos = [line('.'), col('.')]
-    let s:win[s:win_id].cur_temp_pos = [line('.'), col('.')]
   endif
+  let s:win[s:win_id].cur_temp_pos = deepcopy(s:win[s:win_id].cur_init_pos)
 
   if exists('s:buf[s:nr].changed') && s:buf[s:nr].changed
     noautocmd keepjumps silent undo
@@ -807,6 +807,9 @@ function! s:init(...) abort
 
   " restore initial cursor position
   call cursor(s:win[s:win_id].cur_init_pos)
+  if s:buf[s:nr].view !=# winsaveview() && !wildmenumode()
+    call winrestview(s:buf[s:nr].view)
+  endif
 
   let cmdl = s:evaluate_cmdl([s:cmdl])
 
