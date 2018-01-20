@@ -561,6 +561,9 @@ function! s:highlight(group, pattern, priority) abort
   if exists('s:win[cur_win].hlight[a:group].pattern') && s:win[cur_win].hlight[a:group].pattern ==# a:pattern
     return
   endif
+  if !exists('s:win[cur_win].hlight[a:group].pattern') && a:pattern ==# ''
+    return
+  endif
 
   if &hlsearch && a:pattern !=# '' && a:group ==# 'Search'
     let &hlsearch = 0
@@ -582,6 +585,7 @@ function! s:highlight(group, pattern, priority) abort
       let x.pattern = a:pattern
       silent! let x.index = matchadd(a:group, a:pattern, a:priority)
       let s:win[id].hlight[a:group] = x
+      let s:highlighted = 1
     elseif s:win[id].hlight[a:group].pattern !=# a:pattern
       if s:win[id].hlight[a:group].index !=# -1
         call matchdelete(s:win[id].hlight[a:group].index)
@@ -832,6 +836,14 @@ function! s:init(...) abort
       call s:live_global(cmdl)
     endif
     let s:buf[s:nr].duration = reltimefloat(reltime(start_time))
+  endif
+
+  " clean unnecessary highlighting
+  if cmdl.range.pattern ==# ''
+    call s:highlight('Visual', '', 100)
+  endif
+  if cmdl.cmd.name ==# '' && cmdl.range.specifier ==# ''
+    call s:highlight('Search', '', 101)
   endif
 
   if !has('nvim')
