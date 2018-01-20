@@ -506,27 +506,27 @@ endfunction
 
 function! s:parse_global(cmdl) abort
   call s:trim(a:cmdl.string)
-  let pattern = '\v^([[:graph:]]&[^[:alnum:]\\"|])(%(\\.|.){-})%(\1|$)'
+  let pattern = '\v^([[:graph:]]&[^[:alnum:]\\"|])(%(\\.|.){-})%((\1)|$)'
   let args = {}
   let r = matchlist(a:cmdl.string[0], pattern)
   if len(r)
-    let args.pattern = s:add_flags(r[2], a:cmdl, 1)
+    let args.pattern = s:add_flags((r[2] ==# '' && r[3] !=# '') ? @/ : r[2], a:cmdl, 1)
   endif
   return args
 endfunction
 
 function! s:parse_substitute(cmdl) abort
   call s:trim(a:cmdl.string)
-  let pattern = '\v^([[:graph:]]&[^[:alnum:]\\"|])(%(\\\1|\1@!&.)*)%(\1%((%(\\\1|\1@!&.)*)%((\1)([&cegiInp#lr]+)=)=)=)=$'
+  let pattern = '\v^([[:graph:]]&[^[:alnum:]\\"|])(%(\\\1|\1@!&.)*)%((\1)%((%(\\\1|\1@!&.)*)%((\1)([&cegiInp#lr]+)=)=)=)=$'
   let args = {}
   let r = matchlist(a:cmdl.string[0], pattern)
   if len(r)
-    let args.delimiter      = r[1]
-    let args.pattern_org    = r[2]
-    let args.pattern        = s:add_flags(r[2], a:cmdl, 2)
-    let args.string         = r[3]
-    let args.last_delimiter = r[4]
-    let args.flags          = r[5]
+    let args.delimiter        = r[1]
+    let args.pattern_org      = r[2]
+    let args.pattern          = s:add_flags((r[2] ==# '' && r[3] !=# '') ? @/ : r[2], a:cmdl, 2)
+    let args.string           = r[4]
+    let args.last_delimiter   = r[5]
+    let args.flags            = r[6]
   endif
   return args
 endfunction
