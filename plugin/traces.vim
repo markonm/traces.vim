@@ -201,7 +201,7 @@ function! s:mark_to_absolute(address, last_position, range_size) abort
   let result.valid = 1
   let result.skip  = 0
   let result.regex = ''
-  let s:keep_pos  = 0
+  let s:entire_file  = 0
 
   if has_key(a:address, 'address')
 
@@ -218,7 +218,7 @@ function! s:mark_to_absolute(address, last_position, range_size) abort
     elseif a:address.address ==  '%'
       call add(result.range, 1)
       call add(result.range, getpos('$')[1])
-      let s:keep_pos = 1
+      let s:entire_file = 1
 
     elseif a:address.address ==  '*'
       call add(result.range, getpos('''<')[1])
@@ -348,6 +348,7 @@ function! s:evaluate_range(range_structure) abort
   let valid = 1
   let last_position = getpos('.')[1]
   let result.pattern = ''
+  let skip = 0
 
   for specifier in a:range_structure
     let entry = {}
@@ -372,6 +373,10 @@ function! s:evaluate_range(range_structure) abort
         endif
         if len(query.range) == 2
           let entire_file = 1
+          if len(specifier.addresses) > 1
+            let skip = 1
+          endif
+          break
         endif
       else
         let valid = 0
@@ -392,6 +397,9 @@ function! s:evaluate_range(range_structure) abort
       if last_delimiter == ';'
         let last_position = result.range[len(result.range) - 1]
       endif
+    endif
+    if skip
+      break
     endif
   endfor
 
@@ -819,8 +827,7 @@ function! s:init(...) abort
   let cmdl = s:evaluate_cmdl([s:cmdl])
 
   " range
-  if (cmdl.cmd.name !=# '' || s:buf[s:nr].show_range) &&
-        \ !(get(s:, 'keep_pos') && g:traces_whole_file_range == 0)
+  if (cmdl.cmd.name !=# '' || s:buf[s:nr].show_range) && !get(s:, 'entire_file')
     call s:highlight('Visual', cmdl.range.pattern, 100)
     if cmdl.cmd.name ==# ''
       call s:highlight('Search', cmdl.range.specifier, 101)
@@ -840,7 +847,7 @@ function! s:init(...) abort
   endif
 
   " clean unnecessary highlighting
-  if cmdl.range.pattern ==# ''
+  if cmdl.range.pattern ==# '' || get(s:, 'entire_file')
     call s:highlight('Visual', '', 100)
   endif
   if cmdl.cmd.name ==# '' && cmdl.range.specifier ==# ''
