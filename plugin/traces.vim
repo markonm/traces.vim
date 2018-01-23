@@ -264,6 +264,9 @@ function! s:spec_to_abs(address, last_position, range_size) abort
       let pattern = substitute(pattern, '^/', '', '')
       call cursor(a:last_position + 1, 1)
       silent! let query = search(pattern, 'nc')
+      if query == 0
+        let result.valid = 0
+      endif
 
       " stay at the same position if pattern is not provided
       if !len(pattern)
@@ -284,6 +287,9 @@ function! s:spec_to_abs(address, last_position, range_size) abort
       let pattern = substitute(pattern, '\\?', '?', '')
       call cursor(a:last_position, 1)
       silent! let query = search(pattern, 'nb')
+      if query == 0
+        let result.valid = 0
+      endif
 
       " stay at the same position if pattern is not provided
       if !len(pattern)
