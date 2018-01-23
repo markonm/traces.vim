@@ -234,7 +234,7 @@ function! s:spec_to_abs(address, last_position, range_size) abort
       endif
       let s:buf[s:nr].show_range = 1
 
-    elseif a:address.address =~# '\v^\/%(\\.|.){-}\\@<!\/$'
+    elseif a:address.address =~# '\v^\/%(\\.|.){-}%([^\\]\\)@<!\/$'
       let pattern = a:address.address
       let pattern = substitute(pattern, '^/', '', '')
       let pattern = substitute(pattern, '/$', '', '')
@@ -246,7 +246,7 @@ function! s:spec_to_abs(address, last_position, range_size) abort
       endif
       call add(result.range, query)
 
-    elseif a:address.address =~# '\v^\?%(\\.|.){-}\\@<!\?$'
+    elseif a:address.address =~# '\v^\?%(\\.|.){-}%([^\\]\\)@<!\?$'
       let pattern = a:address.address
       let pattern = substitute(pattern, '^?', '', '')
       let pattern = substitute(pattern, '?$', '', '')
