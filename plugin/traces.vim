@@ -548,23 +548,17 @@ function! s:parse_command(cmdl) abort
 endfunction
 
 function! s:position(input) abort
-  let cur_temp_pos = deepcopy(s:buf[s:nr].cur_init_pos)
-
-  if type(a:input) == 1 && !empty(a:input)
-    silent! let position = search(a:input, 'c')
-    if position != 0
-      let cur_temp_pos =  [position, 1]
+  if !g:traces_preserve_view_state
+    if type(a:input) == 1 && !empty(a:input)
+      silent! let position = search(a:input, 'cn')
+      if position != 0
+        let cur_temp_pos =  [position, 1]
+        let s:moved = 1
+        call cursor(cur_temp_pos)
+      endif
+    elseif type(a:input) == 3 && !empty(a:input)
+      let cur_temp_pos =  [a:input[-1], 1]
       let s:moved = 1
-    endif
-  elseif type(a:input) == 3 && !empty(a:input)
-    let cur_temp_pos =  [a:input[-1], 1]
-    let s:moved = 1
-  endif
-
-  if s:moved
-    if g:traces_preserve_view_state
-      call cursor(s:buf[s:nr].cur_init_pos)
-    else
       call cursor(cur_temp_pos)
     endif
   endif
@@ -863,7 +857,7 @@ function! s:init(...) abort
   endif
 
   " move to starting position if necessary
-  if !s:moved && winsaveview() != s:buf[s:nr].view
+  if !s:moved && winsaveview() != s:buf[s:nr].view && !wildmenumode()
     call winrestview(s:buf[s:nr].view)
   endif
 
