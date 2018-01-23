@@ -651,13 +651,14 @@ endfunction
 function! s:live_substitute(cmdl) abort
   if has_key(a:cmdl.cmd.args, 'string')
     call s:position(a:cmdl.cmd.args.pattern)
-    if (!empty(a:cmdl.cmd.args.string) || !empty(a:cmdl.cmd.args.last_delimiter)) && g:traces_substitute_preview
+    if (!empty(a:cmdl.cmd.args.string) || !empty(a:cmdl.cmd.args.last_delimiter))
+       \  && g:traces_substitute_preview  && !&readonly
       call s:highlight('Search', s:str_start . '.\{-}' . s:str_end, 101)
     else
       call s:highlight('Search', a:cmdl.cmd.args.pattern, 101)
     endif
 
-    if g:traces_substitute_preview
+    if g:traces_substitute_preview && !&readonly
       let c = 'noautocmd keepjumps keeppatterns ' . s:format_command(a:cmdl)
 
       if !exists('s:buf[s:nr].changed')
