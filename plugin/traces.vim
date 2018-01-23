@@ -452,8 +452,6 @@ function! s:add_flags(pattern, cmdl, type) abort
   endif
 
   let option = ''
-  let group_start = '\%('
-  let group_end   = '\m\)'
 
   " magic
   if has_key(a:cmdl, 'cmd') && a:cmdl.cmd.name =~# '\v^sm%[agic]$'
@@ -506,7 +504,7 @@ function! s:add_flags(pattern, cmdl, type) abort
   endif
 
   let range = '\m\%>'. start .'l' . '\%<' . end . 'l'
-  return range . group_start . option . a:pattern . group_end
+  return range . option . a:pattern
 endfunction
 
 function! s:parse_global(cmdl) abort
