@@ -415,8 +415,8 @@ function! s:get_selection_regexp(range) abort
   if len(a:range) == 1
     let pattern = '\m\%' . a:range[0] . 'l'
   else
-    let pattern_start = a:range[len(a:range) - 2]
-    let pattern_end = a:range[len(a:range) - 1]
+    let pattern_start = a:range[-2]
+    let pattern_end = a:range[-1]
     if pattern_end < pattern_start
       let temp = pattern_start
       let pattern_start = pattern_end
