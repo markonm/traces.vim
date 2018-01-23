@@ -1,4 +1,4 @@
-if !exists('##CmdlineEnter') || exists("g:loaded_traces_plugin") || &cp
+if !exists('##CmdlineEnter') || exists('g:loaded_traces_plugin') || &cp
   finish
 endif
 let g:loaded_traces_plugin = 1
@@ -8,6 +8,7 @@ set cpo-=C
 
 let g:traces_preserve_view_state = get(g:, 'traces_preserve_view_state')
 let g:traces_substitute_preview  = get(g:, 'traces_substitute_preview', 1)
+let s:traces_delay = 0.4
 
 let s:cmd_pattern = '\v\C^%('
                 \ . '\!|'
@@ -108,7 +109,7 @@ function! s:parse_range(range, cmdl) abort
     let entry = {}
     " regexp for pattern specifier
     let pattern = '/\%(\\/\|[^/]\)*/\=\|?\%(\\?\|[^?]\)*?\='
-    if len(specifier.addresses) == 0
+    if !len(specifier.addresses)
       " \& is not supported
       let address = matchstrpos(a:cmdl[0],
             \ '\m^\%(\d\+\|\.\|\$\|%\|\*\|''.\|'. pattern . '\|\\/\|\\?\)')
@@ -150,8 +151,7 @@ function! s:parse_range(range, cmdl) abort
 
   " add when addresses or delimiter are found or when one specifier is
   " already known
-  if len(specifier.addresses) > 0  || delimiter[2] != -1
-        \ || len(a:range) > 0
+  if len(specifier.addresses) || delimiter[2] != -1 || len(a:range)
     call add(a:range, specifier)
   endif
 
@@ -170,7 +170,7 @@ function! s:offset_to_num(string) abort
   let pattern = '\m^\%(+\d\+\|-\d\+\|\d\+\|-\+\ze-\d\|+\+\ze+\d\|-\+\|+\+\)'
 
   let while_limit = 0
-  while input[0] !=# ''
+  while !empty(input[0])
     call s:trim(input)
     let part = matchstrpos(input[0], pattern)
     call s:trim(input, part[2])
@@ -194,7 +194,7 @@ function! s:offset_to_num(string) abort
   return offset
 endfunction
 
-function! s:mark_to_absolute(address, last_position, range_size) abort
+function! s:spec_to_abs(address, last_position, range_size) abort
   let result = {}
   let result.range = []
   let result.valid = 1
@@ -208,18 +208,18 @@ function! s:mark_to_absolute(address, last_position, range_size) abort
       let lnum = str2nr(a:address.address)
       call add(result.range, lnum)
 
-    elseif a:address.address ==  '.'
+    elseif a:address.address ==# '.'
       call add(result.range, a:last_position)
 
-    elseif a:address.address ==  '$'
+    elseif a:address.address ==# '$'
       call add(result.range, getpos('$')[1])
 
-    elseif a:address.address ==  '%'
+    elseif a:address.address ==# '%'
       call add(result.range, 1)
       call add(result.range, getpos('$')[1])
       let s:entire_file = 1
 
-    elseif a:address.address ==  '*'
+    elseif a:address.address ==# '*'
       call add(result.range, getpos('''<')[1])
       call add(result.range, getpos('''>')[1])
       if match(&cpoptions, '\*') != -1
@@ -229,7 +229,7 @@ function! s:mark_to_absolute(address, last_position, range_size) abort
 
     elseif a:address.address =~# '^''.'
       let mark_position = getpos(a:address.address)
-      if !mark_position[0]
+      if mark_position[1]
         call add(result.range, mark_position[1])
       else
         let result.valid = 0
@@ -268,7 +268,7 @@ function! s:mark_to_absolute(address, last_position, range_size) abort
       silent! let query = search(pattern, 'nc')
 
       " stay at the same position if pattern is not provided
-      if len(pattern) == 0
+      if !len(pattern)
         if a:range_size == 0
           let result.skip = 1
         endif
@@ -288,7 +288,7 @@ function! s:mark_to_absolute(address, last_position, range_size) abort
       silent! let query = search(pattern, 'nb')
 
       " stay at the same position if pattern is not provided
-      if len(pattern) == 0
+      if !len(pattern)
         if a:range_size == 0
           let result.skip = 1
         endif
@@ -300,7 +300,7 @@ function! s:mark_to_absolute(address, last_position, range_size) abort
       let s:buf[s:nr].show_range = 1
       let result.regex = pattern
 
-    elseif a:address.address ==  '\/'
+    elseif a:address.address ==# '\/'
       let pattern = @/
       call cursor(a:last_position + 1, 1)
       silent! let query = search(pattern, 'nc')
@@ -310,7 +310,7 @@ function! s:mark_to_absolute(address, last_position, range_size) abort
       call add(result.range, query)
       let s:buf[s:nr].show_range = 1
 
-    elseif a:address.address ==  '\?'
+    elseif a:address.address ==# '\?'
       let pattern = @?
       call cursor(a:last_position, 1)
       silent! let query = search(pattern, 'nb')
@@ -326,26 +326,30 @@ function! s:mark_to_absolute(address, last_position, range_size) abort
   endif
 
   " add offset
-  if len(result.range) > 0 && !has_key(a:address, 'address')
+  if len(result.range) && !has_key(a:address, 'address')
     let result.range[0] = result.range[0] + s:offset_to_num(a:address.offset)
-  elseif len(result.range) > 0 && has_key(a:address, 'offset') &&
+  elseif len(result.range) && has_key(a:address, 'offset') &&
      \ a:address.address !~# '%'
     let result.range[0] = result.range[0] + s:offset_to_num(a:address.offset)
   endif
 
   " treat specifier 0 as 1
-  if exists('lnum') && result.range[0] == 0
+  if exists('result.range[0]') && result.range[0] == 0
     let result.range[0] = 1
   endif
 
+  if result.valid && (result.range[0] > getpos('$')[1] || result.range[0] < 0)
+    let result.valid = 0
+  endif
   return result
 endfunction
 
 function! s:evaluate_range(range_structure) abort
   let last_delimiter = ''
   let result = { 'range': []}
-  let valid = 1
+  let s:range_valid = 1
   let last_position = getpos('.')[1]
+  let last_position = s:buf[s:nr].cur_init_pos[0]
   let result.pattern = ''
   let skip = 0
 
@@ -361,10 +365,10 @@ function! s:evaluate_range(range_structure) abort
     endif
 
     for address in specifier.addresses
-      let query = s:mark_to_absolute(address,
+      let query = s:spec_to_abs(address,
             \ use_temp_position ? temp_position : last_position, len(result.range))
       if query.valid
-        let temp_position = query.range[len(query.range) - 1]
+        let temp_position = query.range[-1]
         let use_temp_position = 1
         if !query.skip
           call extend(specifier_result, query.range)
@@ -378,7 +382,7 @@ function! s:evaluate_range(range_structure) abort
           break
         endif
       else
-        let valid = 0
+        let s:range_valid = 0
       endif
     endfor
 
@@ -386,15 +390,14 @@ function! s:evaluate_range(range_structure) abort
       let last_delimiter = specifier.delimiter
     endif
 
-    if len(specifier_result) != 0
+    if len(specifier_result)
       if entire_file
         call extend(result.range, specifier_result)
       elseif len(specifier_result)
-        call add(result.range, specifier_result[len(specifier_result) - 1])
+        call add(result.range, specifier_result[-1])
       endif
-
-      if last_delimiter == ';'
-        let last_position = result.range[len(result.range) - 1]
+      if last_delimiter ==# ';'
+        let last_position = result.range[-1]
       endif
     endif
     if skip
@@ -402,41 +405,35 @@ function! s:evaluate_range(range_structure) abort
     endif
   endfor
 
-  return valid ? result : { 'range' : [], 'pattern' : '' }
+  return s:range_valid ? result : { 'range' : [], 'pattern' : '' }
 endfunction
 
 function! s:get_selection_regexp(range) abort
-  " don't draw selection if range is whole file or one line
-  if len(a:range) == 0
+  if empty(a:range) || a:range[-1] > line('$') || !s:range_valid
     return ''
   endif
-
-  if a:range[len(a:range) - 1] > line('$') || a:range[len(a:range) - 2] > line('$')
-    return ''
-  endif
-
   if len(a:range) == 1
     let pattern = '\m\%' . a:range[0] . 'l'
   else
     let pattern_start = a:range[len(a:range) - 2]
     let pattern_end = a:range[len(a:range) - 1]
-
     if pattern_end < pattern_start
       let temp = pattern_start
       let pattern_start = pattern_end
       let pattern_end = temp
     endif
-
     let pattern_start -= 1
     let pattern_end += 1
     let pattern = '\m\%<' . pattern_end . 'l\%>' . pattern_start . 'l'
   endif
-
   return pattern
 endfunction
 
 function! s:get_command(cmdl) abort
   call s:trim(a:cmdl)
+  if !s:range_valid
+    return ''
+  endif
   let result = matchstrpos(a:cmdl[0], s:cmd_pattern)
   if result[2] != -1
     call s:trim(a:cmdl, result[2])
@@ -447,6 +444,9 @@ endfunction
 
 function! s:add_flags(pattern, cmdl, type) abort
   if !len(a:pattern)
+    return ''
+  endif
+  if !s:range_valid
     return ''
   endif
   if !len(substitute(a:pattern, '\\[cCvVmM]', '', 'g'))
@@ -497,8 +497,8 @@ function! s:add_flags(pattern, cmdl, type) abort
   elseif a:type ==# 1
     return option . a:pattern
   elseif a:type ==# 2
-    let start = s:win[s:win_id].cur_init_pos[0] - 1
-    let end   = s:win[s:win_id].cur_init_pos[0] + 1
+    let start = s:buf[s:nr].cur_init_pos[0] - 1
+    let end   = s:buf[s:nr].cur_init_pos[0] + 1
   endif
 
   " range pattern specifer
@@ -517,7 +517,7 @@ function! s:parse_global(cmdl) abort
   let args = {}
   let r = matchlist(a:cmdl.string[0], pattern)
   if len(r)
-    let args.pattern = s:add_flags((r[2] ==# '' && r[3] !=# '') ? @/ : r[2], a:cmdl, 1)
+    let args.pattern = s:add_flags((empty(r[2]) && !empty(r[3])) ? @/ : r[2], a:cmdl, 1)
   endif
   return args
 endfunction
@@ -530,7 +530,7 @@ function! s:parse_substitute(cmdl) abort
   if len(r)
     let args.delimiter        = r[1]
     let args.pattern_org      = r[2]
-    let args.pattern          = s:add_flags((r[2] ==# '' && r[3] !=# '') ? @/ : r[2], a:cmdl, 2)
+    let args.pattern          = s:add_flags((empty(r[2]) && !empty(r[3])) ? @/ : r[2], a:cmdl, 2)
     let args.string           = r[4]
     let args.last_delimiter   = r[5]
     let args.flags            = r[6]
@@ -548,19 +548,25 @@ function! s:parse_command(cmdl) abort
 endfunction
 
 function! s:position(input) abort
-  if type(a:input) == 1 && a:input != ''
+  let cur_temp_pos = deepcopy(s:buf[s:nr].cur_init_pos)
+
+  if type(a:input) == 1 && !empty(a:input)
     silent! let position = search(a:input, 'c')
     if position != 0
-      let s:win[s:win_id].cur_temp_pos =  [position, 1]
+      let cur_temp_pos =  [position, 1]
+      let s:moved = 1
     endif
-  elseif type(a:input) == 3 && len(a:input) > 0
-    let s:win[s:win_id].cur_temp_pos =  [a:input[len(a:input) - 1], 1]
+  elseif type(a:input) == 3 && !empty(a:input)
+    let cur_temp_pos =  [a:input[-1], 1]
+    let s:moved = 1
   endif
 
-  if g:traces_preserve_view_state
-    call cursor(s:win[s:win_id].cur_init_pos)
-  else
-    call cursor(s:win[s:win_id].cur_temp_pos)
+  if s:moved
+    if g:traces_preserve_view_state
+      call cursor(s:buf[s:nr].cur_init_pos)
+    else
+      call cursor(cur_temp_pos)
+    endif
   endif
 endfunction
 
@@ -569,11 +575,11 @@ function! s:highlight(group, pattern, priority) abort
   if exists('s:win[cur_win].hlight[a:group].pattern') && s:win[cur_win].hlight[a:group].pattern ==# a:pattern
     return
   endif
-  if !exists('s:win[cur_win].hlight[a:group].pattern') && a:pattern ==# ''
+  if !exists('s:win[cur_win].hlight[a:group].pattern') && empty(a:pattern)
     return
   endif
 
-  if &hlsearch && a:pattern !=# '' && a:group ==# 'Search'
+  if &hlsearch && !empty(a:pattern) && a:group ==# 'Search'
     let &hlsearch = 0
   endif
   if &scrolloff !=# 0
@@ -602,7 +608,7 @@ function! s:highlight(group, pattern, priority) abort
       silent! let s:win[id].hlight[a:group].index = matchadd(a:group, a:pattern, a:priority)
       let s:highlighted = 1
     endif
-    if &conceallevel !=# 2 || &concealcursor !=# 'c'
+    if (&conceallevel !=# 2 || &concealcursor !=# 'c') && a:group ==# 'Conceal'
       let s:win[id].options = {}
       let s:win[id].options.conceallevel = &conceallevel
       let s:win[id].options.concealcursor = &concealcursor
@@ -622,7 +628,7 @@ endfunction
 function! s:format_command(cmdl) abort
   let c = ''
   if len(a:cmdl.range.abs) == 0
-    let c .= s:win[s:win_id].cur_init_pos[0]
+    let c .= s:buf[s:nr].cur_init_pos[0]
   elseif len(a:cmdl.range.abs) == 1
     let c .= a:cmdl.range.abs[0]
   else
@@ -634,7 +640,7 @@ function! s:format_command(cmdl) abort
   let c .= a:cmdl.cmd.args.delimiter
   let c .= a:cmdl.cmd.args.pattern_org
   let c .= a:cmdl.cmd.args.delimiter
-  if a:cmdl.cmd.args.string =~ '^\\='
+  if a:cmdl.cmd.args.string =~# '^\\='
     let c .= '\=' . "'" . s:str_start . "'" . '
           \ . (' . substitute(a:cmdl.cmd.args.string, '^\\=', '', '') . ')
           \ . ' . "'" . s:str_end . "'"
@@ -649,9 +655,8 @@ endfunction
 function! s:live_substitute(cmdl) abort
   if has_key(a:cmdl.cmd.args, 'string')
     call s:position(a:cmdl.cmd.args.pattern)
-    if (a:cmdl.cmd.args.string != '' || a:cmdl.cmd.args.last_delimiter !=# '') && g:traces_substitute_preview
+    if (!empty(a:cmdl.cmd.args.string) || !empty(a:cmdl.cmd.args.last_delimiter)) && g:traces_substitute_preview
       call s:highlight('Search', s:str_start . '.\{-}' . s:str_end, 101)
-      call s:highlight('Conceal', s:str_start . '\|' . s:str_end, 102)
     else
       call s:highlight('Search', a:cmdl.cmd.args.pattern, 101)
     endif
@@ -668,7 +673,8 @@ function! s:live_substitute(cmdl) abort
       endif
 
       let tick = b:changedtick
-      if a:cmdl.cmd.args.string != '' || a:cmdl.cmd.args.last_delimiter !=# ''
+      if !empty(a:cmdl.cmd.args.string) || !empty(a:cmdl.cmd.args.last_delimiter)
+        call s:highlight('Conceal', s:str_start . '\|' . s:str_end, 102)
         let view = winsaveview()
         let ul = &undolevels
         let &undolevels = 0
@@ -685,14 +691,13 @@ function! s:live_substitute(cmdl) abort
 endfunction
 
 function! s:live_global(cmdl) abort
-  if a:cmdl.range.specifier == '' && has_key(a:cmdl.cmd.args, 'pattern')
+  if empty(a:cmdl.range.specifier) && has_key(a:cmdl.cmd.args, 'pattern')
     call s:highlight('Search', a:cmdl.cmd.args.pattern, 101)
     call s:position(a:cmdl.cmd.args.pattern)
   endif
 endfunction
 
 function! s:cmdl_enter() abort
-  let s:nr =  bufnr('%')
   let s:buf[s:nr] = {}
   let s:buf[s:nr].view = winsaveview()
   let s:buf[s:nr].show_range = 0
@@ -701,57 +706,68 @@ function! s:cmdl_enter() abort
   let s:buf[s:nr].cword = expand('<cword>')
   let s:buf[s:nr].cWORD = expand('<cWORD>')
   let s:buf[s:nr].cfile = expand('<cfile>')
+  let s:buf[s:nr].cur_init_pos = [line('.'), col('.')]
+  call s:save_marks()
 endfunction
 
 function! s:cmdl_leave() abort
   let s:nr = bufnr('%')
+  if !exists('s:buf[s:nr]')
+    return
+  endif
   " changes
   if exists('s:buf[s:nr].changed')
     if s:buf[s:nr].changed
       noautocmd keepjumps silent undo
+      call s:restore_marks()
     endif
     if bufname('%') !=# '[Command Line]'
       silent! execute 'noautocmd rundo ' . s:buf[s:nr].undo_file
     endif
   endif
 
-
   " highlights
-  if &scrolloff !=# 0
-    let scrolloff = &scrolloff
-    let &scrolloff = 0
-  endif
-  let cur_win = win_getid()
-  let alt_win = win_getid(winnr('#'))
-  let windows = filter(win_findbuf(s:nr), {_, val -> win_id2win(val)})
-  for id in windows
-    noautocmd call win_gotoid(id)
-    if exists('s:win[id]')
-      if exists('s:win[id].hlight')
-        for group in keys(s:win[id].hlight)
-          if s:win[id].hlight[group].index !=# - 1
-            call matchdelete(s:win[id].hlight[group].index)
-          endif
-        endfor
-      endif
-      if exists('s:win[id].options')
-        for option in keys(s:win[id].options)
-          execute 'set ' . option . '=' . s:win[id].options[option]
-        endfor
-      endif
-      unlet s:win[id]
+  if exists('s:win[win_getid()]')
+    if &scrolloff !=# 0
+      let scrolloff = &scrolloff
+      let &scrolloff = 0
     endif
-  endfor
-  if bufname('%') !=# '[Command Line]'
-    noautocmd call win_gotoid(alt_win)
-    noautocmd call win_gotoid(cur_win)
-  endif
-  if exists('scrolloff')
-    let &scrolloff = scrolloff
+    let cur_win = win_getid()
+    let alt_win = win_getid(winnr('#'))
+    let windows = filter(win_findbuf(s:nr), {_, val -> win_id2win(val)})
+    for id in windows
+      noautocmd call win_gotoid(id)
+      if exists('s:win[id]')
+        if exists('s:win[id].hlight')
+          for group in keys(s:win[id].hlight)
+            if s:win[id].hlight[group].index !=# - 1
+              call matchdelete(s:win[id].hlight[group].index)
+            endif
+          endfor
+        endif
+        if exists('s:win[id].options')
+          for option in keys(s:win[id].options)
+            execute 'set ' . option . '=' . s:win[id].options[option]
+          endfor
+        endif
+        unlet s:win[id]
+      endif
+    endfor
+    if bufname('%') !=# '[Command Line]'
+      noautocmd call win_gotoid(alt_win)
+      noautocmd call win_gotoid(cur_win)
+    endif
+    if exists('scrolloff')
+      let &scrolloff = scrolloff
+    endif
   endif
 
-  let &hlsearch = s:buf[s:nr].hlsearch
-  call winrestview(s:buf[s:nr].view)
+  if &hlsearch !=# s:buf[s:nr].hlsearch
+    let &hlsearch = s:buf[s:nr].hlsearch
+  endif
+  if winsaveview() !=# s:buf[s:nr].view
+    call winrestview(s:buf[s:nr].view)
+  endif
   unlet s:buf[s:nr]
 endfunction
 
@@ -772,7 +788,6 @@ function! s:evaluate_cmdl(string) abort
 endfunction
 
 function! s:save_marks() abort
-  let s:buf[s:nr] = get(s:buf, s:nr, {})
   if !exists('s:buf[s:nr].marks')
     let types = ['[', ']']
     let s:buf[s:nr].marks  = {}
@@ -791,72 +806,78 @@ function! s:restore_marks() abort
 endfunction
 
 function! s:init(...) abort
-  if &buftype ==# 'terminal' || (has('nvim') && &inccommand !=# '')
+  if &buftype ==# 'terminal' || (has('nvim') && !empty(&inccommand))
     if exists('s:track_cmdl_timer')
       call timer_stop(s:track_cmdl_timer)
     endif
     return
   endif
+
   let s:nr =  bufnr('%')
-  call s:save_marks()
-  let s:highlighted = 0
-
-  let s:win_id = win_getid()
-  let s:win[s:win_id] = get(s:win, s:win_id, {})
-
-  " save cursor positions
-  if !exists('s:win[s:win_id].cur_init_pos')
-    let s:win[s:win_id].cur_init_pos = [line('.'), col('.')]
+  if !exists('s:buf[s:nr]')
+    call s:cmdl_enter()
   endif
-  let s:win[s:win_id].cur_temp_pos = deepcopy(s:win[s:win_id].cur_init_pos)
+
+  let s:highlighted = 0
+  let s:moved       = 0
+
+  if s:buf[s:nr].duration < s:traces_delay
+    let start_time = reltime()
+  endif
 
   if exists('s:buf[s:nr].changed') && s:buf[s:nr].changed
+    let view = winsaveview()
     noautocmd keepjumps silent undo
     let s:buf[s:nr].changed = 0
     let s:highlighted = 1
+    call s:restore_marks()
+    call winrestview(view)
   endif
-  call s:restore_marks()
-
-  " restore initial cursor position
-  call cursor(s:win[s:win_id].cur_init_pos)
-  if s:buf[s:nr].view !=# winsaveview() && !wildmenumode()
-    call winrestview(s:buf[s:nr].view)
-  endif
-
   let cmdl = s:evaluate_cmdl([s:cmdl])
 
-  " range
-  if (cmdl.cmd.name !=# '' || s:buf[s:nr].show_range) && !get(s:, 'entire_file')
-    call s:highlight('Visual', cmdl.range.pattern, 100)
-    if cmdl.cmd.name ==# ''
-      call s:highlight('Search', cmdl.range.specifier, 101)
+  if s:buf[s:nr].duration < s:traces_delay
+    " range preview
+    if (!empty(cmdl.cmd.name) || s:buf[s:nr].show_range) && !get(s:, 'entire_file')
+      call s:highlight('Visual', cmdl.range.pattern, 100)
+      if empty(cmdl.cmd.name)
+        call s:highlight('Search', cmdl.range.specifier, 101)
+      endif
+      call s:position(cmdl.range.abs)
     endif
-    call s:position(cmdl.range.abs)
-  endif
 
-  if s:buf[s:nr].duration < 0.2
-    let start_time = reltime()
+    " cmd preview
     if cmdl.cmd.name =~# '\v^%(s%[ubstitute]|sm%[agic]|sno%[magic])$'
       call s:live_substitute(cmdl)
     endif
     if cmdl.cmd.name =~# '\v^%(g%[lobal]\!=|v%[global])$'
       call s:live_global(cmdl)
     endif
+
+    " clear unnecessary hl
+    if empty(cmdl.range.pattern) || get(s:, 'entire_file')
+      call s:highlight('Visual', '', 100)
+    endif
+    if empty(cmdl.cmd.name) && empty(cmdl.range.specifier)
+      call s:highlight('Search', '', 101)
+    endif
+  endif
+
+  " move to starting position if necessary
+  if !s:moved && winsaveview() != s:buf[s:nr].view
+    call winrestview(s:buf[s:nr].view)
+  endif
+
+  " update screen if necessary
+  if s:highlighted
+    if has('nvim')
+      redraw
+    else
+      call winline()
+    endif
+  endif
+
+  if exists('start_time')
     let s:buf[s:nr].duration = reltimefloat(reltime(start_time))
-  endif
-
-  " clean unnecessary highlighting
-  if cmdl.range.pattern ==# '' || get(s:, 'entire_file')
-    call s:highlight('Visual', '', 100)
-  endif
-  if cmdl.cmd.name ==# '' && cmdl.range.specifier ==# ''
-    call s:highlight('Search', '', 101)
-  endif
-
-  if !has('nvim')
-    call winline()
-  elseif s:highlighted
-    redraw
   endif
 endfunction
 
@@ -869,7 +890,6 @@ function! s:track_cmdl(...) abort
 endfunction
 
 function! s:t_start() abort
-  let s:cmdl = getcmdline()
   let s:track_cmdl_timer = timer_start(15,function('s:track_cmdl'),{'repeat':-1})
 endfunction
 
@@ -921,7 +941,6 @@ augroup traces_augroup
   autocmd!
   autocmd CmdlineEnter,CmdwinLeave : call s:t_start()
   autocmd CmdlineLeave,CmdwinEnter : call s:t_stop()
-  autocmd CmdlineEnter : call s:cmdl_enter()
   autocmd CmdlineLeave : call s:cmdl_leave()
 augroup END
 
