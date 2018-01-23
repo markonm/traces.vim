@@ -108,14 +108,12 @@ function! s:parse_range(range, cmdl) abort
     call s:trim(a:cmdl)
     let entry = {}
     " regexp for pattern specifier
-    let pattern = '/\%(\\/\|[^/]\)*/\=\|?\%(\\?\|[^?]\)*?\='
+    let pattern = '/%(\\.|/@!&.)*/=|\?%(\\.|\?@!&.)*\?='
     if !len(specifier.addresses)
       " \& is not supported
-      let address = matchstrpos(a:cmdl[0],
-            \ '\m^\%(\d\+\|\.\|\$\|%\|\*\|''.\|'. pattern . '\|\\/\|\\?\)')
+      let address = matchstrpos(a:cmdl[0], '\v^%(\d+|\.|\$|\%|\*|''.|'. pattern . '|\\\/|\\\?)')
     else
-      let address = matchstrpos(a:cmdl[0],
-            \ '\m^\%(' . pattern . '\)' )
+      let address = matchstrpos(a:cmdl[0], '\v^%(' . pattern . ')' )
     endif
     if address[2] != -1
       call s:trim(a:cmdl, address[2])
@@ -236,7 +234,7 @@ function! s:spec_to_abs(address, last_position, range_size) abort
       endif
       let s:buf[s:nr].show_range = 1
 
-    elseif a:address.address =~# '^/.*[^\\]/$\|^//$'
+    elseif a:address.address =~# '\v^\/%(\\.|.){-}\\@<!\/$'
       let pattern = a:address.address
       let pattern = substitute(pattern, '^/', '', '')
       let pattern = substitute(pattern, '/$', '', '')
@@ -248,7 +246,7 @@ function! s:spec_to_abs(address, last_position, range_size) abort
       endif
       call add(result.range, query)
 
-    elseif a:address.address =~# '^?.*[^\\]?$\|^??$'
+    elseif a:address.address =~# '\v^\?%(\\.|.){-}\\@<!\?$'
       let pattern = a:address.address
       let pattern = substitute(pattern, '^?', '', '')
       let pattern = substitute(pattern, '?$', '', '')
@@ -524,7 +522,7 @@ endfunction
 
 function! s:parse_substitute(cmdl) abort
   call s:trim(a:cmdl.string)
-  let pattern = '\v^([[:graph:]]&[^[:alnum:]\\"|])(%(\\\1|\1@!&.)*)%((\1)%((%(\\\1|\1@!&.)*)%((\1)([&cegiInp#lr]+)=)=)=)=$'
+  let pattern = '\v^([[:graph:]]&[^[:alnum:]\\"|])(%(\\.|\1@!&.)*)%((\1)%((%(\\.|\1@!&.)*)%((\1)([&cegiInp#lr]+)=)=)=)=$'
   let args = {}
   let r = matchlist(a:cmdl.string[0], pattern)
   if len(r)
