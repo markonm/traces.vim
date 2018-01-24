@@ -260,11 +260,11 @@ function! s:spec_to_abs(address, last_position, range_size) abort
       call add(result.range, query)
 
     elseif a:address.address =~# '^/.*$'
-      let pattern = a:address.address
-      let pattern = substitute(pattern, '^/', '', '')
+      let pattern = a:address.address[1:]
       call cursor(a:last_position + 1, 1)
       silent! let query = search(pattern, 'nc')
-      if query == 0
+
+      if !query && !empty(pattern)
         let result.valid = 0
       endif
 
@@ -282,12 +282,12 @@ function! s:spec_to_abs(address, last_position, range_size) abort
       let result.regex = pattern
 
     elseif a:address.address =~# '^?.*$'
-      let pattern = a:address.address
-      let pattern = substitute(pattern, '^?', '', '')
+      let pattern = a:address.address[1:]
       let pattern = substitute(pattern, '\\?', '?', '')
       call cursor(a:last_position, 1)
       silent! let query = search(pattern, 'nb')
-      if query == 0
+
+      if !query && !empty(pattern)
         let result.valid = 0
       endif
 
