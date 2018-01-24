@@ -235,9 +235,12 @@ function! s:spec_to_abs(address, last_position, range_size) abort
       let s:buf[s:nr].show_range = 1
 
     elseif a:address.address =~# '\v^\/%(\\.|.){-}%([^\\]\\)@<!\/$'
-      let pattern = a:address.address
-      let pattern = substitute(pattern, '^/', '', '')
-      let pattern = substitute(pattern, '/$', '', '')
+      let pattern = a:address.address[1:-2]
+      if empty(pattern)
+        let pattern = s:last_pattern
+      else
+        let s:last_pattern = pattern
+      endif
       call cursor(a:last_position + 1, 1)
       let s:buf[s:nr].show_range = 1
       silent! let query = search(pattern, 'nc')
@@ -247,10 +250,13 @@ function! s:spec_to_abs(address, last_position, range_size) abort
       call add(result.range, query)
 
     elseif a:address.address =~# '\v^\?%(\\.|.){-}%([^\\]\\)@<!\?$'
-      let pattern = a:address.address
-      let pattern = substitute(pattern, '^?', '', '')
-      let pattern = substitute(pattern, '?$', '', '')
+      let pattern = a:address.address[1:-2]
       let pattern = substitute(pattern, '\\?', '?', '')
+      if empty(pattern)
+        let pattern = s:last_pattern
+      else
+        let s:last_pattern = pattern
+      endif
       call cursor(a:last_position, 1)
       let s:buf[s:nr].show_range = 1
       silent! let query = search(pattern, 'nb')
@@ -356,6 +362,7 @@ function! s:evaluate_range(range_structure) abort
   let last_position = s:buf[s:nr].cur_init_pos[0]
   let result.pattern = ''
   let skip = 0
+  let s:last_pattern = @/
 
   for specifier in a:range_structure
     let entry = {}
@@ -409,6 +416,7 @@ function! s:evaluate_range(range_structure) abort
     endif
   endfor
 
+  unlet s:last_pattern
   return s:range_valid ? result : { 'range' : [], 'pattern' : '' }
 endfunction
 
