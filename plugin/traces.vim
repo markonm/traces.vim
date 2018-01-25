@@ -527,7 +527,8 @@ function! s:parse_global(cmdl) abort
   let args = {}
   let r = matchlist(a:cmdl.string[0], pattern)
   if len(r)
-    let args.pattern = s:add_flags((empty(r[2]) && !empty(r[3])) ? @/ : r[2], a:cmdl, 1)
+    let args.delimiter = r[1]
+    let args.pattern   = s:add_flags((empty(r[2]) && !empty(r[3])) ? @/ : r[2], a:cmdl, 1)
   endif
   return args
 endfunction
@@ -557,21 +558,39 @@ function! s:parse_command(cmdl) abort
   endif
 endfunction
 
-function! s:position(input) abort
-  if !g:traces_preserve_view_state
-    if type(a:input) == 1 && !empty(a:input)
-      silent! let position = search(a:input, 'cn')
-      if position != 0
-        let cur_temp_pos =  [position, 1]
-        let s:moved = 1
-        call cursor(cur_temp_pos)
-      endif
-    elseif type(a:input) == 3 && !empty(a:input)
-      let cur_temp_pos =  [a:input[-1], 1]
-      let s:moved = 1
-      call cursor(cur_temp_pos)
-    endif
+function! s:pos_pattern(pattern, range, delimiter) abort
+  if g:traces_preserve_view_state || empty(a:pattern)
+    return
   endif
+  if len(a:range) > 1 && !get(s:, 'entire_file')
+    if a:delimiter ==# '?'
+      call cursor([a:range[-1], 1])
+      call cursor([a:range[-1], col('$')])
+    else
+      call cursor([a:range[-2], 1])
+    endif
+  else
+    call cursor(s:buf[s:nr].cur_init_pos)
+  endif
+  if a:delimiter ==# '?'
+    silent! let position = search(a:pattern, 'ceb')
+  else
+    silent! let position = search(a:pattern, 'ce')
+  endif
+  if position !=# 0
+    let s:moved = 1
+  endif
+endfunction
+
+function! s:pos_range(range, pattern) abort
+  if g:traces_preserve_view_state || empty(a:range)
+    return
+  endif
+  call cursor([a:range[-1], 1])
+  if !empty(a:pattern)
+    call search(a:pattern, 'ce')
+  endif
+  let s:moved = 1
 endfunction
 
 function! s:highlight(group, pattern, priority) abort
@@ -658,7 +677,7 @@ endfunction
 
 function! s:live_substitute(cmdl) abort
   if has_key(a:cmdl.cmd.args, 'string')
-    call s:position(a:cmdl.cmd.args.pattern)
+    call s:pos_pattern(a:cmdl.cmd.args.pattern, a:cmdl.range.abs, a:cmdl.cmd.args.delimiter)
     if (!empty(a:cmdl.cmd.args.string) || !empty(a:cmdl.cmd.args.last_delimiter))
        \  && g:traces_substitute_preview  && !&readonly
       call s:highlight('Search', s:str_start . '.\{-}' . s:str_end, 101)
@@ -698,7 +717,7 @@ endfunction
 function! s:live_global(cmdl) abort
   if empty(a:cmdl.range.specifier) && has_key(a:cmdl.cmd.args, 'pattern')
     call s:highlight('Search', a:cmdl.cmd.args.pattern, 101)
-    call s:position(a:cmdl.cmd.args.pattern)
+    call s:pos_pattern(a:cmdl.cmd.args.pattern, a:cmdl.range.abs, a:cmdl.cmd.args.delimiter)
   endif
 endfunction
 
@@ -847,7 +866,7 @@ function! s:init(...) abort
       if empty(cmdl.cmd.name)
         call s:highlight('Search', cmdl.range.specifier, 101)
       endif
-      call s:position(cmdl.range.abs)
+      call s:pos_range(cmdl.range.abs, cmdl.range.specifier)
     endif
 
     " cmd preview
