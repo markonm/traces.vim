@@ -362,7 +362,6 @@ function! s:evaluate_range(range_structure) abort
   let last_position = s:buf[s:nr].cur_init_pos[0]
   let result.pattern = ''
   let skip = 0
-  let s:last_pattern = @/
 
   for specifier in a:range_structure
     let entry = {}
@@ -416,7 +415,6 @@ function! s:evaluate_range(range_structure) abort
     endif
   endfor
 
-  unlet s:last_pattern
   return s:range_valid ? result : { 'range' : [], 'pattern' : '' }
 endfunction
 
@@ -528,7 +526,7 @@ function! s:parse_global(cmdl) abort
   let r = matchlist(a:cmdl.string[0], pattern)
   if len(r)
     let args.delimiter = r[1]
-    let args.pattern   = s:add_flags((empty(r[2]) && !empty(r[3])) ? @/ : r[2], a:cmdl, 1)
+    let args.pattern   = s:add_flags((empty(r[2]) && !empty(r[3])) ? s:last_pattern : r[2], a:cmdl, 1)
   endif
   return args
 endfunction
@@ -540,8 +538,7 @@ function! s:parse_substitute(cmdl) abort
   let r = matchlist(a:cmdl.string[0], pattern)
   if len(r)
     let args.delimiter        = r[1]
-    let args.pattern_org      = r[2]
-    let args.pattern          = s:add_flags((empty(r[2]) && !empty(r[3])) ? @/ : r[2], a:cmdl, 2)
+    let args.pattern          = s:add_flags((empty(r[2]) && !empty(r[3])) ? s:last_pattern : r[2], a:cmdl, 2)
     let args.string           = r[4]
     let args.last_delimiter   = r[5]
     let args.flags            = r[6]
@@ -661,7 +658,7 @@ function! s:format_command(cmdl) abort
   endif
   let c .= 's'
   let c .= a:cmdl.cmd.args.delimiter
-  let c .= a:cmdl.cmd.args.pattern_org
+  let c .= a:cmdl.cmd.args.pattern
   let c .= a:cmdl.cmd.args.delimiter
   if a:cmdl.cmd.args.string =~# '^\\='
     let c .= '\=' . "'" . s:str_start . "'" . '
@@ -844,6 +841,7 @@ function! s:init(...) abort
 
   let s:highlighted = 0
   let s:moved       = 0
+  let s:last_pattern = @/
 
   if s:buf[s:nr].duration < s:traces_delay
     let start_time = reltime()
