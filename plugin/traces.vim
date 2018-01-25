@@ -542,6 +542,7 @@ function! s:parse_substitute(cmdl) abort
   let r = matchlist(a:cmdl.string[0], pattern)
   if len(r)
     let args.delimiter        = r[1]
+    let args.pattern_org      = (empty(r[2]) && !empty(r[3])) ? s:last_pattern : r[2]
     let args.pattern          = s:add_flags((empty(r[2]) && !empty(r[3])) ? s:last_pattern : r[2], a:cmdl, 2)
     let args.string           = r[4]
     let args.last_delimiter   = r[5]
@@ -662,7 +663,7 @@ function! s:format_command(cmdl) abort
   endif
   let c .= 's'
   let c .= a:cmdl.cmd.args.delimiter
-  let c .= a:cmdl.cmd.args.pattern
+  let c .= a:cmdl.cmd.args.pattern_org
   let c .= a:cmdl.cmd.args.delimiter
   if a:cmdl.cmd.args.string =~# '^\\='
     let c .= '\=' . "'" . s:str_start . "'" . '
