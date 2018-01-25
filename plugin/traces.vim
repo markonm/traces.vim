@@ -154,7 +154,11 @@ function! s:parse_range(range, cmdl) abort
   endif
 
   if delimiter[2] != -1
-    return s:parse_range(a:range, a:cmdl)
+    try
+      return s:parse_range(a:range, a:cmdl)
+    catch /^Vim\%((\a\+)\)\=:E132/
+      return []
+    endtry
   else
     return a:range
   endif
