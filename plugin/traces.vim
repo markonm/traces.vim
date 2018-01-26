@@ -926,7 +926,7 @@ function! s:track_cmdl(...) abort
 endfunction
 
 function! s:t_start() abort
-  let s:track_cmdl_timer = timer_start(15,function('s:track_cmdl'),{'repeat':-1})
+  let s:track_cmdl_timer = timer_start(30,function('s:track_cmdl'),{'repeat':-1})
 endfunction
 
 function! s:t_stop() abort
