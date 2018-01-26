@@ -682,7 +682,7 @@ function! s:live_substitute(cmdl) abort
     call s:pos_pattern(a:cmdl.cmd.args.pattern, a:cmdl.range.abs, a:cmdl.cmd.args.delimiter)
     if (!empty(a:cmdl.cmd.args.string) || !empty(a:cmdl.cmd.args.last_delimiter))
        \  && g:traces_substitute_preview  && !&readonly
-      call s:highlight('Search', s:str_start . '.\{-}' . s:str_end, 101)
+      call s:highlight('Search', s:str_start . '\_.\{-}' . s:str_end, 101)
     else
       call s:highlight('Search', a:cmdl.cmd.args.pattern, 101)
     endif
@@ -701,6 +701,7 @@ function! s:live_substitute(cmdl) abort
       let tick = b:changedtick
       if !empty(a:cmdl.cmd.args.string) || !empty(a:cmdl.cmd.args.last_delimiter)
         call s:highlight('Conceal', s:str_start . '\|' . s:str_end, 102)
+        let lines = line('$')
         let view = winsaveview()
         let ul = &undolevels
         let &undolevels = 0
@@ -708,6 +709,14 @@ function! s:live_substitute(cmdl) abort
         let &undolevels = ul
         call winrestview(view)
         let s:highlighted = 1
+        let lines = lines - line('$')
+        if lines && !get(s:, 'entire_file') && !empty(a:cmdl.range.abs)
+          if len(a:cmdl.range.abs) == 1
+            call add(a:cmdl.range.abs, a:cmdl.range.abs[0])
+          endif
+          let a:cmdl.range.abs[-1] -= lines
+          call s:highlight('Visual', s:get_selection_regexp(a:cmdl.range.abs), 100)
+        endif
       endif
       if tick != b:changedtick
         let s:buf[s:nr].changed = 1
