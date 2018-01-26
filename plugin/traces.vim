@@ -661,7 +661,7 @@ function! s:format_command(cmdl) abort
     let c .= ';'
     let c .= a:cmdl.range.abs[-1]
   endif
-  let c .= 's'
+  let c .= a:cmdl.cmd.name
   let c .= a:cmdl.cmd.args.delimiter
   let c .= a:cmdl.cmd.args.pattern_org
   let c .= a:cmdl.cmd.args.delimiter
