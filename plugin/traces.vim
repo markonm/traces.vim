@@ -958,20 +958,27 @@ function! s:get_pfile() abort
   return ''
 endfunction
 
-silent! cnoremap <unique> <expr> <c-r><c-w> getcmdtype() == ':' ? <sid>get_cword() : "\<c-r>\<c-w>"
-silent! cnoremap <unique> <expr> <c-r><c-a> getcmdtype() == ':' ? <sid>get_cWORD() : "\<c-r>\<c-a>"
-silent! cnoremap <unique> <expr> <c-r><c-f> getcmdtype() == ':' ? <sid>get_cfile() : "\<c-r>\<c-f>"
-silent! cnoremap <unique> <expr> <c-r><c-p> getcmdtype() == ':' ? <sid>get_pfile() : "\<c-r>\<c-p>"
+function! s:check_b() abort
+  let s:nr =  bufnr('%')
+  if getcmdtype() == ':' && exists('s:buf[s:nr]')
+    return 1
+  endif
+endfunction
 
-silent! cnoremap <unique> <expr> <c-r><c-r><c-w> getcmdtype() == ':' ? "\<c-r>\<c-r>=\<sid>get_cword()\<cr>" : "\<c-r>\<c-r>\<c-w>"
-silent! cnoremap <unique> <expr> <c-r><c-r><c-a> getcmdtype() == ':' ? "\<c-r>\<c-r>=\<sid>get_cWORD()\<cr>" : "\<c-r>\<c-r>\<c-a>"
-silent! cnoremap <unique> <expr> <c-r><c-r><c-f> getcmdtype() == ':' ? "\<c-r>\<c-r>=\<sid>get_cfile()\<cr>" : "\<c-r>\<c-r>\<c-f>"
-silent! cnoremap <unique> <expr> <c-r><c-r><c-p> getcmdtype() == ':' ? "\<c-r>\<c-r>=\<sid>get_pfile()\<cr>" : "\<c-r>\<c-r>\<c-p>"
+silent! cnoremap <unique> <expr> <c-r><c-w> <sid>check_b() ? <sid>get_cword() : "\<c-r>\<c-w>"
+silent! cnoremap <unique> <expr> <c-r><c-a> <sid>check_b() ? <sid>get_cWORD() : "\<c-r>\<c-a>"
+silent! cnoremap <unique> <expr> <c-r><c-f> <sid>check_b() ? <sid>get_cfile() : "\<c-r>\<c-f>"
+silent! cnoremap <unique> <expr> <c-r><c-p> <sid>check_b() ? <sid>get_pfile() : "\<c-r>\<c-p>"
 
-silent! cnoremap <unique> <expr> <c-r><c-o><c-w> getcmdtype() == ':' ? "\<c-r>\<c-r>=\<sid>get_cword()\<cr>" : "\<c-r>\<c-o>\<c-w>"
-silent! cnoremap <unique> <expr> <c-r><c-o><c-a> getcmdtype() == ':' ? "\<c-r>\<c-r>=\<sid>get_cWORD()\<cr>" : "\<c-r>\<c-o>\<c-a>"
-silent! cnoremap <unique> <expr> <c-r><c-o><c-f> getcmdtype() == ':' ? "\<c-r>\<c-r>=\<sid>get_cfile()\<cr>" : "\<c-r>\<c-o>\<c-f>"
-silent! cnoremap <unique> <expr> <c-r><c-o><c-p> getcmdtype() == ':' ? "\<c-r>\<c-r>=\<sid>get_pfile()\<cr>" : "\<c-r>\<c-o>\<c-p>"
+silent! cnoremap <unique> <expr> <c-r><c-r><c-w> <sid>check_b() ? "\<c-r>\<c-r>=\<sid>get_cword()\<cr>" : "\<c-r>\<c-r>\<c-w>"
+silent! cnoremap <unique> <expr> <c-r><c-r><c-a> <sid>check_b() ? "\<c-r>\<c-r>=\<sid>get_cWORD()\<cr>" : "\<c-r>\<c-r>\<c-a>"
+silent! cnoremap <unique> <expr> <c-r><c-r><c-f> <sid>check_b() ? "\<c-r>\<c-r>=\<sid>get_cfile()\<cr>" : "\<c-r>\<c-r>\<c-f>"
+silent! cnoremap <unique> <expr> <c-r><c-r><c-p> <sid>check_b() ? "\<c-r>\<c-r>=\<sid>get_pfile()\<cr>" : "\<c-r>\<c-r>\<c-p>"
+
+silent! cnoremap <unique> <expr> <c-r><c-o><c-w> <sid>check_b() ? "\<c-r>\<c-r>=\<sid>get_cword()\<cr>" : "\<c-r>\<c-o>\<c-w>"
+silent! cnoremap <unique> <expr> <c-r><c-o><c-a> <sid>check_b() ? "\<c-r>\<c-r>=\<sid>get_cWORD()\<cr>" : "\<c-r>\<c-o>\<c-a>"
+silent! cnoremap <unique> <expr> <c-r><c-o><c-f> <sid>check_b() ? "\<c-r>\<c-r>=\<sid>get_cfile()\<cr>" : "\<c-r>\<c-o>\<c-f>"
+silent! cnoremap <unique> <expr> <c-r><c-o><c-p> <sid>check_b() ? "\<c-r>\<c-r>=\<sid>get_pfile()\<cr>" : "\<c-r>\<c-o>\<c-p>"
 
 augroup traces_augroup
   autocmd!
