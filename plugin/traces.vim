@@ -315,9 +315,8 @@ function! s:spec_to_abs(address, last_position, range_size) abort
       let result.regex = pattern
 
     elseif a:address.address ==# '\/'
-      let pattern = @/
       call cursor(a:last_position + 1, 1)
-      silent! let query = search(pattern, 'nc')
+      silent! let query = search(s:last_pattern, 'nc')
       if query == 0
         let result.valid = 0
       endif
@@ -325,9 +324,8 @@ function! s:spec_to_abs(address, last_position, range_size) abort
       let s:buf[s:nr].show_range = 1
 
     elseif a:address.address ==# '\?'
-      let pattern = @?
       call cursor(a:last_position, 1)
-      silent! let query = search(pattern, 'nb')
+      silent! let query = search(s:last_pattern, 'nb')
       if query == 0
         let result.valid = 0
       endif
