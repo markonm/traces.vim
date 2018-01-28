@@ -740,6 +740,7 @@ function! s:cmdl_enter() abort
   let s:buf[s:nr].cWORD = expand('<cWORD>')
   let s:buf[s:nr].cfile = expand('<cfile>')
   let s:buf[s:nr].cur_init_pos = [line('.'), col('.')]
+  let s:buf[s:nr].redraw = 1
   call s:save_marks()
 endfunction
 
@@ -905,6 +906,9 @@ function! s:init(...) abort
   if s:highlighted
     if has('nvim')
       redraw
+    elseif s:buf[s:nr].redraw
+      redraw
+      let s:buf[s:nr].redraw = 0
     else
       call winline()
     endif
