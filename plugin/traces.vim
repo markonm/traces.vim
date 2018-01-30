@@ -425,18 +425,23 @@ function! s:get_selection_regexp(range) abort
     return ''
   endif
   if len(a:range) == 1
-    let pattern = '\m\%' . a:range[0] . 'l'
+    let pattern = '\%' . a:range[0] . 'l'
   else
-    let pattern_start = a:range[-2]
-    let pattern_end = a:range[-1]
-    if pattern_end < pattern_start
-      let temp = pattern_start
-      let pattern_start = pattern_end
-      let pattern_end = temp
+    let start = a:range[-2]
+    let end = a:range[-1]
+    if end < start
+      let temp = start
+      let start = end
+      let end = temp
     endif
-    let pattern_start -= 1
-    let pattern_end += 1
-    let pattern = '\m\%<' . pattern_end . 'l\%>' . pattern_start . 'l'
+    let start -= 1
+    let end += 1
+    let pattern = '\%>' . start . 'l\%<' . end . 'l'
+  endif
+  if &listchars =~# 'eol:.'
+    let pattern .= '\_.'
+  else
+    let pattern .= '\(.\|^\)'
   endif
   return pattern
 endfunction
