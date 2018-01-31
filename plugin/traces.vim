@@ -750,6 +750,10 @@ function! s:cmdl_enter() abort
 endfunction
 
 function! s:cmdl_leave() abort
+  if exists('s:start_init_timer')
+    call timer_stop(s:start_init_timer)
+    unlet s:start_init_timer
+  endif
   let s:nr = bufnr('%')
   if !exists('s:buf[s:nr]')
     return
@@ -932,6 +936,15 @@ function! s:track_cmdl(...) abort
   endif
 endfunction
 
+function! s:cmdline_changed() abort
+  let s:cmdl = getcmdline()
+  if exists('s:start_init_timer')
+    call timer_stop(s:start_init_timer)
+    unlet s:start_init_timer
+  endif
+  let s:start_init_timer = timer_start(1,function('s:init'))
+endfunction
+
 function! s:t_start() abort
   let s:track_cmdl_timer = timer_start(30,function('s:track_cmdl'),{'repeat':-1})
 endfunction
@@ -989,8 +1002,12 @@ silent! cnoremap <unique> <expr> <c-r><c-o><c-p> <sid>check_b() ? "\<c-r>\<c-r>=
 
 augroup traces_augroup
   autocmd!
-  autocmd CmdlineEnter,CmdwinLeave : call s:t_start()
-  autocmd CmdlineLeave,CmdwinEnter : call s:t_stop()
+  if exists('##CmdlineChanged')
+    autocmd CmdlineChanged : call s:cmdline_changed()
+  else
+    autocmd CmdlineEnter,CmdwinLeave : call s:t_start()
+    autocmd CmdlineLeave,CmdwinEnter : call s:t_stop()
+  endif
   autocmd CmdlineLeave : call s:cmdl_leave()
 augroup END
 
