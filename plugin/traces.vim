@@ -637,11 +637,20 @@ function! s:highlight(group, pattern, priority) abort
       let s:highlighted = 1
     endif
     if (&conceallevel !=# 2 || &concealcursor !=# 'c') && a:group ==# 'Conceal'
-      let s:win[id].options = {}
+      let s:win[id].options = get(s:win[id], 'options', {})
       let s:win[id].options.conceallevel = &conceallevel
       let s:win[id].options.concealcursor = &concealcursor
       set conceallevel=2
       set concealcursor=c
+    endif
+    " highglighting doesn't work properly when cursorline or cursorcolumn is
+    " enabled
+    if &cursorcolumn || &cursorline
+      let s:win[id].options = get(s:win[id], 'options', {})
+      let s:win[id].options.cursorcolumn = &cursorcolumn
+      let s:win[id].options.cursorline = &cursorline
+      set nocursorcolumn
+      set nocursorline
     endif
   endfor
   if bufname('%') !=# '[Command Line]'
@@ -745,7 +754,6 @@ function! s:cmdl_enter() abort
   let s:buf[s:nr].cWORD = expand('<cWORD>')
   let s:buf[s:nr].cfile = expand('<cfile>')
   let s:buf[s:nr].cur_init_pos = [line('.'), col('.')]
-  let s:buf[s:nr].redraw = 1
   call s:save_marks()
 endfunction
 
@@ -790,7 +798,7 @@ function! s:cmdl_leave() abort
         endif
         if exists('s:win[id].options')
           for option in keys(s:win[id].options)
-            execute 'set ' . option . '=' . s:win[id].options[option]
+            execute 'let &' . option . '="' . s:win[id].options[option] . '"'
           endfor
         endif
         unlet s:win[id]
@@ -915,11 +923,11 @@ function! s:init(...) abort
   if s:highlighted
     if has('nvim')
       redraw
-    elseif s:buf[s:nr].redraw
-      redraw
-      let s:buf[s:nr].redraw = 0
     else
       call winline()
+      " after patch 8.0.1449, necessary for linux cui, otherwise highlighting
+      " is not drawn properly
+      silent! call feedkeys("\<left>\<right>", 'tn')
     endif
   endif
 
