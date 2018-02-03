@@ -954,6 +954,7 @@ function! s:create_cmdl_changed_au(...) abort
     autocmd!
     autocmd CmdlineChanged : call s:cmdline_changed()
   augroup END
+  call s:cmdline_changed()
 endfunction
 
 function! s:t_start() abort
