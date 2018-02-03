@@ -758,10 +758,6 @@ function! s:cmdl_enter() abort
 endfunction
 
 function! s:cmdl_leave() abort
-  if exists('s:start_init_timer')
-    call timer_stop(s:start_init_timer)
-    unlet s:start_init_timer
-  endif
   let s:nr = bufnr('%')
   if !exists('s:buf[s:nr]')
     return
@@ -945,16 +941,27 @@ function! s:track_cmdl(...) abort
 endfunction
 
 function! s:cmdline_changed() abort
-  let s:cmdl = getcmdline()
   if exists('s:start_init_timer')
     call timer_stop(s:start_init_timer)
     unlet s:start_init_timer
   endif
+  let s:cmdl = getcmdline()
   let s:start_init_timer = timer_start(1,function('s:init'))
 endfunction
 
+function! s:create_cmdl_changed_au(...) abort
+  augroup traces_augroup_cmdline_changed
+    autocmd!
+    autocmd CmdlineChanged : call s:cmdline_changed()
+  augroup END
+endfunction
+
 function! s:t_start() abort
-  let s:track_cmdl_timer = timer_start(30,function('s:track_cmdl'),{'repeat':-1})
+  if exists('##CmdlineChanged')
+    let s:track_cmdl_timer = timer_start(30,function('s:create_cmdl_changed_au'))
+  else
+    let s:track_cmdl_timer = timer_start(30,function('s:track_cmdl'),{'repeat':-1})
+  endif
 endfunction
 
 function! s:t_stop() abort
@@ -963,7 +970,15 @@ function! s:t_stop() abort
   endif
   if exists('s:track_cmdl_timer')
     call timer_stop(s:track_cmdl_timer)
+    unlet s:track_cmdl_timer
   endif
+  if exists('s:start_init_timer')
+    call timer_stop(s:start_init_timer)
+    unlet s:start_init_timer
+  endif
+  augroup traces_augroup_cmdline_changed
+    autocmd!
+  augroup END
 endfunction
 
 function! s:get_cword() abort
@@ -1010,12 +1025,8 @@ silent! cnoremap <unique> <expr> <c-r><c-o><c-p> <sid>check_b() ? "\<c-r>\<c-r>=
 
 augroup traces_augroup
   autocmd!
-  if exists('##CmdlineChanged')
-    autocmd CmdlineChanged : call s:cmdline_changed()
-  else
-    autocmd CmdlineEnter,CmdwinLeave : call s:t_start()
-    autocmd CmdlineLeave,CmdwinEnter : call s:t_stop()
-  endif
+  autocmd CmdlineEnter,CmdwinLeave : call s:t_start()
+  autocmd CmdlineLeave,CmdwinEnter : call s:t_stop()
   autocmd CmdlineLeave : call s:cmdl_leave()
 augroup END
 
