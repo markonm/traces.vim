@@ -954,6 +954,8 @@ function! s:create_cmdl_changed_au(...) abort
     autocmd!
     autocmd CmdlineChanged : call s:cmdline_changed()
   augroup END
+  " necessary when entering command line that has already been populated with
+  " text from mappings
   call s:cmdline_changed()
 endfunction
 
