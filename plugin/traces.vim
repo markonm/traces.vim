@@ -523,7 +523,17 @@ function! s:add_flags(pattern, cmdl, type) abort
   endif
 
   let range = '\m\%>'. start .'l' . '\%<' . end . 'l'
-  return range . option . a:pattern
+
+  " group is necessary to contain pattern inside range when using branches (\|)
+  let group_start = '\%('
+  let group_end   = '\m\)'
+  " add backslash to the end of pattern if it ends with odd number of
+  " backslashes, this is required to properly close group
+  if len(matchstr(a:pattern, '\\\+$')) % 2
+    let group_end = '\' . group_end
+  endif
+
+  return range . group_start . option . a:pattern . group_end
 endfunction
 
 function! s:parse_global(cmdl) abort
