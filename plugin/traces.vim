@@ -587,7 +587,11 @@ function! s:pos_pattern(pattern, range, delimiter) abort
   else
     call cursor(s:buf[s:nr].cur_init_pos)
   endif
-  silent! let position = search(a:pattern, 'c')
+  if a:delimiter ==# '?'
+    silent! let position = search(a:pattern, 'cb')
+  else
+    silent! let position = search(a:pattern, 'c')
+  endif
   if position !=# 0
     let s:moved = 1
   endif
