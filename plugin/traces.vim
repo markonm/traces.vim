@@ -587,11 +587,7 @@ function! s:pos_pattern(pattern, range, delimiter) abort
   else
     call cursor(s:buf[s:nr].cur_init_pos)
   endif
-  if a:delimiter ==# '?'
-    silent! let position = search(a:pattern, 'cb')
-  else
-    silent! let position = search(a:pattern, 'c')
-  endif
+  silent! let position = search(a:pattern, 'c')
   if position !=# 0
     let s:moved = 1
   endif
@@ -679,9 +675,9 @@ function! s:format_command(cmdl) abort
   elseif len(a:cmdl.range.abs) == 1
     let c .= a:cmdl.range.abs[0]
   else
-    let c .= a:cmdl.range.abs[-2]
+    let c .= max([a:cmdl.range.abs[-2], line("w0")])
     let c .= ';'
-    let c .= a:cmdl.range.abs[-1]
+    let c .= min([a:cmdl.range.abs[-1], line("w$")])
   endif
   let c .= a:cmdl.cmd.name
   let c .= a:cmdl.cmd.args.delimiter
