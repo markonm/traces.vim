@@ -675,9 +675,15 @@ function! s:format_command(cmdl) abort
   elseif len(a:cmdl.range.abs) == 1
     let c .= a:cmdl.range.abs[0]
   else
-    let c .= max([a:cmdl.range.abs[-2], line("w0")])
-    let c .= ';'
-    let c .= min([a:cmdl.range.abs[-1], line("w$")])
+    if substitute(a:cmdl.cmd.args.pattern_org, '\\\\', '', 'g') =~# '\v(\\n|\\_\.|\\_\[|\\_[iIkKfFpPsSdDxXoOwWhHaAlLuU])'
+      let c .= a:cmdl.range.abs[-2]
+      let c .= ';'
+      let c .= a:cmdl.range.abs[-1]
+    else
+      let c .= max([a:cmdl.range.abs[-2], line("w0")])
+      let c .= ';'
+      let c .= min([a:cmdl.range.abs[-1], line("w$")])
+    end
   endif
   let c .= a:cmdl.cmd.name
   let c .= a:cmdl.cmd.args.delimiter
