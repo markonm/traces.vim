@@ -8,7 +8,7 @@ set cpo-=C
 
 let g:traces_preserve_view_state = get(g:, 'traces_preserve_view_state')
 let g:traces_substitute_preview  = get(g:, 'traces_substitute_preview', 1)
-let s:traces_delay = 0.4
+let s:timeout = 400
 
 let s:cmd_pattern = '\v\C^%('
                 \ . '\!|'
@@ -247,7 +247,7 @@ function! s:spec_to_abs(address, last_position, range_size) abort
       endif
       call cursor(a:last_position + 1, 1)
       let s:buf[s:nr].show_range = 1
-      silent! let query = search(pattern, 'nc')
+      silent! let query = search(pattern, 'nc', 0, s:timeout)
       if query == 0
         let result.valid = 0
       endif
@@ -263,7 +263,7 @@ function! s:spec_to_abs(address, last_position, range_size) abort
       endif
       call cursor(a:last_position, 1)
       let s:buf[s:nr].show_range = 1
-      silent! let query = search(pattern, 'nb')
+      silent! let query = search(pattern, 'nb', 0, s:timeout)
       if query == 0
         let result.valid = 0
       endif
@@ -272,7 +272,7 @@ function! s:spec_to_abs(address, last_position, range_size) abort
     elseif a:address.address =~# '^/.*$'
       let pattern = a:address.address[1:]
       call cursor(a:last_position + 1, 1)
-      silent! let query = search(pattern, 'nc')
+      silent! let query = search(pattern, 'nc', 0, s:timeout)
 
       if !query && !empty(pattern)
         let result.valid = 0
@@ -295,7 +295,7 @@ function! s:spec_to_abs(address, last_position, range_size) abort
       let pattern = a:address.address[1:]
       let pattern = substitute(pattern, '\\?', '?', '')
       call cursor(a:last_position, 1)
-      silent! let query = search(pattern, 'nb')
+      silent! let query = search(pattern, 'nb', 0, s:timeout)
 
       if !query && !empty(pattern)
         let result.valid = 0
@@ -316,7 +316,7 @@ function! s:spec_to_abs(address, last_position, range_size) abort
 
     elseif a:address.address ==# '\/'
       call cursor(a:last_position + 1, 1)
-      silent! let query = search(s:last_pattern, 'nc')
+      silent! let query = search(s:last_pattern, 'nc', 0, s:timeout)
       if query == 0
         let result.valid = 0
       endif
@@ -325,7 +325,7 @@ function! s:spec_to_abs(address, last_position, range_size) abort
 
     elseif a:address.address ==# '\?'
       call cursor(a:last_position, 1)
-      silent! let query = search(s:last_pattern, 'nb')
+      silent! let query = search(s:last_pattern, 'nb', 0, s:timeout)
       if query == 0
         let result.valid = 0
       endif
@@ -588,9 +588,9 @@ function! s:pos_pattern(pattern, range, delimiter) abort
     call cursor(s:buf[s:nr].cur_init_pos)
   endif
   if a:delimiter ==# '?'
-    silent! let position = search(a:pattern, 'cb')
+    silent! let position = search(a:pattern, 'cb', 0, s:timeout)
   else
-    silent! let position = search(a:pattern, 'c')
+    silent! let position = search(a:pattern, 'c', 0, s:timeout)
   endif
   if position !=# 0
     let s:moved = 1
@@ -603,7 +603,7 @@ function! s:pos_range(range, pattern) abort
   endif
   call cursor([a:range[-1], 1])
   if !empty(a:pattern)
-    call search(a:pattern, 'c')
+    call search(a:pattern, 'c', 0, s:timeout)
   endif
   let s:moved = 1
 endfunction
@@ -885,7 +885,7 @@ function! s:init(...) abort
   let s:moved       = 0
   let s:last_pattern = @/
 
-  if s:buf[s:nr].duration < s:traces_delay
+  if s:buf[s:nr].duration < s:timeout
     let start_time = reltime()
   endif
 
@@ -899,7 +899,7 @@ function! s:init(...) abort
   endif
   let cmdl = s:evaluate_cmdl([s:cmdl])
 
-  if s:buf[s:nr].duration < s:traces_delay
+  if s:buf[s:nr].duration < s:timeout
     " range preview
     if (!empty(cmdl.cmd.name) || s:buf[s:nr].show_range) && !get(s:, 'entire_file')
       call s:highlight('Visual', cmdl.range.pattern, 100)
@@ -944,7 +944,7 @@ function! s:init(...) abort
   endif
 
   if exists('start_time')
-    let s:buf[s:nr].duration = reltimefloat(reltime(start_time))
+    let s:buf[s:nr].duration = reltimefloat(reltime(start_time)) * 1000
   endif
 endfunction
 
