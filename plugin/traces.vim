@@ -10,6 +10,7 @@ let g:traces_preserve_view_state = get(g:, 'traces_preserve_view_state')
 let g:traces_substitute_preview  = get(g:, 'traces_substitute_preview', 1)
 let s:timeout = 400
 let s:s_timeout = 300
+let s:lines_limit = 100000
 
 let s:cmd_pattern = '\v\C^%('
                 \ . '\!|'
@@ -714,25 +715,34 @@ endfunction
 
 function! s:live_substitute(cmdl) abort
   if has_key(a:cmdl.cmd.args, 'string')
+    let end_line = line('$')
     call s:pos_pattern(a:cmdl.cmd.args.pattern, a:cmdl.range.abs, a:cmdl.cmd.args.delimiter, 1)
     if (!empty(a:cmdl.cmd.args.string) || !empty(a:cmdl.cmd.args.last_delimiter))
-       \  && g:traces_substitute_preview  && !&readonly
+       \  && g:traces_substitute_preview  && !&readonly && end_line < s:lines_limit
       call s:highlight('Search', s:str_start . '\_.\{-}' . s:str_end, 101)
     else
       call s:highlight('Search', a:cmdl.cmd.args.pattern, 101)
     endif
 
-    if g:traces_substitute_preview && !&readonly
-      let c = 'noautocmd keepjumps keeppatterns ' . s:format_command(a:cmdl)
+    if g:traces_substitute_preview && !&readonly && end_line < s:lines_limit
 
       if !exists('s:buf[s:nr].changed')
-        let s:buf[s:nr].changed = 0
-        let s:buf[s:nr].undo_file = tempname()
-        if bufname('%') !=# '[Command Line]'
-          noautocmd silent execute 'wundo ' . s:buf[s:nr].undo_file
-        endif
+        try
+          let start_time = reltime()
+          if bufname('%') !=# '[Command Line]'
+            let s:buf[s:nr].undo_file = tempname()
+            noautocmd silent execute 'wundo ' . s:buf[s:nr].undo_file
+          endif
+          if (reltimefloat(reltime(start_time)) * 1000) > s:timeout
+            return
+          endif
+          let s:buf[s:nr].changed = 0
+        catch
+          return
+        endtry
       endif
 
+      let c = 'noautocmd keepjumps keeppatterns ' . s:format_command(a:cmdl)
       let tick = b:changedtick
       if !empty(a:cmdl.cmd.args.string) || !empty(a:cmdl.cmd.args.last_delimiter)
         call s:highlight('Conceal', s:str_start . '\|' . s:str_end, 102)
@@ -756,6 +766,7 @@ function! s:live_substitute(cmdl) abort
       if tick != b:changedtick
         let s:buf[s:nr].changed = 1
       endif
+
     endif
   endif
 endfunction
