@@ -9,6 +9,7 @@ set cpo-=C
 let g:traces_preserve_view_state = get(g:, 'traces_preserve_view_state')
 let g:traces_substitute_preview  = get(g:, 'traces_substitute_preview', 1)
 let s:timeout = 400
+let s:s_timeout = 300
 
 let s:cmd_pattern = '\v\C^%('
                 \ . '\!|'
@@ -247,7 +248,7 @@ function! s:spec_to_abs(address, last_position, range_size) abort
       endif
       call cursor(a:last_position + 1, 1)
       let s:buf[s:nr].show_range = 1
-      silent! let query = search(pattern, 'nc', 0, s:timeout)
+      silent! let query = search(pattern, 'nc', 0, s:s_timeout)
       if query == 0
         let result.valid = 0
       endif
@@ -263,7 +264,7 @@ function! s:spec_to_abs(address, last_position, range_size) abort
       endif
       call cursor(a:last_position, 1)
       let s:buf[s:nr].show_range = 1
-      silent! let query = search(pattern, 'nb', 0, s:timeout)
+      silent! let query = search(pattern, 'nb', 0, s:s_timeout)
       if query == 0
         let result.valid = 0
       endif
@@ -272,7 +273,7 @@ function! s:spec_to_abs(address, last_position, range_size) abort
     elseif a:address.address =~# '^/.*$'
       let pattern = a:address.address[1:]
       call cursor(a:last_position + 1, 1)
-      silent! let query = search(pattern, 'nc', 0, s:timeout)
+      silent! let query = search(pattern, 'nc', 0, s:s_timeout)
 
       if !query && !empty(pattern)
         let result.valid = 0
@@ -295,7 +296,7 @@ function! s:spec_to_abs(address, last_position, range_size) abort
       let pattern = a:address.address[1:]
       let pattern = substitute(pattern, '\\?', '?', '')
       call cursor(a:last_position, 1)
-      silent! let query = search(pattern, 'nb', 0, s:timeout)
+      silent! let query = search(pattern, 'nb', 0, s:s_timeout)
 
       if !query && !empty(pattern)
         let result.valid = 0
@@ -316,7 +317,7 @@ function! s:spec_to_abs(address, last_position, range_size) abort
 
     elseif a:address.address ==# '\/'
       call cursor(a:last_position + 1, 1)
-      silent! let query = search(s:last_pattern, 'nc', 0, s:timeout)
+      silent! let query = search(s:last_pattern, 'nc', 0, s:s_timeout)
       if query == 0
         let result.valid = 0
       endif
@@ -325,7 +326,7 @@ function! s:spec_to_abs(address, last_position, range_size) abort
 
     elseif a:address.address ==# '\?'
       call cursor(a:last_position, 1)
-      silent! let query = search(s:last_pattern, 'nb', 0, s:timeout)
+      silent! let query = search(s:last_pattern, 'nb', 0, s:s_timeout)
       if query == 0
         let result.valid = 0
       endif
@@ -573,24 +574,30 @@ function! s:parse_command(cmdl) abort
   endif
 endfunction
 
-function! s:pos_pattern(pattern, range, delimiter) abort
+function! s:pos_pattern(pattern, range, delimiter, type) abort
   if g:traces_preserve_view_state || empty(a:pattern)
     return
   endif
+  let stopline = 0
   if len(a:range) > 1 && !get(s:, 'entire_file')
     if a:delimiter ==# '?'
       call cursor([a:range[-1], 1])
       call cursor([a:range[-1], col('$')])
+      let stopline = a:range[-2]
     else
       call cursor([a:range[-2], 1])
+      let stopline = a:range[-1]
     endif
   else
     call cursor(s:buf[s:nr].cur_init_pos)
+    if a:type
+      let stopline = s:buf[s:nr].cur_init_pos
+    endif
   endif
   if a:delimiter ==# '?'
-    silent! let position = search(a:pattern, 'cb', 0, s:timeout)
+    silent! let position = search(a:pattern, 'cb', stopline, s:s_timeout)
   else
-    silent! let position = search(a:pattern, 'c', 0, s:timeout)
+    silent! let position = search(a:pattern, 'c', stopline, s:s_timeout)
   endif
   if position !=# 0
     let s:moved = 1
@@ -603,7 +610,7 @@ function! s:pos_range(range, pattern) abort
   endif
   call cursor([a:range[-1], 1])
   if !empty(a:pattern)
-    call search(a:pattern, 'c', 0, s:timeout)
+    call search(a:pattern, 'c', a:range[-1], s:s_timeout)
   endif
   let s:moved = 1
 endfunction
@@ -707,7 +714,7 @@ endfunction
 
 function! s:live_substitute(cmdl) abort
   if has_key(a:cmdl.cmd.args, 'string')
-    call s:pos_pattern(a:cmdl.cmd.args.pattern, a:cmdl.range.abs, a:cmdl.cmd.args.delimiter)
+    call s:pos_pattern(a:cmdl.cmd.args.pattern, a:cmdl.range.abs, a:cmdl.cmd.args.delimiter, 1)
     if (!empty(a:cmdl.cmd.args.string) || !empty(a:cmdl.cmd.args.last_delimiter))
        \  && g:traces_substitute_preview  && !&readonly
       call s:highlight('Search', s:str_start . '\_.\{-}' . s:str_end, 101)
@@ -756,7 +763,7 @@ endfunction
 function! s:live_global(cmdl) abort
   if empty(a:cmdl.range.specifier) && has_key(a:cmdl.cmd.args, 'pattern')
     call s:highlight('Search', a:cmdl.cmd.args.pattern, 101)
-    call s:pos_pattern(a:cmdl.cmd.args.pattern, a:cmdl.range.abs, a:cmdl.cmd.args.delimiter)
+    call s:pos_pattern(a:cmdl.cmd.args.pattern, a:cmdl.range.abs, a:cmdl.cmd.args.delimiter, 0)
   endif
 endfunction
 
