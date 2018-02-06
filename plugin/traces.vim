@@ -591,7 +591,7 @@ function! s:pos_pattern(pattern, range, delimiter, type) abort
     endif
   else
     call cursor(s:buf[s:nr].cur_init_pos)
-    if a:type
+    if a:type && empty(a:range)
       let stopline = s:buf[s:nr].cur_init_pos
     endif
   endif
