@@ -886,7 +886,7 @@ function! s:restore_marks() abort
   endif
 endfunction
 
-function! s:init(...) abort
+function! s:init(cmdl) abort
   if &buftype ==# 'terminal' || (has('nvim') && !empty(&inccommand))
     if exists('s:track_cmdl_timer')
       call timer_stop(s:track_cmdl_timer)
@@ -915,7 +915,7 @@ function! s:init(...) abort
     call s:restore_marks()
     call winrestview(view)
   endif
-  let cmdl = s:evaluate_cmdl([s:cmdl])
+  let cmdl = s:evaluate_cmdl([a:cmdl])
 
   if s:buf[s:nr].duration < s:timeout
     " range preview
@@ -967,20 +967,18 @@ function! s:init(...) abort
 endfunction
 
 function! s:track_cmdl(...) abort
-  let current_cmd = getcmdline()
-  if get(s:, 'cmdl', '') !=# current_cmd
-    let s:cmdl = current_cmd
-    call s:init()
+  let current_cmdl = getcmdline()
+  if get(s:, 'previous_cmdl', '') !=# current_cmdl
+    let s:previous_cmdl = current_cmdl
+    call s:init(current_cmdl)
   endif
 endfunction
 
 function! s:cmdline_changed() abort
   if exists('s:start_init_timer')
     call timer_stop(s:start_init_timer)
-    unlet s:start_init_timer
   endif
-  let s:cmdl = getcmdline()
-  let s:start_init_timer = timer_start(1,function('s:init'))
+  let s:start_init_timer = timer_start(1, {_-> s:init(getcmdline())})
 endfunction
 
 function! s:create_cmdl_changed_au(...) abort
@@ -1002,8 +1000,8 @@ function! s:t_start() abort
 endfunction
 
 function! s:t_stop() abort
-  if exists('s:cmdl')
-    unlet s:cmdl
+  if exists('s:previous_cmdl')
+    unlet s:previous_cmdl
   endif
   if exists('s:track_cmdl_timer')
     call timer_stop(s:track_cmdl_timer)
