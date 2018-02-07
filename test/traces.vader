@@ -1,0 +1,267 @@
+Execute (Setup):
+  Save g:traces_preserve_view_state, g:traces_substitute_preview,
+  \ &listchars, &hlsearch, &cursorline, &cursorline
+  let g:traces_preserve_view_state = 0
+  let g:traces_substitute_preview  = 1
+
+  function! Group(group) abort
+    let matches = filter(getmatches(), {idx, val -> val.group == a:group})
+    if !empty(matches)
+      return matches[0].pattern
+    endif
+  endfunction
+
+  function! Eol()
+    if &listchars =~# 'eol:.'
+      return '\_.'
+    else
+      return '\(.\|^\)'
+    endif
+  endfunction
+
+  let &listchars = 'eol:.'
+
+After:
+  call traces#cmdl_leave()
+
+Before:
+  let g:traces_preserve_view_state = 0
+  let g:traces_substitute_preview  = 1
+  call clearmatches()
+
+#######################
+# Test positioning    #
+#######################
+Given (Ten lines):
+  1   one
+  2   two
+  3   three
+  4   four
+  5   five
+  6   six
+  7   seven
+  8   eight
+  9   nine
+  10  ten
+  11  foo/bar
+  12  foo?bar
+  13  \
+  14  four
+
+Execute (Range):
+  call traces#init('/three')
+  Assert line('.') == 3
+
+Execute (Range):
+  /ten/
+  call traces#init('?two')
+  Assert line('.') == 2
+
+Execute (Range):
+  call traces#init('/three/;/eight/')
+  Assert line('.') == 8
+
+Execute (Range):
+  7
+  ma m
+  1
+  call traces#init('/three/;''m')
+  Assert line('.') == 7
+
+Execute (Range):
+  call traces#init('/foo\/bar')
+  Assert line('.') == 11
+
+Execute (Range):
+  call traces#init('/foo\/bar/foobar')
+  Assert line('.') == 11
+
+Execute (Range):
+  call traces#init('/two/3')
+  Assert line('.') == 5
+
+Execute (Range):
+  call traces#init('/foo?bar')
+  Assert line('.') == 12
+
+Execute (Range):
+  call traces#init('?foo\?bar?')
+  Assert line('.') == 12
+
+Execute (Range):
+  call traces#init('?foo\?bar')
+  Assert line('.') == 12
+
+#######################
+# Test highlighting   #
+#######################
+Execute (Range):
+  call traces#init('/one/;/eight/')
+  AssertEqual '\%>0l\%<9l\_.', Group('Visual')
+  call traces#init('')
+  Assert empty(getmatches())
+
+Execute (Range):
+  call traces#init('1;/eight/')
+  AssertEqual '\%>0l\%<9l\_.', Group('Visual')
+
+Execute (Range):
+  call traces#init('3;/seven/')
+  AssertEqual '\%>2l\%<8l\_.', Group('Visual')
+
+Execute (Range):
+  call traces#init('7;/four/')
+  AssertEqual '\%>6l\%<15l\_.', Group('Visual')
+
+Execute (Range):
+  call traces#init('7,/four/')
+  AssertEqual '\%>3l\%<8l\_.', Group('Visual')
+
+Execute (Range):
+  call traces#init('7,/four/s/foobar')
+  AssertEqual '\%>3l\%<8l\_.', Group('Visual')
+  AssertEqual '\m\%>3l\%<8l\%(\mfoobar\m\)', Group('Search')
+
+Execute (Global):
+  call traces#init('7,/four/g/foobar')
+  AssertEqual '\%>3l\%<8l\_.', Group('Visual')
+  AssertEqual '\m\%>3l\%<8l\%(\mfoobar\m\)', Group('Search')
+
+Execute (Global):
+  call traces#init('g/foobar')
+  AssertEqual '\mfoobar', Group('Search')
+
+Execute (Range):
+  call traces#init('7;/four/')
+  AssertEqual '\%>6l\%<15l\_.', Group('Visual')
+
+
+#######################
+# Test substitute     #
+#######################
+Given (Three lines):
+  foo
+  foo
+  foo
+
+Execute (Substitute on first line):
+  call traces#init('s/foo/bar')
+
+Expect:
+  bar
+  foo
+  foo
+
+Execute (Substitute on first and second line):
+  call traces#init('1;2s/foo/bar')
+
+Expect:
+  bar
+  bar
+  foo
+
+Execute (Substitute on every line):
+  call traces#init('%s/foo/bar')
+
+Expect:
+  bar
+  bar
+  bar
+
+Execute (Substitute on every line and revert):
+  call traces#init('%s/foo/bar')
+  call traces#cmdl_leave()
+
+Expect:
+  foo
+  foo
+  foo
+
+Execute (Turn off substitute preview and try to substitute):
+  let g:traces_substitute_preview  = 0
+  call traces#init('%s/foo/bar')
+
+Expect:
+  foo
+  foo
+  foo
+
+Execute (Substitute and empty command line):
+  call traces#init('%s/foo/bar')
+  call traces#init('')
+
+Expect:
+  foo
+  foo
+  foo
+
+Given (Three lines):
+  foo.*
+
+Execute (Snomagic):
+  call traces#init('%snoma/.*/bar')
+
+Expect:
+  foobar
+
+Execute (Smagic):
+  call traces#init('%sma/.*/bar')
+
+Expect:
+  bar
+
+
+#######################
+# Test settings       #
+#######################
+Given (Three lines):
+  one
+  two
+  three
+
+Execute (Test eol):
+  let &listchars = ''
+  call traces#init('1;/three/')
+  AssertEqual '\%>0l\%<4l\(.\|^\)', Group('Visual')
+  let &listchars = 'eol:.'
+
+Execute (Test hlsearch):
+  let &hlsearch = 1
+  call traces#init('1;/three/s/one')
+  AssertEqual &hlsearch, 0
+  call traces#cmdl_leave()
+  AssertEqual &hlsearch, 1
+
+Execute (Test cursorcolumn):
+  let &cursorcolumn = 1
+  call traces#init('1;/three/s/one')
+  AssertEqual &cursorcolumn, 0
+  call traces#cmdl_leave()
+  AssertEqual &cursorcolumn, 1
+
+Execute (Test cursorline):
+  let &cursorline = 1
+  call traces#init('1;/three/s/one')
+  AssertEqual &cursorline, 0
+  call traces#cmdl_leave()
+  AssertEqual &cursorline, 1
+
+Execute (Test conceallevel):
+  let &conceallevel = 1
+  call traces#init('1;/three/s/one/four')
+  AssertEqual &conceallevel, 2
+  call traces#cmdl_leave()
+  AssertEqual &conceallevel, 1
+
+Execute (Test concealcursor):
+  let &concealcursor = 'niv'
+  call traces#init('1;/three/s/one/four')
+  AssertEqual &concealcursor, 'c'
+  call traces#cmdl_leave()
+  AssertEqual &concealcursor, 'niv'
+
+#######################
+# Cleanup             #
+#######################
+Execute (Cleanup):
+  Restore
