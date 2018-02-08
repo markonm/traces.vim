@@ -131,9 +131,96 @@ Execute (Range):
   call traces#init('g/five')
   Assert line('.') == 1
 
+Execute (Global, test invalid pattern):
+  6
+  call traces#init('g/bazbar')
+  Assert line('.') == 6
+
+Execute (Substitute, test invalid pattern):
+  6
+  call traces#init('s/bazbar')
+  Assert line('.') == 6
+
+Execute (Substitute, test invalid pattern):
+  6
+  call traces#init('%s/bazbar')
+  Assert line('.') == 6
+
+Execute (Range, test invalid pattern):
+  6
+  call traces#init('/bazbar')
+  Assert line('.') == 6
+
+Execute (Range, test invalid pattern):
+  6
+  call traces#init('?bazbar')
+  Assert line('.') == 6
+
+Execute (Range, test invalid pattern):
+  6
+  call traces#init('?bazbar')
+  Assert line('.') == 6
+
+Given (Ten lines):
+  1   one
+  2   two
+  3   three
+  4   baz
+  5   five
+  6   six
+  7   seven
+  8   eight
+  9   nine
+  10  baz
+  11  foo/bar
+  12  foo?bar
+  13  \
+  14  four
+
+Execute (Substitute with range):
+  6
+  call traces#init('3;11s/baz')
+  Assert line('.') == 4
+
+Execute (Substitute with range):
+  6
+  call traces#init('3;11s?baz')
+  Assert line('.') == 10
+
+Execute (Substitute with range):
+  6
+  call traces#init('%s/baz')
+  Assert line('.') == 10
+
+Execute (Substitute with range):
+  6
+  call traces#init('%s?baz')
+  Assert line('.') == 4
+
+Execute (Invalid substitute):
+  6
+  call traces#init('s/baz')
+  Assert line('.') == 6
+
 #######################
 # Test highlighting   #
 #######################
+Given (Ten lines):
+  1   one
+  2   two
+  3   three
+  4   four
+  5   five
+  6   six
+  7   seven
+  8   eight
+  9   nine
+  10  ten
+  11  foo/bar
+  12  foo?bar
+  13  \
+  14  four
+
 Execute (Range):
   call traces#init('/one/;/eight/')
   AssertEqual '\%>0l\%<9l\_.', Group('Visual')
