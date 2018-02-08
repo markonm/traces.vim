@@ -92,6 +92,45 @@ Execute (Range):
   call traces#init('?foo\?bar')
   Assert line('.') == 12
 
+Execute (Range):
+  call traces#init('/ten/++')
+  Assert line('.') == 12
+  call traces#init('')
+  Assert line('.') == 1
+
+Execute (Range):
+  call traces#init('/one/;11s/five')
+  Assert line('.') == 5
+  call traces#init('')
+  Assert line('.') == 1
+
+Execute (Range):
+  call traces#init('/one/;11g/five')
+  Assert line('.') == 5
+  call traces#init('')
+  Assert line('.') == 1
+
+# test g:traces_preserve_view_state = 1
+Execute (Range):
+  let g:traces_preserve_view_state = 1
+  call traces#init('/ten/++')
+  Assert line('.') == 1
+
+Execute (Range):
+  let g:traces_preserve_view_state = 1
+  call traces#init('/one/;11s/five')
+  Assert line('.') == 1
+
+Execute (Range):
+  let g:traces_preserve_view_state = 1
+  call traces#init('/one/;11g/five')
+  Assert line('.') == 1
+
+Execute (Range):
+  let g:traces_preserve_view_state = 1
+  call traces#init('g/five')
+  Assert line('.') == 1
+
 #######################
 # Test highlighting   #
 #######################
