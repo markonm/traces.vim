@@ -952,8 +952,10 @@ function! traces#init(cmdl) abort
     else
       call winline()
       " after patch 8.0.1449, necessary for linux cui, otherwise highlighting
-      " is not drawn properly
-      silent! call feedkeys("\<left>\<right>", 'tn')
+      " is not drawn properly, fixed by 8.0.1476
+      if has('unix') && !has('gui_running') && has("patch-8.0.1449") && !has("patch-8.0.1476")
+        silent! call feedkeys("\<left>\<right>", 'tn')
+      endif
     endif
   endif
 
