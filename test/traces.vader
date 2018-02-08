@@ -11,14 +11,6 @@ Execute (Setup):
     endif
   endfunction
 
-  function! Eol()
-    if &listchars =~# 'eol:.'
-      return '\_.'
-    else
-      return '\(.\|^\)'
-    endif
-  endfunction
-
   let &listchars = 'eol:.'
 
 After:
