@@ -696,7 +696,13 @@ function! s:format_command(cmdl) abort
           \ . (' . substitute(a:cmdl.cmd.args.string, '^\\=', '', '') . ')
           \ . ' . "'" . s:str_end . "'"
   else
-    let c .= s:str_start . a:cmdl.cmd.args.string . s:str_end
+    " make ending single backslash literal or else it will escape character
+    " inside str_end
+    if substitute(a:cmdl.cmd.args.string, '\\\\', '', 'g') =~# '\\$'
+      let c .= s:str_start . a:cmdl.cmd.args.string . '\' . s:str_end
+    else
+      let c .= s:str_start . a:cmdl.cmd.args.string . s:str_end
+    endif
   endif
   let c .= a:cmdl.cmd.args.delimiter
   let c .= substitute(a:cmdl.cmd.args.flags, '[^giI]', '', 'g')

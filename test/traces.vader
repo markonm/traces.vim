@@ -144,6 +144,14 @@ Given (Three lines):
   foo
   foo
 
+Execute (Substitute with a backlash at the end of string):
+  call traces#init('%s/foo/\')
+
+Expect:
+  \
+  \
+  \
+
 Execute (Substitute on first line):
   call traces#init('s/foo/bar')
 
@@ -209,7 +217,6 @@ Execute (Smagic):
 
 Expect:
   bar
-
 
 #######################
 # Test settings       #
