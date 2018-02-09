@@ -723,19 +723,18 @@ function! s:live_substitute(cmdl) abort
     if g:traces_substitute_preview && !&readonly && end_line < s:lines_limit
 
       if !exists('s:buf[s:nr].changed')
-        try
-          let start_time = reltime()
-          if bufname('%') !=# '[Command Line]'
-            let s:buf[s:nr].undo_file = tempname()
-            noautocmd silent execute 'wundo ' . s:buf[s:nr].undo_file
-          endif
-          if (reltimefloat(reltime(start_time)) * 1000) > s:timeout
-            return
-          endif
-          let s:buf[s:nr].changed = 0
-        catch
+        let start_time = reltime()
+        if bufname('%') !=# '[Command Line]'
+          let s:buf[s:nr].undo_file = tempname()
+          noautocmd silent execute 'wundo ' . s:buf[s:nr].undo_file
+        endif
+        if (reltimefloat(reltime(start_time)) * 1000) > s:timeout
           return
-        endtry
+        endif
+        if !filereadable(s:buf[s:nr].undo_file) && undotree().seq_last
+          return
+        endif
+        let s:buf[s:nr].changed = 0
       endif
 
       let c = 'noautocmd keepjumps keeppatterns ' . s:format_command(a:cmdl)
@@ -798,8 +797,20 @@ function! traces#cmdl_leave() abort
       noautocmd keepjumps silent undo
       call s:restore_marks()
     endif
-    if bufname('%') !=# '[Command Line]'
-      silent! execute 'noautocmd rundo ' . s:buf[s:nr].undo_file
+    if bufname('%') !=# '[Command Line]' && filereadable(s:buf[s:nr].undo_file)
+      if has('nvim')
+        " XXX do not use try/catch on Neovim
+        " https://github.com/neovim/neovim/issues/7876
+        silent! execute 'noautocmd rundo ' . s:buf[s:nr].undo_file
+      else
+        try
+          silent execute 'noautocmd rundo ' . s:buf[s:nr].undo_file
+        catch
+          echohl WarningMsg
+          echom 'traces.vim - Undo history not restored - ' . v:exception
+          echohl None
+        endtry
+      endif
     endif
   endif
 
