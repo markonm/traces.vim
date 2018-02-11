@@ -253,6 +253,13 @@ Execute (Range):
   call traces#init('7;/four/')
   AssertEqual '\%>6l\%<15l\_.', Group('Visual')
 
+Execute (Substitute):
+  call traces#init('3;5s/\w\+/foobar')
+  AssertEqual '\%>2l\%<6l\_.', Group('Visual')
+
+Execute (Substitute):
+  call traces#init('3;5s/\w\+/\r')
+  AssertEqual '\%>2l\%<9l\_.', Group('Visual')
 
 #######################
 # Test substitute     #
@@ -384,6 +391,26 @@ Execute (Test concealcursor):
   AssertEqual &concealcursor, 'c'
   call traces#cmdl_leave()
   AssertEqual &concealcursor, 'niv'
+
+#######################
+# Test undo history   #
+#######################
+Execute:
+  new
+  AssertEqual undotree().seq_last, 0
+  call traces#init('s/^/foobar')
+  AssertEqual getline('.'), 'foobar'
+  call traces#cmdl_leave()
+  AssertEqual undotree().seq_last, 1
+  AssertEqual getline('.'), ''
+
+
+  call traces#init('s/^/foobar')
+  AssertEqual getline('.'), 'foobar'
+  call traces#cmdl_leave()
+  AssertEqual undotree().seq_last, 1
+  AssertEqual getline('.'), ''
+  bd
 
 #######################
 # Cleanup             #
