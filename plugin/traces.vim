@@ -64,15 +64,15 @@ silent! cnoremap <unique> <expr> <c-r><c-a> traces#check_b() ? traces#get_cWORD(
 silent! cnoremap <unique> <expr> <c-r><c-f> traces#check_b() ? traces#get_cfile() : "\<c-r>\<c-f>"
 silent! cnoremap <unique> <expr> <c-r><c-p> traces#check_b() ? traces#get_pfile() : "\<c-r>\<c-p>"
 
-silent! cnoremap <unique> <expr> <c-r><c-r><c-w> traces#check_b() ? "\<c-r>\<c-r>=\traces#get_cword()\<cr>" : "\<c-r>\<c-r>\<c-w>"
-silent! cnoremap <unique> <expr> <c-r><c-r><c-a> traces#check_b() ? "\<c-r>\<c-r>=\traces#get_cWORD()\<cr>" : "\<c-r>\<c-r>\<c-a>"
-silent! cnoremap <unique> <expr> <c-r><c-r><c-f> traces#check_b() ? "\<c-r>\<c-r>=\traces#get_cfile()\<cr>" : "\<c-r>\<c-r>\<c-f>"
-silent! cnoremap <unique> <expr> <c-r><c-r><c-p> traces#check_b() ? "\<c-r>\<c-r>=\traces#get_pfile()\<cr>" : "\<c-r>\<c-r>\<c-p>"
+silent! cnoremap <unique> <expr> <c-r><c-r><c-w> traces#check_b() ? "\<c-r>\<c-r>=traces#get_cword()\<cr>" : "\<c-r>\<c-r>\<c-w>"
+silent! cnoremap <unique> <expr> <c-r><c-r><c-a> traces#check_b() ? "\<c-r>\<c-r>=traces#get_cWORD()\<cr>" : "\<c-r>\<c-r>\<c-a>"
+silent! cnoremap <unique> <expr> <c-r><c-r><c-f> traces#check_b() ? "\<c-r>\<c-r>=traces#get_cfile()\<cr>" : "\<c-r>\<c-r>\<c-f>"
+silent! cnoremap <unique> <expr> <c-r><c-r><c-p> traces#check_b() ? "\<c-r>\<c-r>=traces#get_pfile()\<cr>" : "\<c-r>\<c-r>\<c-p>"
 
-silent! cnoremap <unique> <expr> <c-r><c-o><c-w> traces#check_b() ? "\<c-r>\<c-r>=\traces#get_cword()\<cr>" : "\<c-r>\<c-o>\<c-w>"
-silent! cnoremap <unique> <expr> <c-r><c-o><c-a> traces#check_b() ? "\<c-r>\<c-r>=\traces#get_cWORD()\<cr>" : "\<c-r>\<c-o>\<c-a>"
-silent! cnoremap <unique> <expr> <c-r><c-o><c-f> traces#check_b() ? "\<c-r>\<c-r>=\traces#get_cfile()\<cr>" : "\<c-r>\<c-o>\<c-f>"
-silent! cnoremap <unique> <expr> <c-r><c-o><c-p> traces#check_b() ? "\<c-r>\<c-r>=\traces#get_pfile()\<cr>" : "\<c-r>\<c-o>\<c-p>"
+silent! cnoremap <unique> <expr> <c-r><c-o><c-w> traces#check_b() ? "\<c-r>\<c-r>=traces#get_cword()\<cr>" : "\<c-r>\<c-o>\<c-w>"
+silent! cnoremap <unique> <expr> <c-r><c-o><c-a> traces#check_b() ? "\<c-r>\<c-r>=traces#get_cWORD()\<cr>" : "\<c-r>\<c-o>\<c-a>"
+silent! cnoremap <unique> <expr> <c-r><c-o><c-f> traces#check_b() ? "\<c-r>\<c-r>=traces#get_cfile()\<cr>" : "\<c-r>\<c-o>\<c-f>"
+silent! cnoremap <unique> <expr> <c-r><c-o><c-p> traces#check_b() ? "\<c-r>\<c-r>=traces#get_pfile()\<cr>" : "\<c-r>\<c-o>\<c-p>"
 
 augroup traces_augroup
   autocmd!
