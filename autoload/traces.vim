@@ -1,6 +1,5 @@
 let s:timeout = 400
 let s:s_timeout = 300
-let s:lines_limit = 100000
 
 let s:cmd_pattern = '\v\C^%('
                 \ . '\!|'
@@ -75,8 +74,8 @@ let s:cmd_pattern = '\v\C^%('
                 \ . 'z\w@!'
                 \ . ')'
 
-let s:str_start = ''
-let s:str_end   = ''
+let s:s_start = ''
+let s:s_end   = ''
 
 let s:win = {}
 let s:buf = {}
@@ -692,16 +691,16 @@ function! s:format_command(cmdl) abort
   let c .= a:cmdl.cmd.args.pattern_org
   let c .= a:cmdl.cmd.args.delimiter
   if a:cmdl.cmd.args.string =~# '^\\='
-    let c .= '\=' . "'" . s:str_start . "'" . '
+    let c .= '\=' . "'" . s:s_start . "'" . '
           \ . (' . substitute(a:cmdl.cmd.args.string, '^\\=', '', '') . ')
-          \ . ' . "'" . s:str_end . "'"
+          \ . ' . "'" . s:s_end . "'"
   else
     " make ending single backslash literal or else it will escape character
-    " inside str_end
+    " inside s_end
     if substitute(a:cmdl.cmd.args.string, '\\\\', '', 'g') =~# '\\$'
-      let c .= s:str_start . a:cmdl.cmd.args.string . '\' . s:str_end
+      let c .= s:s_start . a:cmdl.cmd.args.string . '\' . s:s_end
     else
-      let c .= s:str_start . a:cmdl.cmd.args.string . s:str_end
+      let c .= s:s_start . a:cmdl.cmd.args.string . s:s_end
     endif
   endif
   let c .= a:cmdl.cmd.args.delimiter
@@ -710,61 +709,59 @@ function! s:format_command(cmdl) abort
 endfunction
 
 function! s:live_substitute(cmdl) abort
-  if has_key(a:cmdl.cmd.args, 'string')
-    let end_line = line('$')
-    call s:pos_pattern(a:cmdl.cmd.args.pattern, a:cmdl.range.abs, a:cmdl.cmd.args.delimiter, 1)
-    if (!empty(a:cmdl.cmd.args.string) || !empty(a:cmdl.cmd.args.last_delimiter))
-       \  && g:traces_substitute_preview  && !&readonly && end_line < s:lines_limit
-      call s:highlight('Search', s:str_start . '\_.\{-}' . s:str_end, 101)
-    else
-      call s:highlight('Search', a:cmdl.cmd.args.pattern, 101)
-    endif
-
-    if g:traces_substitute_preview && !&readonly && end_line < s:lines_limit
-
-      if !exists('s:buf[s:nr].changed')
-        try
-          let start_time = reltime()
-          if bufname('%') !=# '[Command Line]'
-            let s:buf[s:nr].undo_file = tempname()
-            noautocmd silent execute 'wundo ' . s:buf[s:nr].undo_file
-          endif
-          if (reltimefloat(reltime(start_time)) * 1000) > s:timeout
-            return
-          endif
-          let s:buf[s:nr].changed = 0
-        catch
-          return
-        endtry
-      endif
-
-      let c = 'noautocmd keepjumps keeppatterns ' . s:format_command(a:cmdl)
-      let tick = b:changedtick
-      if !empty(a:cmdl.cmd.args.string) || !empty(a:cmdl.cmd.args.last_delimiter)
-        call s:highlight('Conceal', s:str_start . '\|' . s:str_end, 102)
-        let lines = line('$')
-        let view = winsaveview()
-        let ul = &undolevels
-        let &undolevels = 0
-        silent! execute c
-        let &undolevels = ul
-        call winrestview(view)
-        let s:highlighted = 1
-        let lines = lines - line('$')
-        if lines && !get(s:, 'entire_file') && !empty(a:cmdl.range.abs)
-          if len(a:cmdl.range.abs) == 1
-            call add(a:cmdl.range.abs, a:cmdl.range.abs[0])
-          endif
-          let a:cmdl.range.abs[-1] -= lines
-          call s:highlight('Visual', s:get_selection_regexp(a:cmdl.range.abs), 100)
-        endif
-      endif
-      if tick != b:changedtick
-        let s:buf[s:nr].changed = 1
-      endif
-
-    endif
+  if empty(a:cmdl.cmd.args)
+    return
   endif
+
+  let ptrn  = a:cmdl.cmd.args.pattern
+  let str   = a:cmdl.cmd.args.string
+  let range = a:cmdl.range.abs
+  let dlm   = a:cmdl.cmd.args.delimiter
+  let l_dlm = a:cmdl.cmd.args.last_delimiter
+
+  call s:pos_pattern(ptrn, range, dlm, 1)
+
+  if !g:traces_substitute_preview || &readonly || !&modifiable || empty(str) && empty(l_dlm)
+    call s:highlight('Search', ptrn, 101)
+    return
+  endif
+
+  call s:save_undo_history()
+
+  if s:buf[s:nr].undo_file is 0
+    call s:highlight('Search', ptrn, 101)
+    return
+  endif
+
+  let cmd = 'noautocmd keepjumps keeppatterns ' . s:format_command(a:cmdl)
+  let tick = b:changedtick
+
+  let lines = line('$')
+  let view = winsaveview()
+  let ul = &undolevels
+  let &undolevels = 0
+  silent! execute cmd
+  let &undolevels = ul
+
+  if tick == b:changedtick
+    return
+  endif
+
+  let s:buf[s:nr].changed = 1
+
+  call winrestview(view)
+  let s:highlighted = 1
+  let lines = lines - line('$')
+
+  if lines && !get(s:, 'entire_file') && !empty(range)
+    if len(range) == 1
+      call add(range, range[0])
+    endif
+    let range[-1] -= lines
+    call s:highlight('Visual', s:get_selection_regexp(range), 100)
+  endif
+  call s:highlight('Search', s:s_start . '\_.\{-}' . s:s_end, 101)
+  call s:highlight('Conceal', s:s_start . '\|' . s:s_end, 102)
 endfunction
 
 function! s:live_global(cmdl) abort
@@ -784,6 +781,8 @@ function! s:cmdl_enter() abort
   let s:buf[s:nr].cWORD = expand('<cWORD>')
   let s:buf[s:nr].cfile = expand('<cfile>')
   let s:buf[s:nr].cur_init_pos = [line('.'), col('.')]
+  let s:buf[s:nr].seq_last = undotree().seq_last
+  let s:buf[s:nr].changed = 0
   call s:save_marks()
 endfunction
 
@@ -792,16 +791,8 @@ function! traces#cmdl_leave() abort
   if !exists('s:buf[s:nr]')
     return
   endif
-  " changes
-  if exists('s:buf[s:nr].changed')
-    if s:buf[s:nr].changed
-      noautocmd keepjumps silent undo
-      call s:restore_marks()
-    endif
-    if bufname('%') !=# '[Command Line]'
-      silent! execute 'noautocmd rundo ' . s:buf[s:nr].undo_file
-    endif
-  endif
+
+  call s:restore_undo_history()
 
   " highlights
   if exists('s:win[win_getid()]')
@@ -882,6 +873,56 @@ function! s:restore_marks() abort
   endif
 endfunction
 
+function! s:save_undo_history() abort
+  if exists('s:buf[s:nr].undo_file')
+    return
+  endif
+  if bufname('%') ==# '[Command Line]' || !s:buf[s:nr].seq_last
+    let s:buf[s:nr].undo_file = 1
+    return
+  endif
+
+  let s:buf[s:nr].undo_file = tempname()
+  let start_time = reltime()
+  noautocmd silent execute 'wundo ' . s:buf[s:nr].undo_file
+  if !filereadable(s:buf[s:nr].undo_file)
+    let s:buf[s:nr].undo_file = 0
+  endif
+  if (reltimefloat(reltime(start_time)) * 1000) > s:timeout
+    let s:buf[s:nr].undo_file = 0
+  endif
+endfunction
+
+function! s:restore_undo_history() abort
+  if s:buf[s:nr].changed
+    noautocmd keepjumps silent undo
+    call s:restore_marks()
+  endif
+
+  if type(get(s:buf[s:nr], 'undo_file')) isnot v:t_string
+    return
+  endif
+
+  if has('nvim')
+    " can't use try/catch on Neovim inside CmdlineLeave
+    " https://github.com/neovim/neovim/issues/7876
+    silent! execute 'noautocmd rundo ' . s:buf[s:nr].undo_file
+    if undotree().seq_last !=# s:buf[s:nr].seq_last
+      echohl WarningMsg
+      echom 'traces.vim - undo history could not be restered'
+      echohl None
+    endif
+  else
+    try
+      silent execute 'noautocmd rundo ' . s:buf[s:nr].undo_file
+    catch
+      echohl WarningMsg
+      echom 'traces.vim - ' . v:exception
+      echohl None
+    endtry
+  endif
+endfunction
+
 function! traces#init(cmdl) abort
   if &buftype ==# 'terminal' || (has('nvim') && !empty(&inccommand))
     if exists('s:track_cmdl_timer')
@@ -903,7 +944,7 @@ function! traces#init(cmdl) abort
     let start_time = reltime()
   endif
 
-  if exists('s:buf[s:nr].changed') && s:buf[s:nr].changed
+  if s:buf[s:nr].changed
     let view = winsaveview()
     noautocmd keepjumps silent undo
     let s:buf[s:nr].changed = 0
