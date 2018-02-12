@@ -650,7 +650,7 @@ function! s:highlight(group, pattern, priority) abort
       set conceallevel=2
       set concealcursor=c
     endif
-    " highglighting doesn't work properly when cursorline or cursorcolumn is
+    " highlighting doesn't work properly when cursorline or cursorcolumn is
     " enabled
     if &cursorcolumn || &cursorline
       let s:win[id].options = get(s:win[id], 'options', {})
@@ -909,7 +909,7 @@ function! s:restore_undo_history() abort
     silent! execute 'noautocmd rundo ' . s:buf[s:nr].undo_file
     if undotree().seq_last !=# s:buf[s:nr].seq_last
       echohl WarningMsg
-      echom 'traces.vim - undo history could not be restered'
+      echom 'traces.vim - undo history could not be restored'
       echohl None
     endif
   else
