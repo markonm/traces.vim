@@ -225,6 +225,7 @@ function! s:spec_to_abs(address, last_position, range_size) abort
     let s:buf[s:nr].show_range = 1
 
   elseif a:address.address =~# '^''.'
+    call cursor(a:last_position, 1)
     let mark_position = getpos(a:address.address)
     if mark_position[1]
       call add(result.range, mark_position[1])
