@@ -318,6 +318,25 @@ Execute (Substitute):
   call traces#init('3;5s/\w\+/\r')
   AssertEqual '\%>2l\%<9l\_.', Group('Visual')
 
+
+Given (Three paragraphs):
+  paragraph1
+  paragraph1
+  paragraph1
+
+  paragraph2
+  paragraph2
+  paragraph2
+
+  paragraph3
+  paragraph3
+  paragraph3
+
+Execute (Substitute):
+  call traces#init(',''}s')
+  call traces#init(',''}s/')
+  AssertEqual '\%>0l\%<5l\_.', Group('Visual')
+
 #######################
 # Test substitute     #
 #######################
