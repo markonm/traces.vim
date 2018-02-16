@@ -1,3 +1,6 @@
+let s:cpo_save = &cpo
+set cpo-=C
+
 let s:timeout = 400
 let s:s_timeout = 300
 
@@ -991,3 +994,6 @@ function! traces#check_b() abort
     return 1
   endif
 endfunction
+
+let &cpo = s:cpo_save
+unlet s:cpo_save
