@@ -1,4 +1,4 @@
-if !exists('##CmdlineEnter') || exists('g:loaded_traces_plugin') || &cp
+if !exists('##CmdlineEnter') || exists('g:loaded_traces_plugin') || !has('timers') || &cp
   finish
 endif
 let g:loaded_traces_plugin = 1
