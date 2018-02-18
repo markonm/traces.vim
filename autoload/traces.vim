@@ -745,6 +745,7 @@ function! s:cmdl_enter() abort
   let s:buf[s:nr].cur_init_pos = [line('.'), col('.')]
   let s:buf[s:nr].seq_last = undotree().seq_last
   let s:buf[s:nr].changed = 0
+  let s:buf[s:nr].cmdheight = &cmdheight
   call s:save_marks()
 endfunction
 
@@ -794,6 +795,9 @@ function! traces#cmdl_leave() abort
 
   if &hlsearch !=# s:buf[s:nr].hlsearch
     let &hlsearch = s:buf[s:nr].hlsearch
+  endif
+  if &cmdheight !=# s:buf[s:nr].cmdheight
+    let &cmdheight = s:buf[s:nr].cmdheight
   endif
   if winsaveview() !=# s:buf[s:nr].view
     call winrestview(s:buf[s:nr].view)
@@ -897,6 +901,19 @@ function! s:restore_undo_history() abort
   endif
 endfunction
 
+function! s:adjust_cmdheight(cmdl) abort
+  let len = strwidth(strtrans(a:cmdl)) + 2
+  let col = &columns
+  let height = &cmdheight
+  if col * height < len
+    let &cmdheight=(len / col) + 1
+    redraw
+  elseif col * (height - 1) >= len && height > s:buf[s:nr].cmdheight
+    let &cmdheight=max([(len / col), s:buf[s:nr].cmdheight])
+    redraw
+  endif
+endfunction
+
 function! traces#init(cmdl) abort
   if &buftype ==# 'terminal' || (has('nvim') && !empty(&inccommand))
     if exists('s:track_cmdl_timer')
@@ -962,6 +979,7 @@ function! traces#init(cmdl) abort
 
   " update screen if necessary
   if s:highlighted
+    call s:adjust_cmdheight(a:cmdl)
     if has('nvim')
       redraw
     else
