@@ -884,6 +884,17 @@ function! s:restore_undo_history() abort
       echohl None
     endtry
   endif
+  if has('win32') && !has('nvim')
+    " on Unix tempfiles are automatically deleted when Vim exits, on Windows
+    " they are not deleted
+    try
+      call delete(s:buf[s:nr].undo_file)
+    catch
+      echohl WarningMsg
+      echom 'traces.vim - ' . v:exception
+      echohl None
+    endtry
+  endif
 endfunction
 
 function! traces#init(cmdl) abort
