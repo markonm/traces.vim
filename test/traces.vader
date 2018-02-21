@@ -229,6 +229,10 @@ Given (Ten lines):
   13  \
   14  four
 
+Execute (Range):
+  6
+  call traces#init('/ten/;?four')
+  AssertEqual '\m\%>3l\%<5l\%(\mfour\m\)', Group('Search')
 
 Execute (Range):
   6
