@@ -471,8 +471,8 @@ function! s:add_flags(pattern, cmdl, type) abort
 
   " range pattern specifer
   if a:type == 3
-    let start = a:cmdl.range.abs[-1] - 1
-    let end   = a:cmdl.range.abs[-1] + 1
+    let start = a:cmdl.range.end - 1
+    let end   = a:cmdl.range.end + 1
   endif
 
   let range = '\m\%>'. start .'l' . '\%<' . end . 'l'
@@ -811,9 +811,9 @@ function! s:evaluate_cmdl(string) abort
   let r                    = s:evaluate_range(s:parse_range([], cmdl.string))
   let cmdl.range           = {}
   let cmdl.range.abs       = r.range
+  let cmdl.range.end       = r.end
   let cmdl.range.pattern   = s:get_selection_regexp(r.range)
   let cmdl.range.specifier = s:add_flags(r.pattern, cmdl, 3)
-  let cmdl.range.end       = r.end
 
   let cmdl.cmd             = {}
   let cmdl.cmd.args        = {}
