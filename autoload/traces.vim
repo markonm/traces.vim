@@ -197,7 +197,7 @@ function! s:offset_to_num(string) abort
   return offset
 endfunction
 
-function! s:spec_to_abs(address, last_position, range_size) abort
+function! s:spec_to_abs(address, last_position) abort
   let result = {}
   let result.range = []
   let result.valid = 1
@@ -272,18 +272,10 @@ function! s:spec_to_abs(address, last_position, range_size) abort
     let pattern = a:address.address[1:]
     call cursor(a:last_position + 1, 1)
     silent! let query = search(pattern, 'nc', 0, s:s_timeout)
-
-    if !query && !empty(pattern)
+    if !query
       let result.valid = 0
     endif
-
-    " stay at the same position if pattern is not provided
-    if !empty(pattern)
-      call add(result.range, query)
-    elseif a:range_size
-      call add(result.range, a:last_position)
-    endif
-
+    call add(result.range, query)
     let s:buf[s:nr].show_range = 1
     let result.regex = pattern
 
@@ -292,18 +284,10 @@ function! s:spec_to_abs(address, last_position, range_size) abort
     let pattern = substitute(pattern, '\\?', '?', '')
     call cursor(a:last_position, 1)
     silent! let query = search(pattern, 'nb', 0, s:s_timeout)
-
-    if !query && !empty(pattern)
+    if !query
       let result.valid = 0
     endif
-
-    " stay at the same position if pattern is not provided
-    if !empty(pattern)
-      call add(result.range, query)
-    elseif a:range_size
-      call add(result.range, a:last_position)
-    endif
-
+    call add(result.range, query)
     let s:buf[s:nr].show_range = 1
     let result.regex = pattern
 
@@ -356,16 +340,22 @@ function! s:evaluate_range(range_structure) abort
     let specifier_result = []
 
     for address in specifier.addresses
-      let query = s:spec_to_abs(address, tmp_pos, !empty(result.range))
+      " skip empty unclosed pattern specifier when range is empty otherwise
+      " substitute it with current position
+      if address.address =~# '^[?/]$'
+        let s:buf[s:nr].show_range = 1
+        if empty(result.range)
+          break
+        endif
+        let address.address = '.'
+      endif
+      let query = s:spec_to_abs(address, tmp_pos)
       " % specifier doesn't accept additional addresses
       if !query.valid || len(query.range) == 2 && len(specifier.addresses) > 1
         let s:range_valid = 0
         break
       endif
-      " it is empty when we want to skip empty unclosed pattern specifier
-      if !empty(query.range)
-        let tmp_pos = query.range[-1]
-      endif
+      let tmp_pos = query.range[-1]
       let specifier_result = deepcopy(query.range)
       let result.pattern = query.regex
     endfor

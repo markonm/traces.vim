@@ -231,6 +231,34 @@ Given (Ten lines):
 
 Execute (Range):
   6
+  call traces#init('/./')
+  AssertEqual '\%>6l\%<8l\_.', Group('Visual')
+  call traces#init('/.//')
+  AssertEqual '\%>6l\%<8l\_.', Group('Visual')
+
+Execute (Range):
+  6
+  call traces#init('?.?')
+  AssertEqual '\%>4l\%<6l\_.', Group('Visual')
+  call traces#init('?.??')
+  AssertEqual '\%>4l\%<6l\_.', Group('Visual')
+
+Execute (Range):
+  6
+  call traces#init('/.')
+  AssertEqual '\%>6l\%<8l\_.', Group('Visual')
+  call traces#init('/')
+  Assert empty(getmatches())
+
+Execute (Range):
+  6
+  call traces#init('?.')
+  AssertEqual '\%>4l\%<6l\_.', Group('Visual')
+  call traces#init('?')
+  Assert empty(getmatches())
+
+Execute (Range):
+  6
   call traces#init('/ten/;?four')
   AssertEqual '\m\%>3l\%<5l\%(\mfour\m\)', Group('Search')
 
