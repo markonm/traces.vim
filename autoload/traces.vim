@@ -844,8 +844,10 @@ function! s:save_undo_history() abort
   noautocmd silent execute 'wundo ' . s:buf[s:nr].undo_file
   if !filereadable(s:buf[s:nr].undo_file)
     let s:buf[s:nr].undo_file = 0
+    return
   endif
   if (reltimefloat(reltime(start_time)) * 1000) > s:timeout
+    call delete(s:buf[s:nr].undo_file)
     let s:buf[s:nr].undo_file = 0
   endif
 endfunction
@@ -878,17 +880,7 @@ function! s:restore_undo_history() abort
       echohl None
     endtry
   endif
-  if has('win32') && !has('nvim')
-    " on Unix tempfiles are automatically deleted when Vim exits, on Windows
-    " they are not deleted
-    try
-      call delete(s:buf[s:nr].undo_file)
-    catch
-      echohl WarningMsg
-      echom 'traces.vim - ' . v:exception
-      echohl None
-    endtry
-  endif
+  call delete(s:buf[s:nr].undo_file)
 endfunction
 
 function! s:adjust_cmdheight(cmdl) abort
