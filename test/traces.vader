@@ -3,6 +3,7 @@ Execute (Setup):
   \ &listchars, &hlsearch, &cursorline, &cursorline
   let g:traces_preserve_view_state = 0
   let g:traces_substitute_preview  = 1
+  let g:traces_skip_modifiers = 1
 
   function! Group(group) abort
     let matches = filter(getmatches(), {idx, val -> val.group == a:group})
@@ -19,6 +20,7 @@ After:
 Before:
   let g:traces_preserve_view_state = 0
   let g:traces_substitute_preview  = 1
+  let g:traces_skip_modifiers = 1
   call clearmatches()
 
 #######################
@@ -350,6 +352,30 @@ Execute (Substitute):
   call traces#init('3;5s/\w\+/\r')
   AssertEqual '\%>2l\%<9l\_.', Group('Visual')
 
+Execute (Substitute):
+  call traces#init('silent! 3;5s/\w\+/\r')
+  AssertEqual '\%>2l\%<9l\_.', Group('Visual')
+
+Execute (Substitute):
+  call traces#init('cdo 3;5s/\w\+/\r')
+  AssertEqual '\%>2l\%<9l\_.', Group('Visual')
+
+Execute (Substitute):
+  call traces#init(':3;5s/\w\+/\r')
+  AssertEqual '\%>2l\%<9l\_.', Group('Visual')
+
+Execute (Substitute):
+  call traces#init(':::: 3;5s/\w\+/\r')
+  AssertEqual '\%>2l\%<9l\_.', Group('Visual')
+
+Execute (Substitute):
+  call traces#init('silent! 0;$windo silent! 3;5s/\w\+/\r')
+  AssertEqual '\%>2l\%<9l\_.', Group('Visual')
+
+Execute (Substitute):
+  let g:traces_skip_modifiers = 0
+  call traces#init('silent! 0;$windo silent! 3;5s/\w\+/\r')
+  AssertEqual 0, Group('Visual')
 
 Given (Three paragraphs):
   paragraph1

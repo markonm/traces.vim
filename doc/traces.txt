@@ -71,6 +71,12 @@ will use live preview.
 
   Default value: 1
 
+                                                *g:traces_skip_modifiers*
+If value is 1, do-modifiers, |cdo|, |cfdo|, |ldo|, |lfdo|, |bufdo|, |tabdo|,
+|argdo| and |windo,| will be ignored when processing command line.
+
+  Default value: 1
+
 ==============================================================================
 BUGS						*traces-bugs*
  - \& range specifier is not supported

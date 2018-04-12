@@ -8,6 +8,7 @@ set cpo-=C
 
 let g:traces_preserve_view_state = get(g:, 'traces_preserve_view_state')
 let g:traces_substitute_preview  = get(g:, 'traces_substitute_preview', 1)
+let g:traces_skip_modifiers      = get(g:, 'traces_skip_modifiers', 1)
 
 function! s:track_cmdl(...) abort
   let current_cmdl = getcmdline()

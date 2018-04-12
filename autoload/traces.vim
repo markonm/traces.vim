@@ -904,6 +904,52 @@ function! s:adjust_cmdheight(cmdl) abort
   endif
 endfunction
 
+function! s:skip_modifiers(cmdl) abort
+  let cmdl = a:cmdl
+
+  " skip leading colon
+  let cmdl = substitute(cmdl, '\v^:+', '', '')
+
+  " skip modifiers
+  let pattern = '\v^\s*%('
+        \ . 'sil%[ent]\!=|'
+        \ . 'verb%[ose]|'
+        \ . 'noa%[utocmd]|'
+        \ . 'loc%[kmarks]'
+        \ . 'keepp%[atterns]|'
+        \ . 'keepa%[lt]|'
+        \ . 'keepj%[umps]|'
+        \ . 'kee%[pmarks]|'
+        \ . ')\s+'
+  while 1
+    let offset = matchstrpos(cmdl, pattern)
+    if offset[2] isnot -1
+      let cmdl = strcharpart(cmdl, offset[2])
+    else
+      break
+    endif
+  endwhile
+
+  if g:traces_skip_modifiers
+    " skip *do modifiers
+    let cmdl = substitute(cmdl,
+          \ '\v^\s*%(%(%(\d+|\.|\$|\%)\s*[,;]=\s*)+)=\s*%(cdo|cfdo|ld%[o]|lfdo'
+          \ . '|bufd%[o]|tabd%[o]|argdo|wind%[o])\!=\s+', '', '')
+
+    " skip modifiers
+    while 1
+      let offset = matchstrpos(cmdl, pattern)
+      if offset[2] isnot -1
+        let cmdl = strcharpart(cmdl, offset[2])
+      else
+        break
+      endif
+    endwhile
+  endif
+
+  return cmdl
+endfunction
+
 function! traces#init(cmdl) abort
   if &buftype ==# 'terminal' || (has('nvim') && !empty(&inccommand))
     if exists('s:track_cmdl_timer')
@@ -933,7 +979,7 @@ function! traces#init(cmdl) abort
     call s:restore_marks()
     call winrestview(view)
   endif
-  let cmdl = s:evaluate_cmdl([a:cmdl])
+  let cmdl = s:evaluate_cmdl([s:skip_modifiers(a:cmdl)])
 
   if s:buf[s:nr].duration < s:timeout
     " range preview
