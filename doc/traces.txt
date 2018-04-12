@@ -6,9 +6,9 @@ CONTENTS					*traces-contents*
 Introduction            |traces-introduction|
 Requirements            |traces-requirements|
 Settings                |traces-settings|
-                          - |g:traces_whole_file_range|
                           - |g:traces_preserve_view_state|
                           - |g:traces_substitute_preview|
+                          - |g:traces_skip_modifiers|
 Bugs                    |traces-bugs|
 Changelog               |traces-changelog|
 
