@@ -262,7 +262,7 @@ Execute (Range):
 Execute (Range):
   6
   call traces#init('/ten/;?four')
-  AssertEqual '\m\%>3l\%<5l\%(\mfour\m\)', Group('Search')
+  AssertEqual '\m\%>3l\%<5l\%(\mfour\m\)', Group('TracesSearch')
 
 Execute (Range):
   6
@@ -329,16 +329,16 @@ Execute (Range):
 Execute (Range):
   call traces#init('7,/four/s/foobar')
   AssertEqual '\%>3l\%<8l\_.', Group('Visual')
-  AssertEqual '\m\%>3l\%<8l\%(\mfoobar\m\)', Group('Search')
+  AssertEqual '\m\%>3l\%<8l\%(\mfoobar\m\)', Group('TracesSearch')
 
 Execute (Global):
   call traces#init('7,/four/g/foobar')
   AssertEqual '\%>3l\%<8l\_.', Group('Visual')
-  AssertEqual '\m\%>3l\%<8l\%(\mfoobar\m\)', Group('Search')
+  AssertEqual '\m\%>3l\%<8l\%(\mfoobar\m\)', Group('TracesSearch')
 
 Execute (Global):
   call traces#init('g/foobar')
-  AssertEqual '\mfoobar', Group('Search')
+  AssertEqual '\mfoobar', Group('TracesSearch')
 
 Execute (Range):
   call traces#init('7;/four/')

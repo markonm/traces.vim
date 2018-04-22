@@ -9,6 +9,7 @@ Settings                |traces-settings|
                           - |g:traces_preserve_view_state|
                           - |g:traces_substitute_preview|
                           - |g:traces_skip_modifiers|
+Highlights              |traces-highlights|
 Bugs                    |traces-bugs|
 Changelog               |traces-changelog|
 
@@ -76,6 +77,12 @@ If value is 1, do-modifiers, |cdo|, |cfdo|, |ldo|, |lfdo|, |bufdo|, |tabdo|,
 |argdo| and |windo,| will be ignored when processing command line.
 
   Default value: 1
+
+==============================================================================
+HIGHLIGHTS					*traces-highlights*
+
+                                                *hl-TracesSearch*
+Search pattern highlighting. Links to |hl-Search| by default.
 
 ==============================================================================
 BUGS						*traces-bugs*
