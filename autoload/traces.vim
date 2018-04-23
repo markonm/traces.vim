@@ -566,7 +566,7 @@ function! s:highlight(group, pattern, priority) abort
     return
   endif
 
-  if &hlsearch && !empty(a:pattern) && a:group ==# 'Search'
+  if &hlsearch && !empty(a:pattern) && a:group ==# 'TracesSearch'
     let &hlsearch = 0
   endif
   if &scrolloff !=# 0
@@ -674,14 +674,14 @@ function! s:live_substitute(cmdl) abort
   call s:pos_pattern(ptrn, range, dlm, 1)
 
   if !g:traces_substitute_preview || &readonly || !&modifiable || empty(str) && empty(l_dlm)
-    call s:highlight('Search', ptrn, 101)
+    call s:highlight('TracesSearch', ptrn, 101)
     return
   endif
 
   call s:save_undo_history()
 
   if s:buf[s:nr].undo_file is 0
-    call s:highlight('Search', ptrn, 101)
+    call s:highlight('TracesSearch', ptrn, 101)
     return
   endif
 
@@ -712,13 +712,13 @@ function! s:live_substitute(cmdl) abort
     let range[-1] -= lines
     call s:highlight('Visual', s:get_selection_regexp(range), 100)
   endif
-  call s:highlight('Search', s:s_start . '\_.\{-}' . s:s_end, 101)
+  call s:highlight('TracesSearch', s:s_start . '\_.\{-}' . s:s_end, 101)
   call s:highlight('Conceal', s:s_start . '\|' . s:s_end, 102)
 endfunction
 
 function! s:live_global(cmdl) abort
   if empty(a:cmdl.range.specifier) && has_key(a:cmdl.cmd.args, 'pattern')
-    call s:highlight('Search', a:cmdl.cmd.args.pattern, 101)
+    call s:highlight('TracesSearch', a:cmdl.cmd.args.pattern, 101)
     call s:pos_pattern(a:cmdl.cmd.args.pattern, a:cmdl.range.abs, a:cmdl.cmd.args.delimiter, 0)
   endif
 endfunction
@@ -978,7 +978,7 @@ function! traces#init(cmdl) abort
     if (!empty(cmdl.cmd.name) || s:buf[s:nr].show_range) && !get(s:, 'entire_file')
       call s:highlight('Visual', cmdl.range.pattern, 100)
       if empty(cmdl.cmd.name)
-        call s:highlight('Search', cmdl.range.specifier, 101)
+        call s:highlight('TracesSearch', cmdl.range.specifier, 101)
       endif
       call s:pos_range(cmdl.range.end, cmdl.range.specifier)
     endif
@@ -996,7 +996,7 @@ function! traces#init(cmdl) abort
       call s:highlight('Visual', '', 100)
     endif
     if empty(cmdl.cmd.name) && empty(cmdl.range.specifier)
-      call s:highlight('Search', '', 101)
+      call s:highlight('TracesSearch', '', 101)
     endif
   endif
 

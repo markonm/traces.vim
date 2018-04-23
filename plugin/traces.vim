@@ -82,5 +82,7 @@ augroup traces_augroup
   autocmd CmdlineLeave : call traces#cmdl_leave()
 augroup END
 
+highlight default link TracesSearch Search
+
 let &cpo = s:cpo_save
 unlet s:cpo_save
