@@ -1,6 +1,6 @@
 *traces.txt*	Range and pattern preview for Command-line mode
 
-Version 0.1.0
+Version 1.0.0
 
 CONTENTS					*traces-contents*
 Introduction            |traces-introduction|
@@ -90,13 +90,25 @@ BUGS						*traces-bugs*
  - if range is one blank line it will not be highlighted
  - highlighting is disabled for |:terminal| windows because of redrawing issues
  - on Windows, cursor is not blinking because of high frequency timer this
-   plugin is using
+   plugin is using (doesn't apply if Vim has |CmdlineChanged| event)
 
 
  - If you have any problems or suggestions, please let me know at:
+   https://github.com/markonm/traces.vim
 
 ==============================================================================
 CHANGELOG					*traces-changelog*
+
+1.0.0   April 30, 2018                          *traces-changelog-1.0.0*
+        - Substitute preview
+        - Use |CmdlineChanged| event
+        - New options
+          - |g:traces_substitute_preview|
+          - |g:traces_skip_modifiers|
+        - Deprecated options
+          - |g:traces_whole_file_range|
+        - New highlight group |hl-TracesSearch|
+        - Various bugs fixed
 
 0.1.0   December 21, 2017                       *traces-changelog-0.1.0*
         - Increased Vim/Neovim requirements
