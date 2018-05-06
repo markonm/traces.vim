@@ -77,9 +77,9 @@ silent! cnoremap <unique> <expr> <c-r><c-o><c-p> traces#check_b() ? "\<c-r>\<c-r
 
 augroup traces_augroup
   autocmd!
-  autocmd CmdlineEnter,CmdwinLeave : call s:t_start()
-  autocmd CmdlineLeave,CmdwinEnter : call s:t_stop()
-  autocmd CmdlineLeave : call traces#cmdl_leave()
+  autocmd CmdlineEnter,CmdwinLeave : nested call s:t_start()
+  autocmd CmdlineLeave,CmdwinEnter : nested call s:t_stop()
+  autocmd CmdlineLeave : nested call traces#cmdl_leave()
 augroup END
 
 highlight default link TracesSearch Search
