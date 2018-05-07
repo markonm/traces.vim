@@ -567,11 +567,11 @@ function! s:highlight(group, pattern, priority) abort
   endif
 
   if &hlsearch && !empty(a:pattern) && a:group ==# 'TracesSearch'
-    let &hlsearch = 0
+    noautocmd let &hlsearch = 0
   endif
   if &scrolloff !=# 0
     let scrolloff = &scrolloff
-    let &scrolloff = 0
+    noautocmd let &scrolloff = 0
   endif
 
   let alt_win = win_getid(winnr('#'))
@@ -599,8 +599,8 @@ function! s:highlight(group, pattern, priority) abort
       let s:win[id].options = get(s:win[id], 'options', {})
       let s:win[id].options.conceallevel = &conceallevel
       let s:win[id].options.concealcursor = &concealcursor
-      set conceallevel=2
-      set concealcursor=c
+      noautocmd set conceallevel=2
+      noautocmd set concealcursor=c
     endif
     " highlighting doesn't work properly when cursorline or cursorcolumn is
     " enabled
@@ -608,8 +608,8 @@ function! s:highlight(group, pattern, priority) abort
       let s:win[id].options = get(s:win[id], 'options', {})
       let s:win[id].options.cursorcolumn = &cursorcolumn
       let s:win[id].options.cursorline = &cursorline
-      set nocursorcolumn
-      set nocursorline
+      noautocmd set nocursorcolumn
+      noautocmd set nocursorline
     endif
   endfor
   if bufname('%') !=# '[Command Line]'
@@ -617,7 +617,7 @@ function! s:highlight(group, pattern, priority) abort
     noautocmd call win_gotoid(cur_win)
   endif
   if exists('scrolloff')
-    let &scrolloff = scrolloff
+    noautocmd let &scrolloff = scrolloff
   endif
 endfunction
 
@@ -691,9 +691,9 @@ function! s:live_substitute(cmdl) abort
   let lines = line('$')
   let view = winsaveview()
   let ul = &undolevels
-  let &undolevels = 0
+  noautocmd let &undolevels = 0
   silent! execute cmd
-  let &undolevels = ul
+  noautocmd let &undolevels = ul
 
   if tick == b:changedtick
     return
@@ -751,7 +751,7 @@ function! traces#cmdl_leave() abort
   if exists('s:win[win_getid()]')
     if &scrolloff !=# 0
       let scrolloff = &scrolloff
-      let &scrolloff = 0
+      noautocmd let &scrolloff = 0
     endif
     let cur_win = win_getid()
     let alt_win = win_getid(winnr('#'))
@@ -768,7 +768,7 @@ function! traces#cmdl_leave() abort
         endif
         if exists('s:win[id].options')
           for option in keys(s:win[id].options)
-            execute 'let &' . option . '="' . s:win[id].options[option] . '"'
+            execute 'noautocmd let &' . option . '="' . s:win[id].options[option] . '"'
           endfor
         endif
         unlet s:win[id]
@@ -779,15 +779,15 @@ function! traces#cmdl_leave() abort
       noautocmd call win_gotoid(cur_win)
     endif
     if exists('scrolloff')
-      let &scrolloff = scrolloff
+      noautocmd let &scrolloff = scrolloff
     endif
   endif
 
   if &hlsearch !=# s:buf[s:nr].hlsearch
-    let &hlsearch = s:buf[s:nr].hlsearch
+    noautocmd let &hlsearch = s:buf[s:nr].hlsearch
   endif
   if &cmdheight !=# s:buf[s:nr].cmdheight
-    let &cmdheight = s:buf[s:nr].cmdheight
+    noautocmd let &cmdheight = s:buf[s:nr].cmdheight
   endif
   if winsaveview() !=# s:buf[s:nr].view
     call winrestview(s:buf[s:nr].view)
@@ -888,10 +888,10 @@ function! s:adjust_cmdheight(cmdl) abort
   let col = &columns
   let height = &cmdheight
   if col * height < len
-    let &cmdheight=(len / col) + 1
+    noautocmd let &cmdheight=(len / col) + 1
     redraw
   elseif col * (height - 1) >= len && height > s:buf[s:nr].cmdheight
-    let &cmdheight=max([(len / col), s:buf[s:nr].cmdheight])
+    noautocmd let &cmdheight=max([(len / col), s:buf[s:nr].cmdheight])
     redraw
   endif
 endfunction
