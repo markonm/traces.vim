@@ -734,6 +734,7 @@ function! s:cmdl_enter() abort
   let s:buf[s:nr].cfile = expand('<cfile>')
   let s:buf[s:nr].cur_init_pos = [line('.'), col('.')]
   let s:buf[s:nr].seq_last = undotree().seq_last
+  let s:buf[s:nr].empty_undotree = empty(undotree().entries)
   let s:buf[s:nr].changed = 0
   let s:buf[s:nr].cmdheight = &cmdheight
   call s:save_marks()
@@ -834,7 +835,7 @@ function! s:save_undo_history() abort
   if exists('s:buf[s:nr].undo_file')
     return
   endif
-  if bufname('%') ==# '[Command Line]' || !s:buf[s:nr].seq_last
+  if bufname('%') ==# '[Command Line]' || s:buf[s:nr].empty_undotree
     let s:buf[s:nr].undo_file = 1
     return
   endif
