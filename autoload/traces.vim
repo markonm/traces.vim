@@ -1012,7 +1012,11 @@ function! traces#init(cmdl) abort
     if has('nvim')
       redraw
     else
-      call winline()
+      if exists('##CmdlineChanged')
+        redraw
+      else
+        call winline()
+      endif
       " after patch 8.0.1449, necessary for linux cui, otherwise highlighting
       " is not drawn properly, fixed by 8.0.1476
       if has('unix') && !has('gui_running') && has("patch-8.0.1449") && !has("patch-8.0.1476")
