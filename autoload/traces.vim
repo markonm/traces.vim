@@ -674,7 +674,7 @@ function! s:format_command(cmdl) abort
   return c
 endfunction
 
-function! s:live_substitute(cmdl) abort
+function! s:preview_substitute(cmdl) abort
   if empty(a:cmdl.cmd.args)
     return
   endif
@@ -730,14 +730,14 @@ function! s:live_substitute(cmdl) abort
   call s:highlight('Conceal', s:s_start . '\|' . s:s_end, 102)
 endfunction
 
-function! s:live_global(cmdl) abort
+function! s:preview_global(cmdl) abort
   if empty(a:cmdl.range.specifier) && has_key(a:cmdl.cmd.args, 'pattern')
     call s:highlight('TracesSearch', a:cmdl.cmd.args.pattern, 101)
     call s:pos_pattern(a:cmdl.cmd.args.pattern, a:cmdl.range.abs, a:cmdl.cmd.args.delimiter, 0)
   endif
 endfunction
 
-function! s:live_sort(cmdl) abort
+function! s:preview_sort(cmdl) abort
   if empty(a:cmdl.range.specifier) && has_key(a:cmdl.cmd.args, 'pattern')
     call s:highlight('TracesSearch', a:cmdl.cmd.args.pattern, 101)
     call s:pos_pattern(a:cmdl.cmd.args.pattern, a:cmdl.range.abs, a:cmdl.cmd.args.delimiter, 0)
@@ -1007,11 +1007,11 @@ function! traces#init(cmdl) abort
 
     " cmd preview
     if cmdl.cmd.name =~# '\v^%(s%[ubstitute]|sm%[agic]|sno%[magic])$'
-      call s:live_substitute(cmdl)
+      call s:preview_substitute(cmdl)
     elseif cmdl.cmd.name =~# '\v^%(g%[lobal]\!=|v%[global])$'
-      call s:live_global(cmdl)
+      call s:preview_global(cmdl)
     elseif cmdl.cmd.name =~# '\v^%(sor%[t]\!=)$'
-      call s:live_sort(cmdl)
+      call s:preview_sort(cmdl)
     endif
 
     " clear unnecessary hl
