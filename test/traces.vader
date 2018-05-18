@@ -231,6 +231,10 @@ Given (Ten lines):
   13  \
   14  four
 
+Execute (Sort):
+  call traces#init('%sort /\w\+/')
+  AssertEqual '\m\%>0l\%<15l\%(\m\w\+\m\)', Group('TracesSearch')
+
 Execute (Global):
   call traces#init('7,/four/g/foobar')
   AssertEqual '\m\%>3l\%<8l\%(\mfoobar\m\)', Group('TracesSearch')

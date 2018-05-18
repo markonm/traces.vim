@@ -36,6 +36,7 @@ Patterns for the following commands will be highlighted immediatelly as typed:
   |:snomagic|
   |:global|
   |:vglobal|
+  |:sort|
 
 Live preview is implemented for the following commands:
 

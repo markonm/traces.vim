@@ -507,12 +507,26 @@ function! s:parse_substitute(cmdl) abort
   return args
 endfunction
 
+function! s:parse_sort(cmdl) abort
+  call s:trim(a:cmdl.string)
+  let pattern = '\v^.{-}([[:graph:]]&[^[:alnum:]\\"|])(%(\\.|.){-})%((\1)|$)'
+  let args = {}
+  let r = matchlist(a:cmdl.string[0], pattern)
+  if len(r)
+    let args.delimiter = r[1]
+    let args.pattern   = s:add_flags((empty(r[2]) && !empty(r[3])) ? s:last_pattern : r[2], a:cmdl, 1)
+  endif
+  return args
+endfunction
+
 function! s:parse_command(cmdl) abort
   let a:cmdl.cmd.name = s:get_command(a:cmdl.string)
   if a:cmdl.cmd.name =~# '\v^%(g%[lobal]\!=|v%[global])$'
     let a:cmdl.cmd.args = s:parse_global(a:cmdl)
   elseif a:cmdl.cmd.name =~# '\v^%(s%[ubstitute]|sm%[agic]|sno%[magic])$'
     let a:cmdl.cmd.args = s:parse_substitute(a:cmdl)
+  elseif a:cmdl.cmd.name =~# '\v^%(sor%[t]\!=)$'
+    let a:cmdl.cmd.args = s:parse_sort(a:cmdl)
   endif
 endfunction
 
@@ -717,6 +731,13 @@ function! s:live_substitute(cmdl) abort
 endfunction
 
 function! s:live_global(cmdl) abort
+  if empty(a:cmdl.range.specifier) && has_key(a:cmdl.cmd.args, 'pattern')
+    call s:highlight('TracesSearch', a:cmdl.cmd.args.pattern, 101)
+    call s:pos_pattern(a:cmdl.cmd.args.pattern, a:cmdl.range.abs, a:cmdl.cmd.args.delimiter, 0)
+  endif
+endfunction
+
+function! s:live_sort(cmdl) abort
   if empty(a:cmdl.range.specifier) && has_key(a:cmdl.cmd.args, 'pattern')
     call s:highlight('TracesSearch', a:cmdl.cmd.args.pattern, 101)
     call s:pos_pattern(a:cmdl.cmd.args.pattern, a:cmdl.range.abs, a:cmdl.cmd.args.delimiter, 0)
@@ -987,9 +1008,10 @@ function! traces#init(cmdl) abort
     " cmd preview
     if cmdl.cmd.name =~# '\v^%(s%[ubstitute]|sm%[agic]|sno%[magic])$'
       call s:live_substitute(cmdl)
-    endif
-    if cmdl.cmd.name =~# '\v^%(g%[lobal]\!=|v%[global])$'
+    elseif cmdl.cmd.name =~# '\v^%(g%[lobal]\!=|v%[global])$'
       call s:live_global(cmdl)
+    elseif cmdl.cmd.name =~# '\v^%(sor%[t]\!=)$'
+      call s:live_sort(cmdl)
     endif
 
     " clear unnecessary hl
