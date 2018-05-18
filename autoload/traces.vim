@@ -997,6 +997,7 @@ function! traces#init(cmdl) abort
       call s:highlight('Visual', '', 100)
     endif
     if empty(cmdl.cmd.name) && empty(cmdl.range.specifier)
+          \ || !empty(cmdl.cmd.name) && empty(cmdl.cmd.args)
       call s:highlight('TracesSearch', '', 101)
     endif
   endif
