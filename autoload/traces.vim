@@ -589,7 +589,7 @@ function! s:highlight(group, pattern, priority) abort
       let s:highlighted = 1
     elseif s:win[id].hlight[a:group].pattern !=# a:pattern
       if s:win[id].hlight[a:group].index !=# -1
-        call matchdelete(s:win[id].hlight[a:group].index)
+        silent! call matchdelete(s:win[id].hlight[a:group].index)
       endif
       let s:win[id].hlight[a:group].pattern = a:pattern
       silent! let s:win[id].hlight[a:group].index = matchadd(a:group, a:pattern, a:priority)
@@ -763,7 +763,7 @@ function! traces#cmdl_leave() abort
         if exists('s:win[id].hlight')
           for group in keys(s:win[id].hlight)
             if s:win[id].hlight[group].index !=# - 1
-              call matchdelete(s:win[id].hlight[group].index)
+              silent! call matchdelete(s:win[id].hlight[group].index)
             endif
           endfor
         endif
