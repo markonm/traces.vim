@@ -758,6 +758,7 @@ function! s:cmdl_enter() abort
   let s:buf[s:nr].empty_undotree = empty(undotree().entries)
   let s:buf[s:nr].changed = 0
   let s:buf[s:nr].cmdheight = &cmdheight
+  let s:buf[s:nr].redraw = 1
   call s:save_marks()
 endfunction
 
@@ -1035,8 +1036,12 @@ function! traces#init(cmdl) abort
     if has('nvim')
       redraw
     else
-      if exists('##CmdlineChanged')
+      " https://github.com/markonm/traces.vim/issues/17
+      " if Vim is missing CmdlineChanged, use explicit redraw only at the
+      " start of preview or else it is going to be slow
+      if exists('##CmdlineChanged') || s:buf[s:nr].redraw
         redraw
+        let s:buf[s:nr].redraw = 0
       else
         call winline()
       endif
