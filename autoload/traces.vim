@@ -1004,6 +1004,9 @@ function! traces#init(cmdl) abort
         call s:highlight('TracesSearch', cmdl.range.specifier, 101)
       endif
       call s:pos_range(cmdl.range.end, cmdl.range.specifier)
+    else
+      " clear unnecessary range hl
+      call s:highlight('Visual', '', 100)
     endif
 
     " cmd preview
@@ -1015,10 +1018,7 @@ function! traces#init(cmdl) abort
       call s:preview_sort(cmdl)
     endif
 
-    " clear unnecessary hl
-    if empty(cmdl.range.pattern) || get(s:, 'entire_file')
-      call s:highlight('Visual', '', 100)
-    endif
+    " clear unnecessary pattern hl
     if empty(cmdl.cmd.name) && empty(cmdl.range.specifier)
           \ || !empty(cmdl.cmd.name) && empty(cmdl.cmd.args)
       call s:highlight('TracesSearch', '', 101)

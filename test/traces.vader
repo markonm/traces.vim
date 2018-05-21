@@ -359,6 +359,18 @@ Execute (Substitute):
   AssertEqual '\%>2l\%<6l\_.', Group('Visual')
 
 Execute (Substitute):
+  call traces#init('3;5s/\w\+/foobar')
+  AssertEqual '\%>2l\%<6l\_.', Group('Visual')
+  call traces#init('3;5')
+  AssertEqual 0, Group('Visual')
+
+Execute (Substitute):
+  call traces#init('3;5s/\w\+/foobar')
+  AssertEqual '\%>2l\%<6l\_.', Group('Visual')
+  call traces#init('3;5sgibberish')
+  AssertEqual 0, Group('Visual')
+
+Execute (Substitute):
   call traces#init('3;5s/\w\+/\r')
   AssertEqual '\%>2l\%<9l\_.', Group('Visual')
 
