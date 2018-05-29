@@ -77,8 +77,8 @@ let s:cmd_pattern = '\v\C^%('
                 \ . 'z[[:alnum:]]@!'
                 \ . ')'
 
-let s:s_start = ''
-let s:s_end   = ''
+let s:s_start = get(g:, 'traces_start_mark', '')
+let s:s_end   = get(g:, 'traces_end_mark', '')
 
 let s:win = {}
 let s:buf = {}
