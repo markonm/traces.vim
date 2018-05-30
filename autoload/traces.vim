@@ -77,9 +77,6 @@ let s:cmd_pattern = '\v\C^%('
                 \ . 'z[[:alnum:]]@!'
                 \ . ')'
 
-let s:s_start = get(g:, 'traces_start_mark', '')
-let s:s_end   = get(g:, 'traces_end_mark', '')
-
 let s:win = {}
 let s:buf = {}
 
@@ -657,16 +654,15 @@ function! s:format_command(cmdl) abort
   let c .= a:cmdl.cmd.args.pattern_org
   let c .= a:cmdl.cmd.args.delimiter
   if a:cmdl.cmd.args.string =~# '^\\='
-    let c .= '\=' . "'" . s:s_start . "'" . '
+    let c .= '\=' . "'" . s:buf[s:nr].s_mark . "'" . '
           \ . (' . substitute(a:cmdl.cmd.args.string, '^\\=', '', '') . ')
-          \ . ' . "'" . s:s_end . "'"
+          \ . ' . "'" . s:buf[s:nr].s_mark . "'"
   else
-    " make ending single backslash literal or else it will escape character
-    " inside s_end
+    " make ending single backslash literal or else it will escape s_mark
     if substitute(a:cmdl.cmd.args.string, '\\\\', '', 'g') =~# '\\$'
-      let c .= s:s_start . a:cmdl.cmd.args.string . '\' . s:s_end
+      let c .= s:buf[s:nr].s_mark . a:cmdl.cmd.args.string . '\' . s:buf[s:nr].s_mark
     else
-      let c .= s:s_start . a:cmdl.cmd.args.string . s:s_end
+      let c .= s:buf[s:nr].s_mark . a:cmdl.cmd.args.string . s:buf[s:nr].s_mark
     endif
   endif
   let c .= a:cmdl.cmd.args.delimiter
@@ -726,8 +722,8 @@ function! s:preview_substitute(cmdl) abort
     let range[-1] -= lines
     call s:highlight('Visual', s:get_selection_regexp(range), 100)
   endif
-  call s:highlight('TracesSearch', s:s_start . '\_.\{-}' . s:s_end, 101)
-  call s:highlight('Conceal', s:s_start . '\|' . s:s_end, 102)
+  call s:highlight('TracesSearch', s:buf[s:nr].s_mark . '\_.\{-}' . s:buf[s:nr].s_mark, 101)
+  call s:highlight('Conceal', s:buf[s:nr].s_mark . '\|' . s:buf[s:nr].s_mark, 102)
 endfunction
 
 function! s:preview_global(cmdl) abort
@@ -759,6 +755,7 @@ function! s:cmdl_enter() abort
   let s:buf[s:nr].changed = 0
   let s:buf[s:nr].cmdheight = &cmdheight
   let s:buf[s:nr].redraw = 1
+  let s:buf[s:nr].s_mark = (&encoding == 'utf-8' ? "\uf8b4" : '' )
   call s:save_marks()
 endfunction
 
