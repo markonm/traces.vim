@@ -1,6 +1,6 @@
 Execute (Setup):
   Save g:traces_preserve_view_state, g:traces_substitute_preview,
-  \ &listchars, &hlsearch, &cursorline, &cursorline
+  \ &listchars, &hlsearch, &cursorline, &cursorline, &encoding
   let g:traces_preserve_view_state = 0
   let g:traces_substitute_preview  = 1
   let g:traces_skip_modifiers = 1
@@ -13,6 +13,7 @@ Execute (Setup):
   endfunction
 
   let &listchars = 'eol:.'
+  set encoding=utf-8
 
 After:
   call traces#cmdl_leave()
@@ -417,15 +418,15 @@ Execute (Substitute with a backlash at the end of string):
   call traces#init('%s/foo/\')
 
 Expect:
-  \
-  \
-  \
+  \
+  \
+  \
 
 Execute (Substitute on first line):
   call traces#init('s/foo/bar')
 
 Expect:
-  bar
+  bar
   foo
   foo
 
@@ -433,17 +434,17 @@ Execute (Substitute on first and second line):
   call traces#init('1;2s/foo/bar')
 
 Expect:
-  bar
-  bar
+  bar
+  bar
   foo
 
 Execute (Substitute on every line):
   call traces#init('%s/foo/bar')
 
 Expect:
-  bar
-  bar
-  bar
+  bar
+  bar
+  bar
 
 Execute (Substitute on every line and revert):
   call traces#init('%s/foo/bar')
@@ -479,13 +480,13 @@ Execute (Snomagic):
   call traces#init('%snoma/.*/bar')
 
 Expect:
-  foobar
+  foobar
 
 Execute (Smagic):
   call traces#init('%sma/.*/bar')
 
 Expect:
-  bar
+  bar
 
 #######################
 # Test settings       #
@@ -543,14 +544,14 @@ Execute:
   new
   AssertEqual undotree().seq_last, 0
   call traces#init('s/^/foobar')
-  AssertEqual getline('.'), 'foobar'
+  AssertEqual getline('.'), 'foobar'
   call traces#cmdl_leave()
   AssertEqual undotree().seq_last, 1
   AssertEqual getline('.'), ''
 
 
   call traces#init('s/^/foobar')
-  AssertEqual getline('.'), 'foobar'
+  AssertEqual getline('.'), 'foobar'
   call traces#cmdl_leave()
   AssertEqual undotree().seq_last, 1
   AssertEqual getline('.'), ''
