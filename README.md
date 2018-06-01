@@ -25,15 +25,17 @@ or
 
 ## Installation
 ### Linux
-`git clone https://github.com/markonm/traces.vim ~/.vim/pack/plugins/start/traces.vim~
+`git clone https://github.com/markonm/traces.vim ~/.vim/pack/plugins/start/traces.vim`
 
 Run the `:helptags` command to generate the doc/tags file.
+
 `:helptags ~/.vim/pack/plugins/start/traces.vim/doc`
 
 ### Windows
 `git clone https://github.com/markonm/traces.vim %HOMEPATH%/vimfiles/pack/plugins/start/traces.vim`
 
 Run the `:helptags` command to generate the doc/tags file.
+
 `:helptags ~/vimfiles/pack/plugins/start/traces.vim/doc`
 
 ## Inspiration
