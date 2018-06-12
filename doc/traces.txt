@@ -53,7 +53,8 @@ or
 
 Neovim v0.2.3+
   Note:
-  - this plugin is not compatible with |inccommand|
+  - this plugin is not compatible with |inccommand|, please turn it off if you
+    want to use this plugin
 
 ==============================================================================
 SETTINGS					*traces-settings*
