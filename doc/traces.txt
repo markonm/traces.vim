@@ -17,19 +17,19 @@ Changelog               |traces-changelog|
 ==============================================================================
 INTRODUCTION					*traces-introduction*
 
-This plugin will highlight |pattern| and |:range| for Ex-commands.
+This plugin highlights |pattern|s and |:range|s for Ex-commands.
 
-Ranges which are composed of only absolute specifiers ({number}, ., $, %) will
-not be highlighted until the command that support them is specified. 
-There are many commands which use ranges other than lines in buffer and it
-would be distracting to highlight selections for them. To force immediate
-feedback for ranges composed of only absolute specifiers enter and delete '//'
-or some other pattern or mark specifier.
+Ranges that are solely composed of absolute specifiers ({number}, ., $, %)
+will not be highlighted until the Ex command that support them is specified.
+There are many commands which use ranges other than lines in a buffer and it
+would be distracting to highlight ranges for them. To force immediate preview
+for ranges solely composed of absolute specifiers, enter and delete '//' or
+some other pattern or mark specifier.
 
 Ranges which are composed of at least one pattern or mark specifier will be
 highlighted immediately.
 
-Patterns for the following commands will be highlighted immediatelly as typed:
+Patterns for the following commands will be highlighted immediately as typed:
 
   |:substitute|
   |:smagic|
@@ -53,10 +53,7 @@ or
 
 Neovim v0.2.3+
   Note:
-  - this plugin uses recently introduced feature CmdlineLeave,
-    please update your Neovim to latest version
-  - this plugin is not compatible with Neovim's inccommand option,
-    it will disable itself if inccommand is enabled
+  - this plugin is not compatible with |inccommand| option
 
 ==============================================================================
 SETTINGS					*traces-settings*

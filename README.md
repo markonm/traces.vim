@@ -1,9 +1,9 @@
 # traces.vim
 
 ## Overview
-This plugin highlights patterns and ranges for EX commands.
+This plugin highlights patterns and ranges for Ex commands.
 
-It also provides live preview for the following EX commands:
+It also provides live preview for the following Ex commands:
 ```
 :substite
 :smagic
@@ -14,11 +14,7 @@ It also provides live preview for the following EX commands:
 ### Vim v8.0.1206+
 or
 ### Neovim v0.2.3+
-#### Notes for Neovim users
-
- - this plugin uses recently introduced feature `CmdlineLeave`, please update your Neovim to latest version
- - this plugin is not compatible with [inccommand](https://neovim.io/doc/user/options.html#'inccommand'),
-   it will disable itself if inccommand is enabled
+ - this plugin is not compatible with [inccommand](https://neovim.io/doc/user/options.html#'inccommand')
 
 ## Example
 ![example](img/traces_example.gif?raw=true)
