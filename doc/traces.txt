@@ -17,7 +17,7 @@ Changelog               |traces-changelog|
 ==============================================================================
 INTRODUCTION					*traces-introduction*
 
-This plugin highlights |pattern|s and |:range|s for Ex-commands.
+This plugin highlights |pattern|s and |:range|s for Ex commands.
 
 Ranges that are solely composed of absolute specifiers ({number}, ., $, %)
 will not be highlighted until the Ex command that support them is specified.
@@ -53,7 +53,7 @@ or
 
 Neovim v0.2.3+
   Note:
-  - this plugin is not compatible with |inccommand| option
+  - this plugin is not compatible with |inccommand|
 
 ==============================================================================
 SETTINGS					*traces-settings*
