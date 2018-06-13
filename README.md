@@ -14,7 +14,7 @@ It also provides live preview for the following Ex commands:
 ### Vim v8.0.1206+
 or
 ### Neovim v0.2.3+
- - this plugin is not compatible with [inccommand](https://neovim.io/doc/user/options.html#'inccommand')
+ - this plugin is not compatible with [inccommand](https://neovim.io/doc/user/options.html#'inccommand'), please turn it off if you want to use this plugin
 
 ## Example
 ![example](img/traces_example.gif?raw=true)
