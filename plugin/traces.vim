@@ -6,6 +6,7 @@ let g:loaded_traces_plugin = 1
 let s:cpo_save = &cpo
 set cpo-=C
 
+let g:traces_enabled = get(g:, 'traces_enabled', 1)
 let g:traces_preserve_view_state = get(g:, 'traces_preserve_view_state')
 let g:traces_substitute_preview  = get(g:, 'traces_substitute_preview', 1)
 let g:traces_skip_modifiers      = get(g:, 'traces_skip_modifiers', 1)
@@ -36,6 +37,9 @@ function! s:create_cmdl_changed_au(...) abort
 endfunction
 
 function! s:t_start() abort
+  if !g:traces_enabled
+    return
+  endif
   if exists('##CmdlineChanged')
     let s:track_cmdl_timer = timer_start(30,function('s:create_cmdl_changed_au'))
   else
