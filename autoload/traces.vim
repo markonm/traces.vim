@@ -584,10 +584,20 @@ function! s:highlight(group, pattern, priority) abort
     let scrolloff = &scrolloff
     noautocmd let &scrolloff = 0
   endif
+  if &winwidth isnot 1
+    noautocmd set winwidth=1
+  endif
+  if &winheight isnot 1
+    noautocmd set winheight=1
+  endif
 
-  let alt_win = win_getid(winnr('#'))
   let windows = filter(win_findbuf(s:nr), {_, val -> win_id2win(val)})
   for id in windows
+    let wininfo = getwininfo(id)[0]
+    if wininfo.height is 0 || wininfo.width is 0
+      " skip minimized windows
+      continue
+    endif
     noautocmd call win_gotoid(id)
     let s:win[id] = get(s:win, id, {})
     let s:win[id].hlight = get(s:win[id], 'hlight', {})
@@ -624,7 +634,6 @@ function! s:highlight(group, pattern, priority) abort
     endif
   endfor
   if bufname('%') !=# '[Command Line]'
-    noautocmd call win_gotoid(alt_win)
     noautocmd call win_gotoid(cur_win)
   endif
   if exists('scrolloff')
@@ -756,6 +765,10 @@ function! s:cmdl_enter() abort
   let s:buf[s:nr].cmdheight = &cmdheight
   let s:buf[s:nr].redraw = 1
   let s:buf[s:nr].s_mark = (&encoding == 'utf-8' ? "\uf8b4" : '' )
+  let s:buf[s:nr].winrestcmd = winrestcmd()
+  let s:buf[s:nr].alt_win = win_getid(winnr('#'))
+  let s:buf[s:nr].winwidth = &winwidth
+  let s:buf[s:nr].winheight = &winheight
   call s:save_marks()
 endfunction
 
@@ -777,6 +790,11 @@ function! traces#cmdl_leave() abort
     let alt_win = win_getid(winnr('#'))
     let windows = filter(win_findbuf(s:nr), {_, val -> win_id2win(val)})
     for id in windows
+      let wininfo = getwininfo(id)[0]
+      if wininfo.height is 0 || wininfo.width is 0
+        " skip minimized windows
+        continue
+      endif
       noautocmd call win_gotoid(id)
       if exists('s:win[id]')
         if exists('s:win[id].hlight')
@@ -795,7 +813,7 @@ function! traces#cmdl_leave() abort
       endif
     endfor
     if bufname('%') !=# '[Command Line]'
-      noautocmd call win_gotoid(alt_win)
+      noautocmd call win_gotoid(s:buf[s:nr].alt_win)
       noautocmd call win_gotoid(cur_win)
     endif
     if exists('scrolloff')
@@ -808,6 +826,16 @@ function! traces#cmdl_leave() abort
   endif
   if &cmdheight !=# s:buf[s:nr].cmdheight
     noautocmd let &cmdheight = s:buf[s:nr].cmdheight
+  endif
+  if &winwidth isnot s:buf[s:nr].winwidth
+    noautocmd let &winwidth = s:buf[s:nr].winwidth
+  endif
+  if &winheight isnot s:buf[s:nr].winheight
+    noautocmd let &winheight = s:buf[s:nr].winheight
+  endif
+
+  if winrestcmd() isnot s:buf[s:nr].winrestcmd
+    noautocmd execute s:buf[s:nr].winrestcmd
   endif
   if winsaveview() !=# s:buf[s:nr].view
     call winrestview(s:buf[s:nr].view)
