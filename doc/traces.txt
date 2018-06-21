@@ -59,6 +59,11 @@ Neovim v0.2.3+
 ==============================================================================
 SETTINGS					*traces-settings*
 
+                                                *g:traces_enabled*
+If value is 0, this plugin will be disabled and no highlighting will be done.
+
+  Default value: 1
+
                                                 *g:traces_preserve_view_state*
 If value is 1, view position  will not be changed when highlighting ranges or
 patterns outside initial view position.
