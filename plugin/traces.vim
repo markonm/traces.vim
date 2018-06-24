@@ -10,12 +10,13 @@ let g:traces_enabled = get(g:, 'traces_enabled', 1)
 let g:traces_preserve_view_state = get(g:, 'traces_preserve_view_state')
 let g:traces_substitute_preview  = get(g:, 'traces_substitute_preview', 1)
 let g:traces_skip_modifiers      = get(g:, 'traces_skip_modifiers', 1)
+let s:view                       = {}
 
 function! s:track_cmdl(...) abort
   let current_cmdl = getcmdline()
   if get(s:, 'previous_cmdl', '') !=# current_cmdl
     let s:previous_cmdl = current_cmdl
-    call traces#init(current_cmdl)
+    call traces#init(current_cmdl, s:view)
   endif
 endfunction
 
@@ -23,7 +24,7 @@ function! s:cmdline_changed() abort
   if exists('s:start_init_timer')
     call timer_stop(s:start_init_timer)
   endif
-  let s:start_init_timer = timer_start(1, {_-> traces#init(getcmdline())})
+  let s:start_init_timer = timer_start(1, {_-> traces#init(getcmdline(), s:view)})
 endfunction
 
 function! s:create_cmdl_changed_au(...) abort
@@ -84,6 +85,9 @@ augroup traces_augroup
   autocmd CmdlineEnter,CmdwinLeave : call s:t_start()
   autocmd CmdlineLeave,CmdwinEnter : call s:t_stop()
   autocmd CmdlineLeave : call traces#cmdl_leave()
+  " s:view is used to restore correct view when entering command line from
+  " visual mode
+  autocmd CursorMoved * let s:view = winsaveview()
 augroup END
 
 highlight default link TracesSearch Search

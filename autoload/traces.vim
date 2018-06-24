@@ -562,6 +562,10 @@ function! s:pos_range(end, pattern) abort
     return
   endif
   call cursor([a:end, 1])
+  if exists('s:buf[s:nr].pre_cmdl_view')
+    call winrestview(s:buf[s:nr].pre_cmdl_view)
+    unlet s:buf[s:nr].pre_cmdl_view
+  endif
   if !empty(a:pattern)
     call search(a:pattern, 'c', a:end, s:s_timeout)
   endif
@@ -749,7 +753,7 @@ function! s:preview_sort(cmdl) abort
   endif
 endfunction
 
-function! s:cmdl_enter() abort
+function! s:cmdl_enter(view) abort
   let s:buf[s:nr] = {}
   let s:buf[s:nr].view = winsaveview()
   let s:buf[s:nr].show_range = 0
@@ -769,6 +773,7 @@ function! s:cmdl_enter() abort
   let s:buf[s:nr].alt_win = win_getid(winnr('#'))
   let s:buf[s:nr].winwidth = &winwidth
   let s:buf[s:nr].winheight = &winheight
+  let s:buf[s:nr].pre_cmdl_view = a:view
   call s:save_marks()
 endfunction
 
@@ -990,7 +995,7 @@ function! s:skip_modifiers(cmdl) abort
   return cmdl
 endfunction
 
-function! traces#init(cmdl) abort
+function! traces#init(cmdl, view) abort
   if &buftype ==# 'terminal' || (has('nvim') && !empty(&inccommand))
     if exists('s:track_cmdl_timer')
       call timer_stop(s:track_cmdl_timer)
@@ -1000,7 +1005,7 @@ function! traces#init(cmdl) abort
 
   let s:nr =  bufnr('%')
   if !exists('s:buf[s:nr]')
-    call s:cmdl_enter()
+    call s:cmdl_enter(a:view)
   endif
 
   let s:highlighted = 0

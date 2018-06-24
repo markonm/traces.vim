@@ -44,132 +44,132 @@ Given (Ten lines):
   14  four
 
 Execute (Range):
-  call traces#init('5;10s/.')
+  call traces#init('5;10s/.', {})
   Assert line('.') == 5
 
 Execute (Range):
-  call traces#init('5;10s?.')
+  call traces#init('5;10s?.', {})
   Assert line('.') == 10
 
 Execute (Range):
-  call traces#init('10;5s/.')
+  call traces#init('10;5s/.', {})
   Assert line('.') == 5
 
 Execute (Range):
-  call traces#init('10;5s?.')
+  call traces#init('10;5s?.', {})
   Assert line('.') == 10
 
 Execute (Range):
-  call traces#init('/three')
+  call traces#init('/three', {})
   Assert line('.') == 3
 
 Execute (Range):
   /ten/
-  call traces#init('?two')
+  call traces#init('?two', {})
   Assert line('.') == 2
 
 Execute (Range):
-  call traces#init('/three/;/eight/')
+  call traces#init('/three/;/eight/', {})
   Assert line('.') == 8
 
 Execute (Range):
   7
   ma m
   1
-  call traces#init('/three/;''m')
+  call traces#init('/three/;''m', {})
   Assert line('.') == 7
 
 Execute (Range):
-  call traces#init('/foo\/bar')
+  call traces#init('/foo\/bar', {})
   Assert line('.') == 11
 
 Execute (Range):
-  call traces#init('/foo\/bar/foobar')
+  call traces#init('/foo\/bar/foobar', {})
   Assert line('.') == 11
 
 Execute (Range):
-  call traces#init('/two/3')
+  call traces#init('/two/3', {})
   Assert line('.') == 5
 
 Execute (Range):
-  call traces#init('/foo?bar')
+  call traces#init('/foo?bar', {})
   Assert line('.') == 12
 
 Execute (Range):
-  call traces#init('?foo\?bar?')
+  call traces#init('?foo\?bar?', {})
   Assert line('.') == 12
 
 Execute (Range):
-  call traces#init('?foo\?bar')
+  call traces#init('?foo\?bar', {})
   Assert line('.') == 12
 
 Execute (Range):
-  call traces#init('/ten/++')
+  call traces#init('/ten/++', {})
   Assert line('.') == 12
-  call traces#init('')
+  call traces#init('', {})
   Assert line('.') == 1
 
 Execute (Range):
-  call traces#init('/one/;11s/five')
+  call traces#init('/one/;11s/five', {})
   Assert line('.') == 5
-  call traces#init('')
+  call traces#init('', {})
   Assert line('.') == 1
 
 Execute (Range):
-  call traces#init('/one/;11g/five')
+  call traces#init('/one/;11g/five', {})
   Assert line('.') == 5
-  call traces#init('')
+  call traces#init('', {})
   Assert line('.') == 1
 
 # test g:traces_preserve_view_state = 1
 Execute (Range):
   let g:traces_preserve_view_state = 1
-  call traces#init('/ten/++')
+  call traces#init('/ten/++', {})
   Assert line('.') == 1
 
 Execute (Range):
   let g:traces_preserve_view_state = 1
-  call traces#init('/one/;11s/five')
+  call traces#init('/one/;11s/five', {})
   Assert line('.') == 1
 
 Execute (Range):
   let g:traces_preserve_view_state = 1
-  call traces#init('/one/;11g/five')
+  call traces#init('/one/;11g/five', {})
   Assert line('.') == 1
 
 Execute (Range):
   let g:traces_preserve_view_state = 1
-  call traces#init('g/five')
+  call traces#init('g/five', {})
   Assert line('.') == 1
 
 Execute (Global, test invalid pattern):
   6
-  call traces#init('g/bazbar')
+  call traces#init('g/bazbar', {})
   Assert line('.') == 6
 
 Execute (Substitute, test invalid pattern):
   6
-  call traces#init('s/bazbar')
+  call traces#init('s/bazbar', {})
   Assert line('.') == 6
 
 Execute (Substitute, test invalid pattern):
   6
-  call traces#init('%s/bazbar')
+  call traces#init('%s/bazbar', {})
   Assert line('.') == 6
 
 Execute (Range, test invalid pattern):
   6
-  call traces#init('/bazbar')
+  call traces#init('/bazbar', {})
   Assert line('.') == 6
 
 Execute (Range, test invalid pattern):
   6
-  call traces#init('?bazbar')
+  call traces#init('?bazbar', {})
   Assert line('.') == 6
 
 Execute (Range, test invalid pattern):
   6
-  call traces#init('?bazbar')
+  call traces#init('?bazbar', {})
   Assert line('.') == 6
 
 Given (Ten lines):
@@ -190,27 +190,27 @@ Given (Ten lines):
 
 Execute (Substitute with range):
   6
-  call traces#init('3;11s/baz')
+  call traces#init('3;11s/baz', {})
   Assert line('.') == 4
 
 Execute (Substitute with range):
   6
-  call traces#init('3;11s?baz')
+  call traces#init('3;11s?baz', {})
   Assert line('.') == 10
 
 Execute (Substitute with range):
   6
-  call traces#init('%s/baz')
+  call traces#init('%s/baz', {})
   Assert line('.') == 10
 
 Execute (Substitute with range):
   6
-  call traces#init('%s?baz')
+  call traces#init('%s?baz', {})
   Assert line('.') == 4
 
 Execute (Invalid substitute):
   6
-  call traces#init('s/baz')
+  call traces#init('s/baz', {})
   Assert line('.') == 6
 
 #######################
@@ -233,159 +233,159 @@ Given (Ten lines):
   14  four
 
 Execute (Sort):
-  call traces#init('%sort /\w\+/')
+  call traces#init('%sort /\w\+/', {})
   AssertEqual '\m\%>0l\%<15l\%(\m\w\+\m\)', Group('TracesSearch')
 
 Execute (Global):
-  call traces#init('7,/four/g/foobar')
+  call traces#init('7,/four/g/foobar', {})
   AssertEqual '\m\%>3l\%<8l\%(\mfoobar\m\)', Group('TracesSearch')
-  call traces#init('7,/four/g')
+  call traces#init('7,/four/g', {})
   AssertEqual 0, Group('TracesSearch')
 
 Execute (Range):
   6
-  call traces#init('/./')
+  call traces#init('/./', {})
   AssertEqual '\%>6l\%<8l\_.', Group('Visual')
-  call traces#init('/.//')
+  call traces#init('/.//', {})
   AssertEqual '\%>6l\%<8l\_.', Group('Visual')
 
 Execute (Range):
   6
-  call traces#init('?.?')
+  call traces#init('?.?', {})
   AssertEqual '\%>4l\%<6l\_.', Group('Visual')
-  call traces#init('?.??')
+  call traces#init('?.??', {})
   AssertEqual '\%>4l\%<6l\_.', Group('Visual')
 
 Execute (Range):
   6
-  call traces#init('/.')
+  call traces#init('/.', {})
   AssertEqual '\%>6l\%<8l\_.', Group('Visual')
-  call traces#init('/')
+  call traces#init('/', {})
   Assert empty(getmatches())
 
 Execute (Range):
   6
-  call traces#init('?.')
+  call traces#init('?.', {})
   AssertEqual '\%>4l\%<6l\_.', Group('Visual')
-  call traces#init('?')
+  call traces#init('?', {})
   Assert empty(getmatches())
 
 Execute (Range):
   6
-  call traces#init('/ten/;?four')
+  call traces#init('/ten/;?four', {})
   AssertEqual '\m\%>3l\%<5l\%(\mfour\m\)', Group('TracesSearch')
 
 Execute (Range):
   6
-  call traces#init('?.?;?.?;?')
+  call traces#init('?.?;?.?;?', {})
   AssertEqual '\%>3l\%<5l\_.', Group('Visual')
-  call traces#init('')
+  call traces#init('', {})
   Assert empty(getmatches())
 
 Execute (Range):
   6
-  call traces#init('/./;/./;/')
+  call traces#init('/./;/./;/', {})
   AssertEqual '\%>7l\%<9l\_.', Group('Visual')
-  call traces#init('')
+  call traces#init('', {})
   Assert empty(getmatches())
 
 Execute (Range):
-  call traces#init('22;g')
+  call traces#init('22;g', {})
   AssertEqual 0, Group('Visual')
-  call traces#init('')
+  call traces#init('', {})
   Assert empty(getmatches())
 
 
 Execute (Range):
-  call traces#init(';+++s')
+  call traces#init(';+++s', {})
   AssertEqual '\%>0l\%<5l\_.', Group('Visual')
-  call traces#init('')
+  call traces#init('', {})
   Assert empty(getmatches())
 
 
 Execute (Range):
-  call traces#init('/one/;/eight/')
+  call traces#init('/one/;/eight/', {})
   AssertEqual '\%>0l\%<9l\_.', Group('Visual')
-  call traces#init('')
+  call traces#init('', {})
   Assert empty(getmatches())
 
 Execute (Range):
-  call traces#init('1;/eight/')
+  call traces#init('1;/eight/', {})
   AssertEqual '\%>0l\%<9l\_.', Group('Visual')
 
 Execute (Range):
-  call traces#init(';/eight/')
+  call traces#init(';/eight/', {})
   AssertEqual '\%>0l\%<9l\_.', Group('Visual')
 
 Execute (Range):
-  call traces#init(',/eight/')
+  call traces#init(',/eight/', {})
   AssertEqual '\%>0l\%<9l\_.', Group('Visual')
 
 Execute (Range):
-  call traces#init(';/eight/;')
+  call traces#init(';/eight/;', {})
   AssertEqual '\%>7l\%<9l\_.', Group('Visual')
 
 Execute (Range):
-  call traces#init('3;/seven/')
+  call traces#init('3;/seven/', {})
   AssertEqual '\%>2l\%<8l\_.', Group('Visual')
 
 Execute (Range):
-  call traces#init('7;/four/')
+  call traces#init('7;/four/', {})
   AssertEqual '\%>6l\%<15l\_.', Group('Visual')
 
 Execute (Range):
-  call traces#init('7,/four/')
+  call traces#init('7,/four/', {})
   AssertEqual '\%>3l\%<8l\_.', Group('Visual')
 
 Execute (Range):
-  call traces#init('7,/four/s/foobar')
+  call traces#init('7,/four/s/foobar', {})
   AssertEqual '\%>3l\%<8l\_.', Group('Visual')
   AssertEqual '\m\%>3l\%<8l\%(\mfoobar\m\)', Group('TracesSearch')
 
 Execute (Global):
-  call traces#init('7,/four/g/foobar')
+  call traces#init('7,/four/g/foobar', {})
   AssertEqual '\%>3l\%<8l\_.', Group('Visual')
   AssertEqual '\m\%>3l\%<8l\%(\mfoobar\m\)', Group('TracesSearch')
 
 Execute (Global):
-  call traces#init('g/foobar')
+  call traces#init('g/foobar', {})
   AssertEqual '\mfoobar', Group('TracesSearch')
 
 Execute (Range):
-  call traces#init('7;/four/')
+  call traces#init('7;/four/', {})
   AssertEqual '\%>6l\%<15l\_.', Group('Visual')
 
 Execute (Substitute):
-  call traces#init('3;5s/\w\+/foobar')
+  call traces#init('3;5s/\w\+/foobar', {})
   AssertEqual '\%>2l\%<6l\_.', Group('Visual')
 
 Execute (Substitute):
-  call traces#init('3;5s/\w\+/\r')
+  call traces#init('3;5s/\w\+/\r', {})
   AssertEqual '\%>2l\%<9l\_.', Group('Visual')
 
 Execute (Substitute):
-  call traces#init('silent! 3;5s/\w\+/\r')
+  call traces#init('silent! 3;5s/\w\+/\r', {})
   AssertEqual '\%>2l\%<9l\_.', Group('Visual')
 
 Execute (Substitute):
-  call traces#init('cdo 3;5s/\w\+/\r')
+  call traces#init('cdo 3;5s/\w\+/\r', {})
   AssertEqual '\%>2l\%<9l\_.', Group('Visual')
 
 Execute (Substitute):
-  call traces#init(':3;5s/\w\+/\r')
+  call traces#init(':3;5s/\w\+/\r', {})
   AssertEqual '\%>2l\%<9l\_.', Group('Visual')
 
 Execute (Substitute):
-  call traces#init(':::: 3;5s/\w\+/\r')
+  call traces#init(':::: 3;5s/\w\+/\r', {})
   AssertEqual '\%>2l\%<9l\_.', Group('Visual')
 
 Execute (Substitute):
-  call traces#init('silent! 0;$windo silent! 3;5s/\w\+/\r')
+  call traces#init('silent! 0;$windo silent! 3;5s/\w\+/\r', {})
   AssertEqual '\%>2l\%<9l\_.', Group('Visual')
 
 Execute (Substitute):
   let g:traces_skip_modifiers = 0
-  call traces#init('silent! 0;$windo silent! 3;5s/\w\+/\r')
+  call traces#init('silent! 0;$windo silent! 3;5s/\w\+/\r', {})
   AssertEqual 0, Group('Visual')
 
 Given (Three paragraphs):
@@ -402,8 +402,8 @@ Given (Three paragraphs):
   paragraph3
 
 Execute (Substitute):
-  call traces#init(',''}s')
-  call traces#init(',''}s/')
+  call traces#init(',''}s', {})
+  call traces#init(',''}s/', {})
   AssertEqual '\%>0l\%<5l\_.', Group('Visual')
 
 #######################
@@ -415,7 +415,7 @@ Given (Three lines):
   foo
 
 Execute (Substitute with a backlash at the end of string):
-  call traces#init('%s/foo/\')
+  call traces#init('%s/foo/\', {})
 
 Expect:
   \
@@ -423,7 +423,7 @@ Expect:
   \
 
 Execute (Substitute on first line):
-  call traces#init('s/foo/bar')
+  call traces#init('s/foo/bar', {})
 
 Expect:
   bar
@@ -431,7 +431,7 @@ Expect:
   foo
 
 Execute (Substitute on first and second line):
-  call traces#init('1;2s/foo/bar')
+  call traces#init('1;2s/foo/bar', {})
 
 Expect:
   bar
@@ -439,7 +439,7 @@ Expect:
   foo
 
 Execute (Substitute on every line):
-  call traces#init('%s/foo/bar')
+  call traces#init('%s/foo/bar', {})
 
 Expect:
   bar
@@ -447,7 +447,7 @@ Expect:
   bar
 
 Execute (Substitute on every line and revert):
-  call traces#init('%s/foo/bar')
+  call traces#init('%s/foo/bar', {})
   call traces#cmdl_leave()
 
 Expect:
@@ -457,7 +457,7 @@ Expect:
 
 Execute (Turn off substitute preview and try to substitute):
   let g:traces_substitute_preview  = 0
-  call traces#init('%s/foo/bar')
+  call traces#init('%s/foo/bar', {})
 
 Expect:
   foo
@@ -465,8 +465,8 @@ Expect:
   foo
 
 Execute (Substitute and empty command line):
-  call traces#init('%s/foo/bar')
-  call traces#init('')
+  call traces#init('%s/foo/bar', {})
+  call traces#init('', {})
 
 Expect:
   foo
@@ -477,13 +477,13 @@ Given (Three lines):
   foo.*
 
 Execute (Snomagic):
-  call traces#init('%snoma/.*/bar')
+  call traces#init('%snoma/.*/bar', {})
 
 Expect:
   foobar
 
 Execute (Smagic):
-  call traces#init('%sma/.*/bar')
+  call traces#init('%sma/.*/bar', {})
 
 Expect:
   bar
@@ -498,41 +498,41 @@ Given (Three lines):
 
 Execute (Test eol):
   let &listchars = ''
-  call traces#init('1;/three/')
+  call traces#init('1;/three/', {})
   AssertEqual '\%>0l\%<4l\(.\|^\)', Group('Visual')
   let &listchars = 'eol:.'
 
 Execute (Test hlsearch):
   let &hlsearch = 1
-  call traces#init('1;/three/s/one')
+  call traces#init('1;/three/s/one', {})
   AssertEqual &hlsearch, 0
   call traces#cmdl_leave()
   AssertEqual &hlsearch, 1
 
 Execute (Test cursorcolumn):
   let &cursorcolumn = 1
-  call traces#init('1;/three/s/one')
+  call traces#init('1;/three/s/one', {})
   AssertEqual &cursorcolumn, 0
   call traces#cmdl_leave()
   AssertEqual &cursorcolumn, 1
 
 Execute (Test cursorline):
   let &cursorline = 1
-  call traces#init('1;/three/s/one')
+  call traces#init('1;/three/s/one', {})
   AssertEqual &cursorline, 0
   call traces#cmdl_leave()
   AssertEqual &cursorline, 1
 
 Execute (Test conceallevel):
   let &conceallevel = 1
-  call traces#init('1;/three/s/one/four')
+  call traces#init('1;/three/s/one/four', {})
   AssertEqual &conceallevel, 2
   call traces#cmdl_leave()
   AssertEqual &conceallevel, 1
 
 Execute (Test concealcursor):
   let &concealcursor = 'niv'
-  call traces#init('1;/three/s/one/four')
+  call traces#init('1;/three/s/one/four', {})
   AssertEqual &concealcursor, 'c'
   call traces#cmdl_leave()
   AssertEqual &concealcursor, 'niv'
@@ -543,14 +543,14 @@ Execute (Test concealcursor):
 Execute:
   new
   AssertEqual undotree().seq_last, 0
-  call traces#init('s/^/foobar')
+  call traces#init('s/^/foobar', {})
   AssertEqual getline('.'), 'foobar'
   call traces#cmdl_leave()
   AssertEqual undotree().seq_last, 1
   AssertEqual getline('.'), ''
 
 
-  call traces#init('s/^/foobar')
+  call traces#init('s/^/foobar', {})
   AssertEqual getline('.'), 'foobar'
   call traces#cmdl_leave()
   AssertEqual undotree().seq_last, 1
