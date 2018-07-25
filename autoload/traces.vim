@@ -561,11 +561,11 @@ function! s:pos_range(end, pattern) abort
   if g:traces_preserve_view_state || empty(a:end)
     return
   endif
-  call cursor([a:end, 1])
   if exists('s:buf[s:nr].pre_cmdl_view')
     call winrestview(s:buf[s:nr].pre_cmdl_view)
     unlet s:buf[s:nr].pre_cmdl_view
   endif
+  call cursor([a:end, 1])
   if !empty(a:pattern)
     call search(a:pattern, 'c', a:end, s:s_timeout)
   endif
