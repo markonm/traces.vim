@@ -44,6 +44,16 @@ Given (Ten lines):
   14  four
 
 Execute (Range):
+  1
+  call traces#init('10;5g', winsaveview())
+  Assert line('.') == 5
+
+Execute (Range):
+  1
+  call traces#init('5;10g', winsaveview())
+  Assert line('.') == 10
+
+Execute (Range):
   call traces#init('5;10s/.', {})
   Assert line('.') == 5
 
