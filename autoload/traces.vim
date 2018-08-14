@@ -1078,7 +1078,7 @@ function! traces#init(cmdl, view) abort
       " after patch 8.0.1449, necessary for linux cui, otherwise highlighting
       " is not drawn properly, fixed by 8.0.1476
       if has('unix') && !has('gui_running') && has("patch-8.0.1449") && !has("patch-8.0.1476")
-        silent! call feedkeys("\<left>\<right>", 'tn')
+        silent! call feedkeys(getcmdpos() is 1 ? "\<right>\<left>" : "\<left>\<right>", 'tn')
       endif
     endif
   endif
