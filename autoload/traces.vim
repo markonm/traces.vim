@@ -562,7 +562,9 @@ function! s:pos_range(end, pattern) abort
     return
   endif
   if exists('s:buf[s:nr].pre_cmdl_view')
-    call winrestview(s:buf[s:nr].pre_cmdl_view)
+    if a:end > line('w$') || a:end < line('w0')
+      call winrestview(s:buf[s:nr].pre_cmdl_view)
+    endif
     unlet s:buf[s:nr].pre_cmdl_view
   endif
   call cursor([a:end, 1])
