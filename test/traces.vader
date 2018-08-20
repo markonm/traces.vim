@@ -420,6 +420,19 @@ Execute (Substitute):
 # Test substitute     #
 #######################
 Given (Three lines):
+  1
+  2
+  3
+
+Execute (Substitute, expression with decimal number):
+  call traces#init('%s/\d/\=submatch(0) * 0.55', {})
+
+Expect:
+  0.55
+  1.1
+  1.65
+
+Given (Three lines):
   foo
   foo
   foo

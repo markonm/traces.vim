@@ -670,16 +670,17 @@ function! s:format_command(cmdl) abort
   let c .= a:cmdl.cmd.args.delimiter
   let c .= a:cmdl.cmd.args.pattern_org
   let c .= a:cmdl.cmd.args.delimiter
+  let s_mark = s:buf[s:nr].s_mark
   if a:cmdl.cmd.args.string =~# '^\\='
-    let c .= '\=' . "'" . s:buf[s:nr].s_mark . "'" . '
-          \ . (' . substitute(a:cmdl.cmd.args.string, '^\\=', '', '') . ')
-          \ . ' . "'" . s:buf[s:nr].s_mark . "'"
+    let c .= printf("\\='%s' . printf('%%s', %s) . '%s'",
+          \ s_mark, empty(a:cmdl.cmd.args.string[2:]) ?
+          \ '''''' : a:cmdl.cmd.args.string[2:], s_mark)
   else
     " make ending single backslash literal or else it will escape s_mark
     if substitute(a:cmdl.cmd.args.string, '\\\\', '', 'g') =~# '\\$'
-      let c .= s:buf[s:nr].s_mark . a:cmdl.cmd.args.string . '\' . s:buf[s:nr].s_mark
+      let c .= s_mark . a:cmdl.cmd.args.string . '\' . s_mark
     else
-      let c .= s:buf[s:nr].s_mark . a:cmdl.cmd.args.string . s:buf[s:nr].s_mark
+      let c .= s_mark . a:cmdl.cmd.args.string . s_mark
     endif
   endif
   let c .= a:cmdl.cmd.args.delimiter
