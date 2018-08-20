@@ -92,8 +92,8 @@ augroup traces_augroup
   " https://github.com/vim/vim/commit/b0acacd767a2b0618a7f3c08087708f4329580d0
   if has("patch-8.1.0271")
     autocmd CmdlineEnter,CmdwinLeave : let s:incsearch = &incsearch
-          \| let &incsearch = 0
-    autocmd CmdlineLeave,CmdwinEnter : let &incsearch = s:incsearch
+          \| noautocmd let &incsearch = 0
+    autocmd CmdlineLeave,CmdwinEnter : noautocmd let &incsearch = s:incsearch
   endif
 augroup END
 
