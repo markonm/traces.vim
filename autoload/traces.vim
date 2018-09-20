@@ -563,7 +563,7 @@ function! s:pos_range(end, pattern) abort
   endif
   if exists('s:buf[s:nr].pre_cmdl_view')
     if get(s:buf[s:nr].pre_cmdl_view, 'mode', '') =~# "^[vV\<C-V>]"
-          \ && (a:end > line('w$') || a:end < line('w0'))
+          \ && a:end > line('w$')
       unlet s:buf[s:nr].pre_cmdl_view.mode
       call winrestview(s:buf[s:nr].pre_cmdl_view)
     endif
