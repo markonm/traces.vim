@@ -571,7 +571,7 @@ function! s:pos_range(end, pattern) abort
   endif
   call cursor([a:end, 1])
   if !empty(a:pattern)
-    call search(a:pattern, 'c', a:end, s:s_timeout)
+    silent! call search(a:pattern, 'c', a:end, s:s_timeout)
   endif
   let s:moved = 1
 endfunction
