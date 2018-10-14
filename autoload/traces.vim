@@ -592,11 +592,11 @@ function! s:highlight(group, pattern, priority) abort
     let scrolloff = &scrolloff
     noautocmd let &scrolloff = 0
   endif
-  if &winwidth isnot 1
-    noautocmd set winwidth=1
+  if &winwidth isnot &winminwidth
+    noautocmd let &winwidth=&winminwidth
   endif
-  if &winheight isnot 1
-    noautocmd set winheight=1
+  if &winheight isnot &winminheight
+    noautocmd let &winheight=&winminheight
   endif
 
   let windows = filter(win_findbuf(s:nr), {_, val -> win_id2win(val)})
