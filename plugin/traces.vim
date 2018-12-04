@@ -38,7 +38,7 @@ function! s:create_cmdl_changed_au(...) abort
 endfunction
 
 function! s:t_start() abort
-  if !g:traces_enabled
+  if !g:traces_enabled || mode(1) =~# '^c.'
     return
   endif
   if exists('##CmdlineChanged')
@@ -84,7 +84,7 @@ augroup traces_augroup
   autocmd!
   autocmd CmdlineEnter,CmdwinLeave : call s:t_start()
   autocmd CmdlineLeave,CmdwinEnter : call s:t_stop()
-  autocmd CmdlineLeave : call traces#cmdl_leave()
+  autocmd CmdlineLeave : if mode(1) is 'c' | call traces#cmdl_leave() | endif
   " s:view is used to restore correct view when entering command line from
   " visual mode
   autocmd CursorMoved * let s:view = extend(winsaveview(), {'mode': mode()})
