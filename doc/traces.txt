@@ -1,36 +1,38 @@
-*traces.txt*	Range and pattern preview for Command-line mode
+*traces.txt*	Range, pattern and substitute preview for Vim
 
 Version 1.0.0
 
 CONTENTS					*traces-contents*
-Introduction            |traces-introduction|
-Requirements            |traces-requirements|
-Settings                |traces-settings|
-                          - |g:traces_enabled|
-                          - |g:traces_preserve_view_state|
-                          - |g:traces_substitute_preview|
-                          - |g:traces_skip_modifiers|
-Highlights              |traces-highlights|
-Bugs                    |traces-bugs|
-Changelog               |traces-changelog|
 
+  1. Introduction ........... |traces-introduction|
+  2. Requirements ........... |traces-requirements|
+  3. Settings ............... |traces-settings|
+                                - |g:traces_enabled|
+                                - |g:traces_preserve_view_state|
+                                - |g:traces_substitute_preview|
+                                - |g:traces_skip_modifiers|
+  4. Highlights               |traces-highlights|
+  5. Bugs ................... |traces-bugs|
+  6. Changelog .............. |traces-changelog|
 
 ==============================================================================
 INTRODUCTION					*traces-introduction*
 
-This plugin highlights |pattern|s and |:range|s for Ex commands.
+This plugin highlights |pattern|s and |:range|s for Ex commands in
+Command-line mode.
 
 Ranges that are solely composed of absolute specifiers ({number}, ., $, %)
 will not be highlighted until the Ex command that support them is specified.
-There are many commands which use ranges other than lines in a buffer and it
-would be distracting to highlight ranges for them. To force immediate preview
-for ranges solely composed of absolute specifiers, enter and delete '//' or
-some other pattern or mark specifier.
+There are many Ex commands which use ranges other than lines in a buffer and
+it would be distracting to highlight ranges for them. To force immediate
+preview for ranges solely composed of absolute specifiers, enter and delete
+'//' or some other pattern or mark specifier.
 
 Ranges which are composed of at least one pattern or mark specifier will be
 highlighted immediately.
 
-Patterns for the following commands will be highlighted immediately as typed:
+Patterns for the following Ex commands will be highlighted immediately as
+typed:
 
   |:substitute|
   |:smagic|
@@ -39,7 +41,7 @@ Patterns for the following commands will be highlighted immediately as typed:
   |:vglobal|
   |:sort|
 
-Live preview is implemented for the following commands:
+Live preview is implemented for the following Ex commands:
 
   |:substitute|
   |:smagic|
@@ -60,35 +62,48 @@ Neovim v0.2.3+
 ==============================================================================
 SETTINGS					*traces-settings*
 
+------------------------------------------------------------------------------
                                                 *g:traces_enabled*
+Type: Number                                                               ~
+Default: 1                                                                   ~
+
 If value is 0, this plugin will be disabled and no highlighting will be done.
 
-  Default value: 1
-
+------------------------------------------------------------------------------
                                                 *g:traces_preserve_view_state*
+Type: Number                                                               ~
+Default: 0                                                                   ~
+
 If value is 1, view position  will not be changed when highlighting ranges or
 patterns outside initial view position.
 
-  Default value: 0
-
+------------------------------------------------------------------------------
                                                 *g:traces_substitute_preview*
-If value is 1, |:substitute|, |:smagic| and |:snomagic| commands
-will use live preview.
+Type: Number                                                               ~
+Default: 1                                                                   ~
 
-  Default value: 1
+If value is 1, |:substitute|, |:smagic| and |:snomagic| Ex commands will use
+live preview.
 
+------------------------------------------------------------------------------
                                                 *g:traces_skip_modifiers*
+Type: Number                                                               ~
+Default: 1                                                                   ~
+
 If value is 1, do-modifiers, |cdo|, |cfdo|, |ldo|, |lfdo|, |bufdo|, |tabdo|,
 |argdo| and |windo,| will be ignored when processing command line.
-
-  Default value: 1
 
 ==============================================================================
 HIGHLIGHTS					*traces-highlights*
 
                                                 *hl-TracesSearch*
+
 Search pattern highlighting. Links to |hl-Search| by default.
 
+Example: >
+
+  hi link TracesSearch Incsearch
+<
 ==============================================================================
 BUGS						*traces-bugs*
  - \& range specifier is not supported
@@ -127,5 +142,6 @@ CHANGELOG					*traces-changelog*
 
 0.0.0	September 18, 2017			*traces-changelog-0.0.0*
 	- Initial version.
+
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:fen:fdl=0:fdm=marker:

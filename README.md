@@ -1,7 +1,7 @@
 # traces.vim
 
 ## Overview
-This plugin highlights patterns and ranges for Ex commands.
+This plugin highlights patterns and ranges for Ex commands in Command-line mode.
 
 It also provides live preview for the following Ex commands:
 ```
