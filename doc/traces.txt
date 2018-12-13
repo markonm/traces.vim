@@ -21,15 +21,14 @@ INTRODUCTION					*traces-introduction*
 This plugin highlights |pattern|s and |:range|s for Ex commands in
 Command-line mode.
 
-Ranges that are solely composed of absolute specifiers ({number}, ., $, %)
-will not be highlighted until the Ex command that support them is specified.
-There are many Ex commands which use ranges other than lines in a buffer and
-it would be distracting to highlight ranges for them. To force immediate
-preview for ranges solely composed of absolute specifiers, enter and delete
-'//' or some other pattern or mark specifier.
+Ranges composed of at least one pattern or mark specifier will be highlighted
+immediately. Ranges that do not include any pattern or mark specifier will not
+be highlighted because they cannot be uniquely identified as ranges related to
+buffer lines (see |:command-addr|).
 
-Ranges which are composed of at least one pattern or mark specifier will be
-highlighted immediately.
+To force immediate preview for ranges composed entirely of absolute specifiers
+({number}, ., $, %), first enter and delete '/' or some other pattern or mark
+specifier.
 
 Patterns for the following Ex commands will be highlighted immediately as
 typed:
@@ -110,7 +109,7 @@ BUGS						*traces-bugs*
  - if range is one blank line it will not be highlighted
  - highlighting is disabled for |:terminal| windows because of redrawing issues
  - on Windows, cursor is not blinking because of high frequency timer this
-   plugin is using (doesn't apply if Vim has |CmdlineChanged| event)
+   plugin is using (does not apply if Vim has |CmdlineChanged| event)
 
 
  - If you have any problems or suggestions, please let me know at:

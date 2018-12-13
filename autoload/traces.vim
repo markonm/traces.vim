@@ -5,76 +5,12 @@ let s:timeout = 400
 let s:s_timeout = 300
 
 let s:cmd_pattern = '\v\C^%('
-                \ . '\!|'
-                \ . '\#|'
-                \ . '\<|'
-                \ . '\=|'
-                \ . '\>|'
-                \ . 'a%[ppend][[:alnum:]]@!\!=|'
-                \ . 'c%[hange][[:alnum:]]@!\!=|'
-                \ . 'cal%[l][[:alnum:]]@!|'
-                \ . 'ce%[nter][[:alnum:]]@!|'
-                \ . 'co%[py][[:alnum:]]@!|'
-                \ . 'd%[elete][[:alnum:]]@!|'
-                \ . 'diffg%[et][[:alnum:]]@!|'
-                \ . 'diffpu%[t][[:alnum:]]@!|'
-                \ . 'dj%[ump][[:alnum:]]@!\!=|'
-                \ . 'dli%[st][[:alnum:]]@!\!=|'
-                \ . 'ds%[earch][[:alnum:]]@!\!=|'
-                \ . 'dsp%[lit][[:alnum:]]@!\!=|'
-                \ . 'exi%[t][[:alnum:]]@!\!=|'
-                \ . 'fo%[ld][[:alnum:]]@!|'
-                \ . 'foldc%[lose][[:alnum:]]@!\!=|'
-                \ . 'foldd%[oopen][[:alnum:]]@!|'
-                \ . 'folddoc%[losed][[:alnum:]]@!|'
-                \ . 'foldo%[pen][[:alnum:]]@!\!=|'
                 \ . 'g%[lobal][[:alnum:]]@!\!=|'
-                \ . 'ha%[rdcopy][[:alnum:]]@!\!=|'
-                \ . 'i%[nsert][[:alnum:]]@!\!=|'
-                \ . 'ij%[ump][[:alnum:]]@!\!=|'
-                \ . 'il%[ist][[:alnum:]]@!\!=|'
-                \ . 'is%[earch][[:alnum:]]@!\!=|'
-                \ . 'isp%[lit][[:alnum:]]@!\!=|'
-                \ . 'j%[oin][[:alnum:]]@!\!=|'
-                \ . 'k[[:alnum:]]@!|'
-                \ . 'l%[ist][[:alnum:]]@!|'
-                \ . 'le%[ft][[:alnum:]]@!|'
-                \ . 'le%[ft][[:alnum:]]@!|'
-                \ . 'luado[[:alnum:]]@!|'
-                \ . 'luafile[[:alnum:]]@!|'
-                \ . 'lua[[:alnum:]]@!|'
-                \ . 'm%[ove][[:alnum:]]@!|'
-                \ . 'ma%[rk][[:alnum:]]@!|'
-                \ . 'mz%[scheme][[:alnum:]]@!|'
-                \ . 'mzf%[ile][[:alnum:]]@!|'
-                \ . 'norm%[al][[:alnum:]]@!\!=|'
-                \ . 'nu%[mber][[:alnum:]]@!|'
-                \ . 'p%[rint][[:alnum:]]@!|'
-                \ . 'perld%[o][[:alnum:]]@!|'
-                \ . 'ps%[earch][[:alnum:]]@!\!=|'
-                \ . 'py%[thon][[:alnum:]]@!|'
-                \ . 'py%[thon][[:alnum:]]@!|'
-                \ . 'pydo[[:alnum:]]@!|'
-                \ . 'pyf%[ile][[:alnum:]]@!|'
-                \ . 'r%[ead][[:alnum:]]@!|'
-                \ . 'ri%[ght][[:alnum:]]@!|'
-                \ . 'rubyd%[o][[:alnum:]]@!|'
                 \ . 's%[ubstitute][[:alnum:]]@!|'
                 \ . 'sm%[agic][[:alnum:]]@!|'
                 \ . 'sno%[magic][[:alnum:]]@!|'
                 \ . 'sor%[t][[:alnum:]]@!\!=|'
-                \ . 'tc%[l][[:alnum:]]@!|'
-                \ . 'tcld%[o][[:alnum:]]@!|'
-                \ . 'ter%[minal][[:alnum:]]@!|'
-                \ . 't[[:alnum:]]@!|'
-                \ . 'up%[date][[:alnum:]]@!\!=|'
-                \ . 'v%[global][[:alnum:]]@!|'
-                \ . 'w%[rite][[:alnum:]]@!\!=|'
-                \ . 'wq[[:alnum:]]@!\!=|'
-                \ . 'x%[it][[:alnum:]]@!\!=|'
-                \ . 'y%[ank][[:alnum:]]@!|'
-                \ . 'z\#|'
-                \ . 'z[[:alnum:]]@!'
+                \ . 'v%[global][[:alnum:]]@!'
                 \ . ')'
 
 let s:win = {}
@@ -1033,12 +969,16 @@ function! traces#init(cmdl, view) abort
 
   if s:buf[s:nr].duration < s:timeout
     " range preview
-    if (!empty(cmdl.cmd.name) || s:buf[s:nr].show_range) && !get(s:, 'entire_file')
+    if (!empty(cmdl.cmd.name) && !empty(cmdl.cmd.args) || s:buf[s:nr].show_range)
+          \ && !get(s:, 'entire_file')
       call s:highlight('Visual', cmdl.range.pattern, 100)
       if empty(cmdl.cmd.name)
         call s:highlight('TracesSearch', cmdl.range.specifier, 101)
       endif
       call s:pos_range(cmdl.range.end, cmdl.range.specifier)
+    else
+      " clear unnecessary range hl
+      call s:highlight('Visual', '', 100)
     endif
 
     " cmd preview
@@ -1050,10 +990,6 @@ function! traces#init(cmdl, view) abort
       call s:preview_sort(cmdl)
     endif
 
-    " clear unnecessary hl
-    if empty(cmdl.range.pattern) || get(s:, 'entire_file')
-      call s:highlight('Visual', '', 100)
-    endif
     if empty(cmdl.cmd.name) && empty(cmdl.range.specifier)
           \ || !empty(cmdl.cmd.name) && empty(cmdl.cmd.args)
       call s:highlight('TracesSearch', '', 101)
