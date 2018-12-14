@@ -10,7 +10,8 @@ let s:cmd_pattern = '\v\C^%('
                 \ . 'sm%[agic][[:alnum:]]@!|'
                 \ . 'sno%[magic][[:alnum:]]@!|'
                 \ . 'sor%[t][[:alnum:]]@!\!=|'
-                \ . 'v%[global][[:alnum:]]@!'
+                \ . 'v%[global][[:alnum:]]@!|'
+                \ . 'S%[ubvert][[:alnum:]]@!|'
                 \ . ')'
 
 let s:win = {}
@@ -456,7 +457,7 @@ function! s:parse_command(cmdl) abort
   let a:cmdl.cmd.name = s:get_command(a:cmdl.string)
   if a:cmdl.cmd.name =~# '\v^%(g%[lobal]\!=|v%[global])$'
     let a:cmdl.cmd.args = s:parse_global(a:cmdl)
-  elseif a:cmdl.cmd.name =~# '\v^%(s%[ubstitute]|sm%[agic]|sno%[magic])$'
+  elseif a:cmdl.cmd.name =~# '\v^%(s%[ubstitute]|sm%[agic]|sno%[magic]|S%[ubvert])$'
     let a:cmdl.cmd.args = s:parse_substitute(a:cmdl)
   elseif a:cmdl.cmd.name =~# '\v^%(sor%[t]\!=)$'
     let a:cmdl.cmd.args = s:parse_sort(a:cmdl)
@@ -982,7 +983,7 @@ function! traces#init(cmdl, view) abort
     endif
 
     " cmd preview
-    if cmdl.cmd.name =~# '\v^%(s%[ubstitute]|sm%[agic]|sno%[magic])$'
+    if cmdl.cmd.name =~# '\v^%(s%[ubstitute]|sm%[agic]|sno%[magic]|S%[ubvert])$'
       call s:preview_substitute(cmdl)
     elseif cmdl.cmd.name =~# '\v^%(g%[lobal]\!=|v%[global])$'
       call s:preview_global(cmdl)
