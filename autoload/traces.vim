@@ -297,6 +297,9 @@ function! s:evaluate_range(range_structure) abort
     endif
 
     call extend(result.range, specifier_result)
+    if exists('specifier.delimiter')
+      let s:specifier_delimiter = 1
+    endif
     if get(specifier, 'delimiter') is# ';'
       let pos = result.range[-1]
     endif
@@ -952,6 +955,7 @@ function! traces#init(cmdl, view) abort
   let s:highlighted = 0
   let s:moved       = 0
   let s:last_pattern = @/
+  let s:specifier_delimiter = 0
 
   if s:buf[s:nr].duration < s:timeout
     let start_time = reltime()
@@ -969,7 +973,8 @@ function! traces#init(cmdl, view) abort
 
   if s:buf[s:nr].duration < s:timeout
     " range preview
-    if (!empty(cmdl.cmd.name) && !empty(cmdl.cmd.args) || s:buf[s:nr].show_range)
+    if (!empty(cmdl.cmd.name) && !empty(cmdl.cmd.args) || s:buf[s:nr].show_range
+          \ || s:specifier_delimiter && g:traces_num_range_preview)
           \ && !get(s:, 'entire_file')
       call s:highlight('Visual', cmdl.range.pattern, 100)
       if empty(cmdl.cmd.name)

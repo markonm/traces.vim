@@ -11,6 +11,7 @@ CONTENTS					*traces-contents*
                                 - |g:traces_preserve_view_state|
                                 - |g:traces_substitute_preview|
                                 - |g:traces_skip_modifiers|
+                                - |g:traces_num_range_preview|
   4. Highlights               |traces-highlights|
   5. Bugs ................... |traces-bugs|
   6. Changelog .............. |traces-changelog|
@@ -28,7 +29,7 @@ buffer lines (see |:command-addr|).
 
 To force immediate preview for ranges composed entirely of absolute specifiers
 ({number}, ., $, %), first enter and delete '/' or some other pattern or mark
-specifier.
+specifier. Also see |g:traces_num_range_preview|.
 
 Patterns for the following Ex commands will be highlighted immediately as
 typed:
@@ -63,14 +64,14 @@ SETTINGS					*traces-settings*
 
 ------------------------------------------------------------------------------
                                                 *g:traces_enabled*
-Type: Number                                                               ~
+Type: Number                                                                 ~
 Default: 1                                                                   ~
 
 If value is 0, this plugin will be disabled and no highlighting will be done.
 
 ------------------------------------------------------------------------------
                                                 *g:traces_preserve_view_state*
-Type: Number                                                               ~
+Type: Number                                                                 ~
 Default: 0                                                                   ~
 
 If value is 1, view position  will not be changed when highlighting ranges or
@@ -78,7 +79,7 @@ patterns outside initial view position.
 
 ------------------------------------------------------------------------------
                                                 *g:traces_substitute_preview*
-Type: Number                                                               ~
+Type: Number                                                                 ~
 Default: 1                                                                   ~
 
 If value is 1, |:substitute|, |:smagic| and |:snomagic| Ex commands will use
@@ -86,12 +87,28 @@ live preview.
 
 ------------------------------------------------------------------------------
                                                 *g:traces_skip_modifiers*
-Type: Number                                                               ~
+Type: Number                                                                 ~
 Default: 1                                                                   ~
 
 If value is 1, do-modifiers, |cdo|, |cfdo|, |ldo|, |lfdo|, |bufdo|, |tabdo|,
 |argdo| and |windo,| will be ignored when processing command line.
 
+------------------------------------------------------------------------------
+                                                *g:traces_num_range_preview*
+Type: Number                                                                 ~
+Default: 0                                                                   ~
+
+If value is 1, numerical ranges :N, and :N; will be previewed.
+
+Previewed: >
+  :1,
+  :1;
+  :1,10
+  :1;10
+<
+Not previewed: >
+  :10
+<
 ==============================================================================
 HIGHLIGHTS					*traces-highlights*
 

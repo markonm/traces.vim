@@ -4,6 +4,7 @@ Execute (Setup):
   let g:traces_preserve_view_state = 0
   let g:traces_substitute_preview  = 1
   let g:traces_skip_modifiers = 1
+  let g:traces_num_range_preview = 0
 
   function! Group(group) abort
     let matches = filter(getmatches(), {idx, val -> val.group == a:group})
@@ -22,6 +23,7 @@ Before:
   let g:traces_preserve_view_state = 0
   let g:traces_substitute_preview  = 1
   let g:traces_skip_modifiers = 1
+  let g:traces_num_range_preview = 0
   call clearmatches()
 
 #######################
@@ -42,6 +44,44 @@ Given (Ten lines):
   12  foo?bar
   13  \
   14  four
+
+Execute (Range):
+  1
+  call traces#init('5;10', winsaveview())
+  Assert line('.') == 1
+
+Execute (Range):
+  let g:traces_num_range_preview = 1
+  1
+  call traces#init('5;10', winsaveview())
+  Assert line('.') == 10
+
+Execute (Range):
+  let g:traces_num_range_preview = 1
+  1
+  call traces#init('5;', winsaveview())
+  Assert line('.') == 5
+
+Execute (Range):
+  let g:traces_num_range_preview = 1
+  1
+  call traces#init('5,', winsaveview())
+  Assert line('.') == 1
+
+Execute (Range):
+  1
+  call traces#init('5,', winsaveview())
+  Assert line('.') == 1
+
+Execute (Range):
+  1
+  call traces#init('5;', winsaveview())
+  Assert line('.') == 1
+
+Execute (Range):
+  1
+  call traces#init('5', winsaveview())
+  Assert line('.') == 1
 
 Execute (Range):
   1
