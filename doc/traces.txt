@@ -1,6 +1,6 @@
 *traces.txt*	Range, pattern and substitute preview for Vim
 
-Version 1.0.0
+Version 1.1.0
 
 CONTENTS					*traces-contents*
 
@@ -134,6 +134,13 @@ BUGS						*traces-bugs*
 
 ==============================================================================
 CHANGELOG					*traces-changelog*
+
+1.1.0   January 21, 2019                        *traces-changelog-1.1.0*
+        - New options
+          - |g:traces_num_range_preview|
+          - |g:traces_enabled|
+        - Pattern preview for |:sort|
+        - Various bugs fixed
 
 1.0.0   April 30, 2018                          *traces-changelog-1.0.0*
         - Substitute preview
