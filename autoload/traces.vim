@@ -636,11 +636,10 @@ function! s:preview_substitute(cmdl) abort
   let str   = a:cmdl.cmd.args.string
   let range = a:cmdl.range.abs
   let dlm   = a:cmdl.cmd.args.delimiter
-  let l_dlm = a:cmdl.cmd.args.last_delimiter
 
   call s:pos_pattern(ptrn, range, dlm, 1)
 
-  if !g:traces_substitute_preview || &readonly || !&modifiable || empty(str) && empty(l_dlm)
+  if !g:traces_substitute_preview || &readonly || !&modifiable || empty(str)
     call s:highlight('TracesSearch', ptrn, 101)
     return
   endif
