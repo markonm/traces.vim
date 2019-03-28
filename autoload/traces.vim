@@ -1,8 +1,9 @@
 let s:cpo_save = &cpo
 set cpo-=C
 
-let s:timeout = 400
-let s:s_timeout = 300
+let s:timeout = get(g:, 'traces_timeout', 1000)
+let s:timeout = s:timeout > 200 ? s:timeout : 200
+let s:s_timeout = s:timeout - 100
 
 let s:cmd_pattern = '\v\C^%('
                 \ . 'g%[lobal][[:alnum:]]@!\!=|'
@@ -834,17 +835,13 @@ function! s:save_undo_history() abort
     let s:buf[s:nr].undo_file = 1
     return
   endif
-
   let s:buf[s:nr].undo_file = tempname()
-  let start_time = reltime()
+  let time = reltime()
   noautocmd silent execute 'wundo ' . s:buf[s:nr].undo_file
+  let s:wundo_time = reltimefloat(reltime(time)) * 1000
   if !filereadable(s:buf[s:nr].undo_file)
     let s:buf[s:nr].undo_file = 0
     return
-  endif
-  if (reltimefloat(reltime(start_time)) * 1000) > s:timeout
-    call delete(s:buf[s:nr].undo_file)
-    let s:buf[s:nr].undo_file = 0
   endif
 endfunction
 
@@ -955,6 +952,7 @@ function! traces#init(cmdl, view) abort
   let s:moved       = 0
   let s:last_pattern = @/
   let s:specifier_delimiter = 0
+  let s:wundo_time = 0
 
   if s:buf[s:nr].duration < s:timeout
     let start_time = reltime()
@@ -1029,7 +1027,7 @@ function! traces#init(cmdl, view) abort
   endif
 
   if exists('start_time')
-    let s:buf[s:nr].duration = reltimefloat(reltime(start_time)) * 1000
+    let s:buf[s:nr].duration = reltimefloat(reltime(start_time)) * 1000 - s:wundo_time
   endif
 endfunction
 

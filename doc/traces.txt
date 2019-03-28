@@ -12,7 +12,8 @@ CONTENTS					*traces-contents*
                                 - |g:traces_substitute_preview|
                                 - |g:traces_skip_modifiers|
                                 - |g:traces_num_range_preview|
-  4. Highlights               |traces-highlights|
+                                - |g:traces_timeout|
+  4. Highlights ............. |traces-highlights|
   5. Bugs ................... |traces-bugs|
   6. Changelog .............. |traces-changelog|
 
@@ -109,6 +110,16 @@ Previewed: >
 Not previewed: >
   :10
 <
+------------------------------------------------------------------------------
+                                                *g:traces_timeout*
+Type: Number                                                                 ~
+Default: 1000                                                                ~
+Minimum: 200                                                                 ~
+
+If preview is slower than the timeout (in milliseconds), it gets disabled
+until Command-line mode is entered again.  Time spent saving undo history is
+ignored.
+
 ==============================================================================
 HIGHLIGHTS					*traces-highlights*
 
