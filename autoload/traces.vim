@@ -19,7 +19,7 @@ let s:buf = {}
 
 function! s:trim(...) abort
   if a:0 == 2
-    let a:1[0] = strcharpart(a:1[0], a:2)
+    let a:1[0] = strpart(a:1[0], a:2)
   else
     let a:1[0] = substitute(a:1[0], '^\s\+', '', '')
   endif
