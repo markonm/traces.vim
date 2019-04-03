@@ -3,7 +3,8 @@ set cpo-=C
 
 let s:timeout = get(g:, 'traces_timeout', 1000)
 let s:timeout = s:timeout > 200 ? s:timeout : 200
-let s:s_timeout = s:timeout - 100
+let s:s_timeout = get(g:, 'traces_search_timeout', 500)
+let s:s_timeout = s:s_timeout > s:timeout - 100 ? s:timeout - 100 : s:s_timeout
 
 let s:cmd_pattern = '\v\C^%('
                 \ . 'g%[lobal][[:alnum:]]@!\!=|'
@@ -867,8 +868,8 @@ function! s:restore_undo_history() abort
   call delete(s:buf[s:nr].undo_file)
 endfunction
 
-function! s:adjust_cmdheight(cmdl) abort
-  let len = strwidth(strtrans(a:cmdl)) + 2
+function! s:adjust_cmdheight() abort
+  let len = strwidth(strtrans(getcmdline())) + 2
   let col = &columns
   let height = &cmdheight
   if col * height < len
@@ -957,9 +958,9 @@ function! traces#init(cmdl, view) abort
     call s:restore_marks()
     call winrestview(view)
   endif
-  let cmdl = s:evaluate_cmdl([s:skip_modifiers(a:cmdl)])
 
   if s:buf[s:nr].duration < s:timeout
+    let cmdl = s:evaluate_cmdl([s:skip_modifiers(a:cmdl)])
     " range preview
     if (!empty(cmdl.cmd.name) && !empty(cmdl.cmd.args) || s:buf[s:nr].show_range
           \ || s:specifier_delimiter && g:traces_num_range_preview)
@@ -996,7 +997,7 @@ function! traces#init(cmdl, view) abort
 
   " update screen if necessary
   if s:highlighted
-    call s:adjust_cmdheight(a:cmdl)
+    call s:adjust_cmdheight()
     if has('nvim')
       redraw
     else
