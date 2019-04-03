@@ -44,7 +44,7 @@ function! s:parse_range(range, cmdl) abort
     endif
     if address[2] != -1
       call s:trim(a:cmdl, address[2])
-      let entry.address = address[0]
+      let entry.str = address[0]
     endif
 
     " offset
@@ -58,8 +58,8 @@ function! s:parse_range(range, cmdl) abort
     " add first address
     if address[2] != -1 || offset[2] != -1
       " if offset is present but specifier is missing add '.' specifier
-      if !has_key(entry, 'address')
-        let entry.address = '.'
+      if !has_key(entry, 'str')
+        let entry.str = '.'
       endif
       call add(specifier.addresses, entry)
     else
@@ -83,7 +83,7 @@ function! s:parse_range(range, cmdl) abort
   if !empty(specifier.addresses) || delimiter[2] != -1 || !empty(a:range)
     " specifiers are not given but delimiter is present
     if empty(specifier.addresses)
-      call add(specifier.addresses, { 'address': '.' })
+      call add(specifier.addresses, { 'str': '.' })
     endif
     call add(a:range, specifier)
   endif
@@ -131,29 +131,29 @@ function! s:offset_to_num(string) abort
   return offset
 endfunction
 
-function! s:spec_to_abs(address, last_position) abort
+function! s:address_to_num(address, last_position) abort
   let result = {}
   let result.range = []
   let result.valid = 1
   let result.regex = ''
   let s:entire_file  = 0
 
-  if     a:address.address =~# '^\d\+'
-    let lnum = str2nr(a:address.address)
+  if     a:address.str =~# '^\d\+'
+    let lnum = str2nr(a:address.str)
     call add(result.range, lnum)
 
-  elseif a:address.address ==# '.'
+  elseif a:address.str ==# '.'
     call add(result.range, a:last_position)
 
-  elseif a:address.address ==# '$'
+  elseif a:address.str ==# '$'
     call add(result.range, getpos('$')[1])
 
-  elseif a:address.address ==# '%'
+  elseif a:address.str ==# '%'
     call add(result.range, 1)
     call add(result.range, getpos('$')[1])
     let s:entire_file = 1
 
-  elseif a:address.address ==# '*'
+  elseif a:address.str ==# '*'
     call add(result.range, getpos('''<')[1])
     call add(result.range, getpos('''>')[1])
     if match(&cpoptions, '\*') != -1
@@ -161,9 +161,9 @@ function! s:spec_to_abs(address, last_position) abort
     endif
     let s:buf[s:nr].show_range = 1
 
-  elseif a:address.address =~# '^''.'
+  elseif a:address.str =~# '^''.'
     call cursor(a:last_position, 1)
-    let mark_position = getpos(a:address.address)
+    let mark_position = getpos(a:address.str)
     if mark_position[1]
       call add(result.range, mark_position[1])
     else
@@ -171,75 +171,66 @@ function! s:spec_to_abs(address, last_position) abort
     endif
     let s:buf[s:nr].show_range = 1
 
-  elseif a:address.address =~# '\v^\/%(\\.|.){-}%([^\\]\\)@<!\/$'
-    let pattern = a:address.address[1:-2]
-    if empty(pattern)
-      let pattern = s:last_pattern
-    else
-      let s:last_pattern = pattern
+  elseif a:address.str[0] is '/'
+    let closed = a:address.str =~# '\v%([^\\]\\)@<!\/$'
+    let pattern = closed ? a:address.str[1:-2] : a:address.str[1:]
+    if closed
+      if empty(pattern)
+        let pattern = s:last_pattern
+      else
+        let s:last_pattern = pattern
+      endif
     endif
     call cursor(a:last_position + 1, 1)
+    if a:last_position is line('$')
+      if &wrapscan
+        call cursor(1, 1)
+      else
+        let result.valid = 0
+      endif
+    endif
     let s:buf[s:nr].show_range = 1
     silent! let query = search(pattern, 'nc', 0, s:s_timeout)
-    if query == 0
-      let result.valid = 0
-    endif
+    if !query | let result.valid = 0 | endif
+    if !closed | let result.regex = pattern | endif
     call add(result.range, query)
 
-  elseif a:address.address =~# '\v^\?%(\\.|.){-}%([^\\]\\)@<!\?$'
-    let pattern = a:address.address[1:-2]
+  elseif a:address.str[0] is '?'
+    let closed = a:address.str =~# '\v%([^\\]\\)@<!\?$'
+    let pattern = closed ? a:address.str[1:-2] : a:address.str[1:]
     let pattern = substitute(pattern, '\\?', '?', '')
-    if empty(pattern)
-      let pattern = s:last_pattern
-    else
-      let s:last_pattern = pattern
+    if closed
+      if empty(pattern)
+        let pattern = s:last_pattern
+      else
+        let s:last_pattern = pattern
+      endif
     endif
     call cursor(a:last_position, 1)
     let s:buf[s:nr].show_range = 1
     silent! let query = search(pattern, 'nb', 0, s:s_timeout)
-    if query == 0
-      let result.valid = 0
-    endif
+    if !query | let result.valid = 0 | endif
+    if !closed | let result.regex = pattern | endif
     call add(result.range, query)
 
-  elseif a:address.address =~# '^/.*$'
-    let pattern = a:address.address[1:]
+  elseif a:address.str ==# '\/'
     call cursor(a:last_position + 1, 1)
-    silent! let query = search(pattern, 'nc', 0, s:s_timeout)
-    if !query
-      let result.valid = 0
+    if a:last_position is line('$')
+      if &wrapscan
+        call cursor(1, 1)
+      else
+        let result.valid = 0
+      endif
     endif
-    call add(result.range, query)
-    let s:buf[s:nr].show_range = 1
-    let result.regex = pattern
-
-  elseif a:address.address =~# '^?.*$'
-    let pattern = a:address.address[1:]
-    let pattern = substitute(pattern, '\\?', '?', '')
-    call cursor(a:last_position, 1)
-    silent! let query = search(pattern, 'nb', 0, s:s_timeout)
-    if !query
-      let result.valid = 0
-    endif
-    call add(result.range, query)
-    let s:buf[s:nr].show_range = 1
-    let result.regex = pattern
-
-  elseif a:address.address ==# '\/'
-    call cursor(a:last_position + 1, 1)
     silent! let query = search(s:last_pattern, 'nc', 0, s:s_timeout)
-    if query == 0
-      let result.valid = 0
-    endif
+    if !query | let result.valid = 0 | endif
     call add(result.range, query)
     let s:buf[s:nr].show_range = 1
 
-  elseif a:address.address ==# '\?'
+  elseif a:address.str ==# '\?'
     call cursor(a:last_position, 1)
     silent! let query = search(s:last_pattern, 'nb', 0, s:s_timeout)
-    if query == 0
-      let result.valid = 0
-    endif
+    if !query | let result.valid = 0 | endif
     call add(result.range, query)
     let s:buf[s:nr].show_range = 1
   endif
@@ -276,14 +267,14 @@ function! s:evaluate_range(range_structure) abort
     for address in specifier.addresses
       " skip empty unclosed pattern specifier when range is empty otherwise
       " substitute it with current position
-      if address.address =~# '^[?/]$'
+      if address.str =~# '^[?/]$'
         let s:buf[s:nr].show_range = 1
         if empty(result.range)
           break
         endif
-        let address.address = '.'
+        let address.str = '.'
       endif
-      let query = s:spec_to_abs(address, tmp_pos)
+      let query = s:address_to_num(address, tmp_pos)
       " % specifier doesn't accept additional addresses
       if !query.valid || len(query.range) == 2 && len(specifier.addresses) > 1
         let s:range_valid = 0

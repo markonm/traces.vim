@@ -46,6 +46,37 @@ Given (Ten lines):
   14  four
 
 Execute (Range):
+  14
+  call traces#init('/four', {})
+  Assert line('.') is 4
+
+Execute (Range):
+  14
+  call traces#init('/four/', {})
+  Assert line('.') is 4
+
+Execute (Range):
+  14
+  let @/= 'four'
+  call traces#init('\/', {})
+  Assert line('.') is 4
+
+Execute (Range):
+  set nowrapscan
+  14
+  call traces#init('/four/-', {})
+  Assert line('.') is 14
+  set wrapscan
+
+Execute (Range):
+  set nowrapscan
+  14
+  let @/= 'four'
+  call traces#init('\/-', {})
+  Assert line('.') is 14
+  set wrapscan
+
+Execute (Range):
   1
   call traces#init('5;10', winsaveview())
   Assert line('.') == 1
