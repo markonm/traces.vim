@@ -132,7 +132,23 @@ function! s:offset_to_num(string) abort
   return offset
 endfunction
 
-function! s:address_to_num(address, last_position) abort
+function! s:search(args, last_pos, shouldCache) abort
+  if !has_key(s:buf[s:nr].cache, 'patterns')
+    let s:buf[s:nr].cache.patterns = {}
+  endif
+  let patterns = s:buf[s:nr].cache.patterns
+  let key = join(a:args) . a:last_pos
+  if has_key(patterns, key)
+    return patterns[key]
+  endif
+  silent! let pos = call('search', a:args)
+  if a:shouldCache
+    let patterns[key] = pos
+  endif
+  return pos
+endfunction
+
+function! s:address_to_num(address, last_pos) abort
   let result = {}
   let result.range = []
   let result.valid = 1
@@ -144,7 +160,7 @@ function! s:address_to_num(address, last_position) abort
     call add(result.range, lnum)
 
   elseif a:address.str ==# '.'
-    call add(result.range, a:last_position)
+    call add(result.range, a:last_pos)
 
   elseif a:address.str ==# '$'
     call add(result.range, getpos('$')[1])
@@ -163,7 +179,7 @@ function! s:address_to_num(address, last_position) abort
     let s:buf[s:nr].show_range = 1
 
   elseif a:address.str =~# '^''.'
-    call cursor(a:last_position, 1)
+    call cursor(a:last_pos, 1)
     let mark_position = getpos(a:address.str)
     if mark_position[1]
       call add(result.range, mark_position[1])
@@ -182,8 +198,8 @@ function! s:address_to_num(address, last_position) abort
         let s:last_pattern = pattern
       endif
     endif
-    call cursor(a:last_position + 1, 1)
-    if a:last_position is line('$')
+    call cursor(a:last_pos + 1, 1)
+    if a:last_pos is line('$')
       if &wrapscan
         call cursor(1, 1)
       else
@@ -191,7 +207,7 @@ function! s:address_to_num(address, last_position) abort
       endif
     endif
     let s:buf[s:nr].show_range = 1
-    silent! let query = search(pattern, 'nc', 0, s:s_timeout)
+    let query = s:search([pattern, 'nc', 0, s:s_timeout], a:last_pos, closed)
     if !query | let result.valid = 0 | endif
     if !closed | let result.regex = pattern | endif
     call add(result.range, query)
@@ -207,30 +223,30 @@ function! s:address_to_num(address, last_position) abort
         let s:last_pattern = pattern
       endif
     endif
-    call cursor(a:last_position, 1)
+    call cursor(a:last_pos, 1)
     let s:buf[s:nr].show_range = 1
-    silent! let query = search(pattern, 'nb', 0, s:s_timeout)
+    let query = s:search([pattern, 'nb', 0, s:s_timeout], a:last_pos, closed)
     if !query | let result.valid = 0 | endif
     if !closed | let result.regex = pattern | endif
     call add(result.range, query)
 
   elseif a:address.str ==# '\/'
-    call cursor(a:last_position + 1, 1)
-    if a:last_position is line('$')
+    call cursor(a:last_pos + 1, 1)
+    if a:last_pos is line('$')
       if &wrapscan
         call cursor(1, 1)
       else
         let result.valid = 0
       endif
     endif
-    silent! let query = search(s:last_pattern, 'nc', 0, s:s_timeout)
+    let query = s:search([s:last_pattern, 'nc', 0, s:s_timeout], a:last_pos, 1)
     if !query | let result.valid = 0 | endif
     call add(result.range, query)
     let s:buf[s:nr].show_range = 1
 
   elseif a:address.str ==# '\?'
-    call cursor(a:last_position, 1)
-    silent! let query = search(s:last_pattern, 'nb', 0, s:s_timeout)
+    call cursor(a:last_pos, 1)
+    let query = s:search([s:last_pattern, 'nb', 0, s:s_timeout], a:last_pos, 1)
     if !query | let result.valid = 0 | endif
     call add(result.range, query)
     let s:buf[s:nr].show_range = 1
@@ -463,6 +479,17 @@ function! s:pos_pattern(pattern, range, delimiter, type) abort
   if g:traces_preserve_view_state || empty(a:pattern)
     return
   endif
+
+  " restore position from cache
+  if has_key(s:buf[s:nr].cache, 'pattern')
+    let cache = s:buf[s:nr].cache.pattern
+    if cache.state ==# a:
+      call winrestview(cache.view)
+      let s:moved = 1
+      return
+    endif
+  endif
+
   let stopline = 0
   if len(a:range) > 1 && !get(s:, 'entire_file')
     if a:delimiter ==# '?'
@@ -487,12 +514,32 @@ function! s:pos_pattern(pattern, range, delimiter, type) abort
   if position !=# 0
     let s:moved = 1
   endif
+
+  " save position to cache
+  let cache = {}
+  let cache.state = deepcopy(a:)
+  let cache.view = winsaveview()
+  let s:buf[s:nr].cache.pattern = cache
 endfunction
 
 function! s:pos_range(end, pattern) abort
   if g:traces_preserve_view_state || empty(a:end)
     return
   endif
+
+  " restore position from cache
+  if has_key(s:buf[s:nr].cache, 'range')
+    let cache = s:buf[s:nr].cache.range
+    if cache.state ==# a:
+      call winrestview(cache.view)
+      let s:moved = 1
+      return
+    elseif has_key(s:buf[s:nr].cache, 'pattern')
+      " drop unvalid cache
+      unlet s:buf[s:nr].cache.pattern
+    endif
+  endif
+
   if exists('s:buf[s:nr].pre_cmdl_view')
     if get(s:buf[s:nr].pre_cmdl_view, 'mode', '') =~# "^[vV\<C-V>]"
           \ && a:end > line('w$')
@@ -506,6 +553,12 @@ function! s:pos_range(end, pattern) abort
     silent! call search(a:pattern, 'c', a:end, s:s_timeout)
   endif
   let s:moved = 1
+
+  " save position to cache
+  let cache = {}
+  let cache.state = deepcopy(a:)
+  let cache.view = winsaveview()
+  let s:buf[s:nr].cache.range = cache
 endfunction
 
 function! s:highlight(group, pattern, priority) abort
@@ -691,6 +744,7 @@ endfunction
 
 function! s:cmdl_enter(view) abort
   let s:buf[s:nr] = {}
+  let s:buf[s:nr].cache = {}
   let s:buf[s:nr].view = winsaveview()
   let s:buf[s:nr].show_range = 0
   let s:buf[s:nr].duration = 0
