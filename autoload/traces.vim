@@ -357,14 +357,9 @@ function! s:get_command(cmdl) abort
   return ''
 endfunction
 
-function! s:add_flags(pattern, cmdl, type) abort
-  if !len(a:pattern)
-    return ''
-  endif
-  if !s:range_valid
-    return ''
-  endif
-  if !len(substitute(a:pattern, '\\[cCvVmM]', '', 'g'))
+function! s:add_opt(pattern, cmdl) abort
+  if empty(a:pattern) || !s:range_valid
+        \ || empty(substitute(a:pattern, '\\[cCvVmM]', '', 'g'))
     return ''
   endif
 
@@ -394,24 +389,34 @@ function! s:add_flags(pattern, cmdl, type) abort
     endif
   endif
 
-  if !empty(a:cmdl.range.abs)
-    let start = a:cmdl.range.abs[-2] - 1
-    let end   = a:cmdl.range.abs[-1] + 1
-  elseif a:type ==# 1
-    return option . a:pattern
-  elseif a:type ==# 2
-    let start = s:buf[s:nr].cur_init_pos[0] - 1
-    let end   = s:buf[s:nr].cur_init_pos[0] + 1
-  endif
+  return option . a:pattern
+endfunction
 
-  " range pattern specifer
-  if a:type == 3
-    let start = a:cmdl.range.end - 1
-    let end   = a:cmdl.range.end + 1
+function! s:add_hl_guard(pattern, range, type) abort
+  if empty(a:pattern)
+    return ''
+  endif
+  if a:type is 's'
+    if empty(a:range)
+      let start = s:buf[s:nr].cur_init_pos[0] - 1
+      let end   = s:buf[s:nr].cur_init_pos[0] + 1
+    else
+      let start = a:range[-2] - 1
+      let end   = a:range[-1] + 1
+    endif
+  elseif a:type is 'g'
+    if empty(a:range)
+      return  a:pattern
+    else
+      let start = a:range[-2] - 1
+      let end   = a:range[-1] + 1
+    endif
+  elseif a:type is 'r'
+    let start = a:range - 1
+    let end   = a:range + 1
   endif
 
   let range = '\m\%>'. start .'l' . '\%<' . end . 'l'
-
   " group is necessary to contain pattern inside range when using branches (\|)
   let group_start = '\%('
   let group_end   = '\m\)'
@@ -421,7 +426,7 @@ function! s:add_flags(pattern, cmdl, type) abort
     let group_end = '\' . group_end
   endif
 
-  return range . group_start . option . a:pattern . group_end
+  return range . group_start  . a:pattern . group_end
 endfunction
 
 function! s:parse_global(cmdl) abort
@@ -431,7 +436,7 @@ function! s:parse_global(cmdl) abort
   let r = matchlist(a:cmdl.string[0], pattern)
   if len(r)
     let args.delimiter = r[1]
-    let args.pattern   = s:add_flags((empty(r[2]) && !empty(r[3])) ? s:last_pattern : r[2], a:cmdl, 1)
+    let args.pattern   = s:add_opt((empty(r[2]) && !empty(r[3])) ? s:last_pattern : r[2], a:cmdl)
   endif
   return args
 endfunction
@@ -444,7 +449,7 @@ function! s:parse_substitute(cmdl) abort
   if len(r)
     let args.delimiter        = r[1]
     let args.pattern_org      = (empty(r[2]) && !empty(r[3])) ? s:last_pattern : r[2]
-    let args.pattern          = s:add_flags((empty(r[2]) && !empty(r[3])) ? s:last_pattern : r[2], a:cmdl, 2)
+    let args.pattern          = s:add_opt((empty(r[2]) && !empty(r[3])) ? s:last_pattern : r[2], a:cmdl)
     let args.string           = r[4]
     let args.last_delimiter   = r[5]
     let args.flags            = r[6]
@@ -459,7 +464,7 @@ function! s:parse_sort(cmdl) abort
   let r = matchlist(a:cmdl.string[0], pattern)
   if len(r)
     let args.delimiter = r[1]
-    let args.pattern   = s:add_flags((empty(r[2]) && !empty(r[3])) ? s:last_pattern : r[2], a:cmdl, 1)
+    let args.pattern   = s:add_opt((empty(r[2]) && !empty(r[3])) ? s:last_pattern : r[2], a:cmdl)
   endif
   return args
 endfunction
@@ -686,14 +691,14 @@ function! s:preview_substitute(cmdl) abort
   call s:pos_pattern(ptrn, range, dlm, 1)
 
   if !g:traces_substitute_preview || &readonly || !&modifiable || empty(str)
-    call s:highlight('TracesSearch', ptrn, 101)
+    call s:highlight('TracesSearch', s:add_hl_guard(ptrn, range, 's'), 101)
     return
   endif
 
   call s:save_undo_history()
 
   if s:buf[s:nr].undo_file is 0
-    call s:highlight('TracesSearch', ptrn, 101)
+    call s:highlight('TracesSearch', s:add_hl_guard(ptrn, range, 's'), 101)
     return
   endif
 
@@ -730,15 +735,19 @@ endfunction
 
 function! s:preview_global(cmdl) abort
   if empty(a:cmdl.range.specifier) && has_key(a:cmdl.cmd.args, 'pattern')
-    call s:highlight('TracesSearch', a:cmdl.cmd.args.pattern, 101)
-    call s:pos_pattern(a:cmdl.cmd.args.pattern, a:cmdl.range.abs, a:cmdl.cmd.args.delimiter, 0)
+    let pattern = a:cmdl.cmd.args.pattern
+    let range = a:cmdl.range.abs
+    call s:highlight('TracesSearch', s:add_hl_guard(pattern, range, 'g'), 101)
+    call s:pos_pattern(pattern, range, a:cmdl.cmd.args.delimiter, 0)
   endif
 endfunction
 
 function! s:preview_sort(cmdl) abort
   if empty(a:cmdl.range.specifier) && has_key(a:cmdl.cmd.args, 'pattern')
-    call s:highlight('TracesSearch', a:cmdl.cmd.args.pattern, 101)
-    call s:pos_pattern(a:cmdl.cmd.args.pattern, a:cmdl.range.abs, a:cmdl.cmd.args.delimiter, 0)
+    let pattern = a:cmdl.cmd.args.pattern
+    let range = a:cmdl.range.abs
+    call s:highlight('TracesSearch', s:add_hl_guard(pattern, range, 'g'), 101)
+    call s:pos_pattern(pattern, range, a:cmdl.cmd.args.delimiter, 0)
   endif
 endfunction
 
@@ -846,7 +855,7 @@ function! s:evaluate_cmdl(string) abort
   let cmdl.range.abs       = r.range
   let cmdl.range.end       = r.end
   let cmdl.range.pattern   = s:get_selection_regexp(r.range)
-  let cmdl.range.specifier = s:add_flags(r.pattern, cmdl, 3)
+  let cmdl.range.specifier = s:add_hl_guard(s:add_opt(r.pattern, cmdl), r.end, 'r')
 
   let cmdl.cmd             = {}
   let cmdl.cmd.args        = {}
