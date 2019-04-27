@@ -1,5 +1,5 @@
 let s:cpo_save = &cpo
-set cpo-=C
+set cpo&vim
 
 let s:timeout = get(g:, 'traces_timeout', 1000)
 let s:timeout = s:timeout > 200 ? s:timeout : 200

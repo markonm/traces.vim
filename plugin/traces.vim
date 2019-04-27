@@ -4,7 +4,7 @@ endif
 let g:loaded_traces_plugin = 1
 
 let s:cpo_save = &cpo
-set cpo-=C
+set cpo&vim
 
 let g:traces_enabled             = get(g:, 'traces_enabled', 1)
 let g:traces_preserve_view_state = get(g:, 'traces_preserve_view_state')
