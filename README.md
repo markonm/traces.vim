@@ -17,7 +17,7 @@ or
  - this plugin is not compatible with [inccommand](https://neovim.io/doc/user/options.html#'inccommand'), please turn it off if you want to use this plugin
 
 
-**Note**: some of features provided by this plugin are already present in Vim/Neovim.
+**Note**: some of the features provided by this plugin are already present in Vim/Neovim.
 
 |                                                    | traces.vim  | Vim*  | Neovim |
 | ---------------------------------------------      | :---------: | :---: | :---:  |
