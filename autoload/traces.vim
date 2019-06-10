@@ -955,7 +955,7 @@ function! s:skip_modifiers(cmdl) abort
         \ . 'sil%[ent]\!=|'
         \ . 'verb%[ose]|'
         \ . 'noa%[utocmd]|'
-        \ . 'loc%[kmarks]'
+        \ . 'loc%[kmarks]|'
         \ . 'keepp%[atterns]|'
         \ . 'keepa%[lt]|'
         \ . 'keepj%[umps]|'
