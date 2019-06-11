@@ -946,45 +946,28 @@ endfunction
 
 function! s:skip_modifiers(cmdl) abort
   let cmdl = a:cmdl
-
-  " skip leading colon
-  let cmdl = substitute(cmdl, '\v^:+', '', '')
-
+  " skip leading colons
+  let cmdl = substitute(cmdl, '\v^[[:space:]:]+', '', '')
   " skip modifiers
-  let pattern = '\v^\s*%('
-        \ . 'sil%[ent]\!=|'
-        \ . 'verb%[ose]|'
-        \ . 'noa%[utocmd]|'
-        \ . 'loc%[kmarks]|'
-        \ . 'keepp%[atterns]|'
-        \ . 'keepa%[lt]|'
-        \ . 'keepj%[umps]|'
-        \ . 'kee%[pmarks]|'
-        \ . ')\s+'
-  while 1
-    let offset = matchstrpos(cmdl, pattern)
-    if offset[2] isnot -1
-      let cmdl = strcharpart(cmdl, offset[2])
-    else
-      break
-    endif
-  endwhile
+  let pattern = '\v^%(%('
+        \ . 'sil%[ent]%(\!|\H@=)|'
+        \ . 'verb%[ose]\H@=|'
+        \ . 'noa%[utocmd]\H@=|'
+        \ . 'loc%[kmarks]\H@=|'
+        \ . 'keepp%[atterns]\H@=|'
+        \ . 'keepa%[lt]\H@=|'
+        \ . 'keepj%[umps]\H@=|'
+        \ . 'kee%[pmarks]\H@='
+        \ . ')\s*)+'
+  let cmdl = substitute(cmdl, pattern, '', '')
 
   if g:traces_skip_modifiers
     " skip *do modifiers
     let cmdl = substitute(cmdl,
-          \ '\v^\s*%(%(%(\d+|\.|\$|\%)\s*[,;]=\s*)+)=\s*%(cdo|cfdo|ld%[o]|lfdo'
-          \ . '|bufd%[o]|tabd%[o]|argdo|wind%[o])\!=\s+', '', '')
-
-    " skip modifiers
-    while 1
-      let offset = matchstrpos(cmdl, pattern)
-      if offset[2] isnot -1
-        let cmdl = strcharpart(cmdl, offset[2])
-      else
-        break
-      endif
-    endwhile
+          \ '\v^%(%(%(\d+|\.|\$|\%)\s*[,;]=\s*)+)=\s*%(cdo|cfdo|ld%[o]|lfdo'
+          \ . '|bufd%[o]|tabd%[o]\!@!|argdo|wind%[o]\!@!)%(\!|\H@=)\s*', '', '')
+    " skip modifiers again
+    let cmdl = substitute(cmdl, pattern, '', '')
   endif
 
   return cmdl
