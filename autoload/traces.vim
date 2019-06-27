@@ -15,7 +15,6 @@ let s:cmd_pattern = '\v\C^%('
                 \ . 'v%[global][[:alnum:]]@!'
                 \ . ')'
 
-let s:win = {}
 let s:buf = {}
 
 function! s:trim(...) abort
@@ -567,76 +566,67 @@ function! s:pos_range(end, pattern) abort
 endfunction
 
 function! s:highlight(group, pattern, priority) abort
-  let cur_win = win_getid()
-  if exists('s:win[cur_win].hlight[a:group].pattern') && s:win[cur_win].hlight[a:group].pattern ==# a:pattern
+  let cur_win = s:buf[s:nr].cur_win
+  if exists('s:buf[s:nr].win[cur_win].matches[a:group].pattern')
+    if s:buf[s:nr].win[cur_win].matches[a:group].pattern ==# a:pattern
+      return
+    endif
+  elseif empty(a:pattern)
     return
   endif
-  if !exists('s:win[cur_win].hlight[a:group].pattern') && empty(a:pattern)
-    return
-  endif
-
-  if &hlsearch && !empty(a:pattern) && a:group ==# 'TracesSearch'
+  if a:group ==# 'TracesSearch'
     noautocmd let &hlsearch = 0
   endif
-  if &scrolloff !=# 0
-    let scrolloff = &scrolloff
-    noautocmd let &scrolloff = 0
-  endif
-  if &winwidth isnot &winminwidth
-    noautocmd let &winwidth=&winminwidth
-  endif
-  if &winheight isnot &winminheight
-    noautocmd let &winheight=&winminheight
-  endif
+  noautocmd let &winwidth = &winminwidth
+  noautocmd let &winheight = &winminheight
 
   let windows = filter(win_findbuf(s:nr), {_, val -> win_id2win(val)})
-  for id in windows
-    let wininfo = getwininfo(id)[0]
-    if wininfo.height is 0 || wininfo.width is 0
-      " skip minimized windows
-      continue
-    endif
-    noautocmd call win_gotoid(id)
-    let s:win[id] = get(s:win, id, {})
-    let s:win[id].hlight = get(s:win[id], 'hlight', {})
+  " skip minimized windows
+  let windows = filter(windows, 'getwininfo(v:val)[0].height isnot 0'
+        \ . ' && getwininfo(v:val)[0].width isnot 0')
 
-    if !exists('s:win[id].hlight[a:group]')
-      let x = {}
-      let x.pattern = a:pattern
-      silent! let x.index = matchadd(a:group, a:pattern, a:priority)
-      let s:win[id].hlight[a:group] = x
-      let s:highlighted = 1
-    elseif s:win[id].hlight[a:group].pattern !=# a:pattern
-      if s:win[id].hlight[a:group].index !=# -1
-        silent! call matchdelete(s:win[id].hlight[a:group].index)
+  if empty(s:buf[s:nr].win)
+    " save local options
+    for id in windows
+      let s:buf[s:nr].win[id] = {}
+      let win = s:buf[s:nr].win[id]
+      let win.options = {}
+      let win.options.cursorcolumn = getwinvar(id, '&cursorcolumn')
+      let win.options.cursorline = getwinvar(id, '&cursorline')
+      let win.options.scrolloff = getwinvar(id, '&scrolloff')
+      let win.options.conceallevel = getwinvar(id, '&conceallevel')
+      let win.options.concealcursor = getwinvar(id, '&concealcursor')
+    endfor
+    " set local options
+    for id in windows
+      call setwinvar(id, '&' . 'cursorcolumn', 0)
+      call setwinvar(id, '&' . 'cursorline', 0)
+      call setwinvar(id, '&' . 'scrolloff', 0)
+    endfor
+  endif
+
+  " add matches
+  for id in windows
+    noautocmd call win_gotoid(id)
+    let win = s:buf[s:nr].win[id]
+    let win.matches = get(win, 'matches', {})
+    if !exists('win.matches[a:group]')
+      silent! let match_id = matchadd(a:group, a:pattern, a:priority)
+      let win.matches[a:group] = {'match_id': match_id, 'pattern': a:pattern}
+      let s:redraw_later = 1
+      if a:group ==# 'Conceal'
+        noautocmd let &l:conceallevel=2
+        noautocmd let &l:concealcursor='c'
       endif
-      let s:win[id].hlight[a:group].pattern = a:pattern
-      silent! let s:win[id].hlight[a:group].index = matchadd(a:group, a:pattern, a:priority)
-      let s:highlighted = 1
-    endif
-    if (&conceallevel !=# 2 || &concealcursor !=# 'c') && a:group ==# 'Conceal'
-      let s:win[id].options = get(s:win[id], 'options', {})
-      let s:win[id].options.conceallevel = &conceallevel
-      let s:win[id].options.concealcursor = &concealcursor
-      noautocmd set conceallevel=2
-      noautocmd set concealcursor=c
-    endif
-    " highlighting doesn't work properly when cursorline or cursorcolumn is
-    " enabled
-    if &cursorcolumn || &cursorline
-      let s:win[id].options = get(s:win[id], 'options', {})
-      let s:win[id].options.cursorcolumn = &cursorcolumn
-      let s:win[id].options.cursorline = &cursorline
-      noautocmd set nocursorcolumn
-      noautocmd set nocursorline
+    else
+      silent! call matchdelete(win.matches[a:group].match_id)
+      silent! let match_id = matchadd(a:group, a:pattern, a:priority)
+      let win.matches[a:group] = {'match_id': match_id, 'pattern': a:pattern}
+      let s:redraw_later = 1
     endif
   endfor
-  if bufname('%') !=# '[Command Line]'
-    noautocmd call win_gotoid(cur_win)
-  endif
-  if exists('scrolloff')
-    noautocmd let &scrolloff = scrolloff
-  endif
+
+  noautocmd call win_gotoid(s:buf[s:nr].cur_win)
 endfunction
 
 function! s:format_command(cmdl) abort
@@ -707,10 +697,10 @@ function! s:preview_substitute(cmdl) abort
 
   let lines = line('$')
   let view = winsaveview()
-  let ul = &undolevels
-  noautocmd let &undolevels = 0
+  let ul = &l:undolevels
+  noautocmd let &l:undolevels = 0
   silent! execute cmd
-  noautocmd let &undolevels = ul
+  noautocmd let &l:undolevels = ul
 
   if tick == b:changedtick
     return
@@ -719,7 +709,7 @@ function! s:preview_substitute(cmdl) abort
   let s:buf[s:nr].changed = 1
 
   call winrestview(view)
-  let s:highlighted = 1
+  let s:redraw_later = 1
   let lines = lines - line('$')
 
   if lines && !get(s:, 'entire_file') && !empty(range)
@@ -769,10 +759,12 @@ function! s:cmdl_enter(view) abort
   let s:buf[s:nr].redraw = 1
   let s:buf[s:nr].s_mark = (&encoding == 'utf-8' ? "\uf8b4" : '' )
   let s:buf[s:nr].winrestcmd = winrestcmd()
+  let s:buf[s:nr].cur_win = win_getid()
   let s:buf[s:nr].alt_win = win_getid(winnr('#'))
   let s:buf[s:nr].winwidth = &winwidth
   let s:buf[s:nr].winheight = &winheight
   let s:buf[s:nr].pre_cmdl_view = a:view
+  let s:buf[s:nr].win = {}
   call s:save_marks()
 endfunction
 
@@ -784,47 +776,28 @@ function! traces#cmdl_leave() abort
 
   call s:restore_undo_history()
 
-  " highlights
-  if exists('s:win[win_getid()]')
-    if &scrolloff !=# 0
-      let scrolloff = &scrolloff
-      noautocmd let &scrolloff = 0
-    endif
-    let cur_win = win_getid()
-    let alt_win = win_getid(winnr('#'))
-    let windows = filter(win_findbuf(s:nr), {_, val -> win_id2win(val)})
-    for id in windows
-      let wininfo = getwininfo(id)[0]
-      if wininfo.height is 0 || wininfo.width is 0
-        " skip minimized windows
-        continue
-      endif
-      noautocmd call win_gotoid(id)
-      if exists('s:win[id]')
-        if exists('s:win[id].hlight')
-          for group in keys(s:win[id].hlight)
-            if s:win[id].hlight[group].index !=# - 1
-              silent! call matchdelete(s:win[id].hlight[group].index)
-            endif
-          endfor
-        endif
-        if exists('s:win[id].options')
-          for option in keys(s:win[id].options)
-            execute 'noautocmd let &' . option . '="' . s:win[id].options[option] . '"'
-          endfor
-        endif
-        unlet s:win[id]
-      endif
+  " clear highlights
+  for id in keys(s:buf[s:nr].win)
+    noautocmd call win_gotoid(id)
+    for group in keys(get(s:buf[s:nr].win[id], 'matches', {}))
+      silent! call matchdelete(s:buf[s:nr].win[id].matches[group].match_id)
     endfor
-    if bufname('%') !=# '[Command Line]'
-      noautocmd call win_gotoid(s:buf[s:nr].alt_win)
-      noautocmd call win_gotoid(cur_win)
-    endif
-    if exists('scrolloff')
-      noautocmd let &scrolloff = scrolloff
-    endif
+  endfor
+
+  " restore previous window <c-w>p
+  if bufname('%') !=# '[Command Line]'
+    noautocmd call win_gotoid(s:buf[s:nr].alt_win)
+    noautocmd call win_gotoid(s:buf[s:nr].cur_win)
   endif
 
+  " restore local options
+  for id in keys(s:buf[s:nr].win)
+    for option in keys(get(s:buf[s:nr].win[id], 'options', {}))
+      call setwinvar(id, '&' . option, s:buf[s:nr].win[id].options[option])
+    endfor
+  endfor
+
+  " restore global options
   if &hlsearch !=# s:buf[s:nr].hlsearch
     noautocmd let &hlsearch = s:buf[s:nr].hlsearch
   endif
@@ -844,6 +817,7 @@ function! traces#cmdl_leave() abort
   if winsaveview() !=# s:buf[s:nr].view
     call winrestview(s:buf[s:nr].view)
   endif
+
   unlet s:buf[s:nr]
 endfunction
 
@@ -986,7 +960,7 @@ function! traces#init(cmdl, view) abort
     call s:cmdl_enter(a:view)
   endif
 
-  let s:highlighted = 0
+  let s:redraw_later = 0
   let s:moved       = 0
   let s:last_pattern = @/
   let s:specifier_delimiter = 0
@@ -1000,7 +974,7 @@ function! traces#init(cmdl, view) abort
     let view = winsaveview()
     noautocmd keepjumps silent undo
     let s:buf[s:nr].changed = 0
-    let s:highlighted = 1
+    let s:redraw_later = 1
     call s:restore_marks()
     call winrestview(view)
   endif
@@ -1041,8 +1015,8 @@ function! traces#init(cmdl, view) abort
     call winrestview(s:buf[s:nr].view)
   endif
 
-  " update screen if necessary
-  if s:highlighted
+  " redraw screen if necessary
+  if s:redraw_later
     call s:adjust_cmdheight()
     if has('nvim')
       redraw
