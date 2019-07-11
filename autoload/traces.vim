@@ -624,6 +624,10 @@ function! s:highlight(group, pattern, priority) abort
       let win.matches[a:group] = {'match_id': match_id, 'pattern': a:pattern}
       let s:redraw_later = 1
     endif
+    if a:group ==# 'TracesReplace' && exists('win.matches[''TracesSearch'']')
+      silent! call matchdelete(win.matches['TracesSearch'].match_id)
+      unlet win.matches['TracesSearch']
+    endif
   endfor
 
   noautocmd call win_gotoid(s:buf[s:nr].cur_win)
@@ -719,7 +723,7 @@ function! s:preview_substitute(cmdl) abort
     let range[-1] -= lines
     call s:highlight('Visual', s:get_selection_regexp(range), 100)
   endif
-  call s:highlight('TracesSearch', s:buf[s:nr].s_mark . '\_.\{-}' . s:buf[s:nr].s_mark, 101)
+  call s:highlight('TracesReplace', s:buf[s:nr].s_mark . '\_.\{-}' . s:buf[s:nr].s_mark, 101)
   call s:highlight('Conceal', s:buf[s:nr].s_mark . '\|' . s:buf[s:nr].s_mark, 102)
 endfunction
 
