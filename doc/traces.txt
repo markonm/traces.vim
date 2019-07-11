@@ -4,21 +4,19 @@ Version 1.1.0
 
 CONTENTS					*traces-contents*
 
-1. Introduction			|traces-introduction|
-2. Requirements			|traces-requirements|
-3. Options 			|traces-options|
-					|g:traces_enabled|
-					|g:traces_preserve_view_state|
-					|g:traces_substitute_preview|
-					|g:traces_skip_modifiers|
-					|g:traces_num_range_preview|
-					|g:traces_timeout|
-					|g:traces_search_timeout|
-4. Highlights			|traces-highlights|
-					|hl-TracesSearch|
-					|hl-TracesReplace|
-5. Bugs				|traces-bugs|
-6. Changelog			|traces-changelog|
+  1. Introduction ........... |traces-introduction|
+  2. Requirements ........... |traces-requirements|
+  3. Settings ............... |traces-options|
+                                - |g:traces_enabled|
+                                - |g:traces_preserve_view_state|
+                                - |g:traces_substitute_preview|
+                                - |g:traces_skip_modifiers|
+                                - |g:traces_num_range_preview|
+                                - |g:traces_timeout|
+                                - |g:traces_search_timeout|
+  4. Highlights ............. |traces-highlights|
+  5. Bugs ................... |traces-bugs|
+  6. Changelog .............. |traces-changelog|
 
 ==============================================================================
 INTRODUCTION					*traces-introduction*
@@ -27,13 +25,13 @@ This plugin highlights |pattern|s and |:range|s for Ex commands in
 Command-line mode.
 
 Ranges composed of at least one pattern or mark specifier will be highlighted
-immediately.  Ranges that do not include any pattern or mark specifier will not
+immediately. Ranges that do not include any pattern or mark specifier will not
 be highlighted because they cannot be uniquely identified as ranges related to
 buffer lines (see |:command-addr|).
 
 To force immediate preview for ranges composed entirely of absolute specifiers
 ({number}, ., $, %), first enter and delete '/' or some other pattern or mark
-specifier.  Also see |g:traces_num_range_preview|.
+specifier. Also see |g:traces_num_range_preview|.
 
 Patterns for the following Ex commands will be highlighted immediately as
 typed:
@@ -59,74 +57,88 @@ Vim v8.0.1206+
 or
 
 Neovim v0.2.3+
-  - Note: this plugin is not compatible with |inccommand|, please turn it
-    off if you want to use this plugin
+  Note:
+  - this plugin is not compatible with |inccommand|, please turn it off if you
+    want to use this plugin
 
 ==============================================================================
 OPTIONS 					*traces-options*
 
                                                 *g:traces_enabled*
-g:traces_enabled	boolean (default 1)
-                If value is 0, this plugin will be disabled and no highlighting
-                will be done.
+Type: Number                                                                 ~
+Default: 1                                                                   ~
 
+If value is 0, this plugin will be disabled and no highlighting will be done.
+
+------------------------------------------------------------------------------
                                                 *g:traces_preserve_view_state*
-g:traces_preserve_view_state boolean (default 0)
-                If value is 1, view position  will not be changed when
-                highlighting ranges or patterns outside initial view position.
+Type: Number                                                                 ~
+Default: 0                                                                   ~
 
+If value is 1, view position  will not be changed when highlighting ranges or
+patterns outside initial view position.
+
+------------------------------------------------------------------------------
                                                 *g:traces_substitute_preview*
-g:traces_substitute_preview boolean (default 1)
-                If value is 1, |:substitute|, |:smagic| and |:snomagic| will be
-                previewed.
+Type: Number                                                                 ~
+Default: 1                                                                   ~
 
+If value is 1, |:substitute|, |:smagic| and |:snomagic| Ex commands will use
+live preview.
+
+------------------------------------------------------------------------------
                                                 *g:traces_skip_modifiers*
-g:traces_skip_modifiers boolean (default 1)
-                If value is 1, |cdo|, |cfdo|, |ldo|, |lfdo|, |bufdo|, |tabdo|,
-                |argdo| and |windo| will be ignored when processing command
-                line.
+Type: Number                                                                 ~
+Default: 1                                                                   ~
 
+If value is 1, do-modifiers, |cdo|, |cfdo|, |ldo|, |lfdo|, |bufdo|, |tabdo|,
+|argdo| and |windo| will be ignored when processing command line.
+
+------------------------------------------------------------------------------
                                                 *g:traces_num_range_preview*
-g:traces_num_range_preview boolean (default 0)
+Type: Number                                                                 ~
+Default: 0                                                                   ~
 
-                If value is 1, numerical ranges :N, and :N; will be
-                highlighted immediately.
+If value is 1, numerical ranges :N, and :N; will be previewed.
 
-                Highlighted: >
-                  :10,
-                  :10;15
+Previewed: >
+  :1,
+  :1;
+  :1,10
+  :1;10
 <
-                Not highlighted: >
-                  :10
+Not previewed: >
+  :10
 <
+------------------------------------------------------------------------------
                                                 *g:traces_timeout*
-g:traces_timeout	number (default 1000)
-                If preview is slower than the timeout (in milliseconds), it
-                gets disabled until Command-line mode is entered again.  Time
-                spent saving undo history is ignored.  Cannot be lower than
-                200.
+Type: Number                                                                 ~
+Default: 1000                                                                ~
+Minimum: 200                                                                 ~
 
+If preview is slower than the timeout (in milliseconds), it gets disabled
+until Command-line mode is entered again.  Time spent saving undo history is
+ignored.
+
+------------------------------------------------------------------------------
                                                 *g:traces_search_timeout*
-g:traces_search_timeout number (default 500)
-                If searching is slower than the timeout (in milliseconds), it
-                gets disabled until new character is passed to Command-line.
-                Cannot be higher than |g:traces_timeout|.
+Type: Number                                                                 ~
+Default: 500                                                                 ~
+
+If searching is slower than the timeout (in milliseconds), it gets disabled
+until new character is passed to Command-line. Cannot be higher than
+|g:traces_timeout|.
 
 ==============================================================================
 HIGHLIGHTS					*traces-highlights*
 
                                                 *hl-TracesSearch*
 
-TracesSearch	Search pattern highlighting.  Links to |hl-Search| by default.
-
-                                                *hl-TracesReplace*
-TracesReplace	Substitute string highlighting.  Links to |hl-TracesSearch| by
-                default.
+Search pattern highlighting. Links to |hl-Search| by default.
 
 Example: >
 
-  highlight link TracesSearch Cursor
-  highlight link TracesReplace DiffAdd
+  hi link TracesSearch Incsearch
 <
 ==============================================================================
 BUGS						*traces-bugs*

@@ -99,7 +99,6 @@ augroup traces_augroup
 augroup END
 
 highlight default link TracesSearch Search
-highlight default link TracesReplace TracesSearch
 
 let &cpo = s:cpo_save
 unlet s:cpo_save
