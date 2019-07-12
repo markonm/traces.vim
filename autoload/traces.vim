@@ -574,7 +574,7 @@ function! s:highlight(group, pattern, priority) abort
   elseif empty(a:pattern)
     return
   endif
-  if a:group ==# 'TracesSearch'
+  if a:group ==# 'TracesSearch' || a:group ==# 'TracesReplace'
     noautocmd let &hlsearch = 0
   endif
   noautocmd let &winwidth = &winminwidth
@@ -719,7 +719,8 @@ function! s:preview_substitute(cmdl) abort
     let range[-1] -= lines
     call s:highlight('Visual', s:get_selection_regexp(range), 100)
   endif
-  call s:highlight('TracesSearch', s:buf[s:nr].s_mark . '\_.\{-}' . s:buf[s:nr].s_mark, 101)
+  call s:highlight('TracesSearch', '', 101)
+  call s:highlight('TracesReplace', s:buf[s:nr].s_mark . '\_.\{-}' . s:buf[s:nr].s_mark, 101)
   call s:highlight('Conceal', s:buf[s:nr].s_mark . '\|' . s:buf[s:nr].s_mark, 102)
 endfunction
 
