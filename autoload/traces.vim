@@ -601,7 +601,9 @@ function! s:highlight(group, pattern, priority) abort
     for id in windows
       call setwinvar(id, '&' . 'cursorcolumn', 0)
       call setwinvar(id, '&' . 'cursorline', 0)
-      call setwinvar(id, '&' . 'scrolloff', 0)
+      if id isnot s:buf[s:nr].cur_win
+        call setwinvar(id, '&' . 'scrolloff', 0)
+      endif
     endfor
   endif
 
