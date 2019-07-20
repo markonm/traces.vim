@@ -27,9 +27,9 @@ This plugin highlights |pattern|s and |:range|s for Ex commands in
 Command-line mode.
 
 Ranges composed of at least one pattern or mark specifier will be highlighted
-immediately.  Ranges that do not include any pattern or mark specifier will not
-be highlighted because they cannot be uniquely identified as ranges related to
-buffer lines (see |:command-addr|).
+immediately.  Ranges that do not include any pattern or mark specifier will
+not be highlighted because they cannot be uniquely identified as ranges
+related to buffer lines (see |:command-addr|).
 
 To force immediate preview for ranges composed entirely of absolute specifiers
 ({number}, ., $, %), first enter and delete '/' or some other pattern or mark
@@ -67,8 +67,8 @@ OPTIONS 					*traces-options*
 
                                                 *g:traces_enabled*
 g:traces_enabled	boolean (default 1)
-                If value is 0, this plugin will be disabled and no highlighting
-                will be done.
+                If value is 0, this plugin will be disabled and no
+                highlighting will be done.
 
                                                 *g:traces_preserve_view_state*
 g:traces_preserve_view_state boolean (default 0)
@@ -77,8 +77,8 @@ g:traces_preserve_view_state boolean (default 0)
 
                                                 *g:traces_substitute_preview*
 g:traces_substitute_preview boolean (default 1)
-                If value is 1, |:substitute|, |:smagic| and |:snomagic| will be
-                previewed.
+                If value is 1, |:substitute|, |:smagic| and |:snomagic| will
+                be previewed.
 
                                                 *g:traces_skip_modifiers*
 g:traces_skip_modifiers boolean (default 1)
@@ -88,7 +88,6 @@ g:traces_skip_modifiers boolean (default 1)
 
                                                 *g:traces_num_range_preview*
 g:traces_num_range_preview boolean (default 0)
-
                 If value is 1, numerical ranges :N, and :N; will be
                 highlighted immediately.
 
@@ -116,7 +115,6 @@ g:traces_search_timeout number (default 500)
 HIGHLIGHTS					*traces-highlights*
 
                                                 *hl-TracesSearch*
-
 TracesSearch	Search pattern highlighting.  Links to |hl-Search| by default.
 
                                                 *hl-TracesReplace*
@@ -130,9 +128,11 @@ Example: >
 <
 ==============================================================================
 BUGS						*traces-bugs*
+
  - \& range specifier is not supported
  - if range is one blank line it will not be highlighted
- - highlighting is disabled for |:terminal| windows because of redrawing issues
+ - highlighting is disabled for |:terminal| windows because of redrawing
+   issues
  - on Windows, cursor is not blinking because of high frequency timer this
    plugin is using (does not apply if Vim has |CmdlineChanged| event)
 
