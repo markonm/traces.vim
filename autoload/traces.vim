@@ -761,7 +761,6 @@ function! s:cmdl_enter(view) abort
   let s:buf[s:nr].cmdheight = &cmdheight
   let s:buf[s:nr].redraw = 1
   let s:buf[s:nr].s_mark = (&encoding == 'utf-8' ? "\uf8b4" : '' )
-  let s:buf[s:nr].winrestcmd = winrestcmd()
   let s:buf[s:nr].cur_win = win_getid()
   let s:buf[s:nr].alt_win = win_getid(winnr('#'))
   let s:buf[s:nr].winwidth = &winwidth
@@ -789,8 +788,10 @@ function! traces#cmdl_leave() abort
 
   " restore previous window <c-w>p
   if bufname('%') !=# '[Command Line]'
+    let winrestcmd = winrestcmd()
     noautocmd call win_gotoid(s:buf[s:nr].alt_win)
     noautocmd call win_gotoid(s:buf[s:nr].cur_win)
+    execute winrestcmd
   endif
 
   " restore local options
@@ -814,9 +815,6 @@ function! traces#cmdl_leave() abort
     noautocmd let &winheight = s:buf[s:nr].winheight
   endif
 
-  if winrestcmd() isnot s:buf[s:nr].winrestcmd
-    noautocmd execute s:buf[s:nr].winrestcmd
-  endif
   if winsaveview() !=# s:buf[s:nr].view
     call winrestview(s:buf[s:nr].view)
   endif
