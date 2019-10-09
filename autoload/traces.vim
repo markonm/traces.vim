@@ -609,7 +609,9 @@ function! s:highlight(group, pattern, priority) abort
 
   " add matches
   for id in windows
-    noautocmd call win_gotoid(id)
+    if empty(getcmdwintype())
+      noautocmd call win_gotoid(id)
+    endif
     let win = s:buf[s:nr].win[id]
     let win.matches = get(win, 'matches', {})
     if !exists('win.matches[a:group]')
@@ -628,7 +630,9 @@ function! s:highlight(group, pattern, priority) abort
     endif
   endfor
 
-  noautocmd call win_gotoid(s:buf[s:nr].cur_win)
+  if empty(getcmdwintype())
+    noautocmd call win_gotoid(s:buf[s:nr].cur_win)
+  endif
 endfunction
 
 function! s:format_command(cmdl) abort
@@ -780,14 +784,16 @@ function! traces#cmdl_leave() abort
 
   " clear highlights
   for id in keys(s:buf[s:nr].win)
-    noautocmd call win_gotoid(id)
+    if empty(getcmdwintype())
+      noautocmd call win_gotoid(id)
+    endif
     for group in keys(get(s:buf[s:nr].win[id], 'matches', {}))
       silent! call matchdelete(s:buf[s:nr].win[id].matches[group].match_id)
     endfor
   endfor
 
   " restore previous window <c-w>p
-  if bufname('%') !=# '[Command Line]'
+  if empty(getcmdwintype())
     let winrestcmd = winrestcmd()
     noautocmd call win_gotoid(s:buf[s:nr].alt_win)
     noautocmd call win_gotoid(s:buf[s:nr].cur_win)
@@ -861,7 +867,7 @@ function! s:save_undo_history() abort
   if exists('s:buf[s:nr].undo_file')
     return
   endif
-  if bufname('%') ==# '[Command Line]' || s:buf[s:nr].empty_undotree
+  if !empty(getcmdwintype()) || s:buf[s:nr].empty_undotree
     let s:buf[s:nr].undo_file = 1
     return
   endif
