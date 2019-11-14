@@ -37,8 +37,7 @@ function! s:parse_range(range, cmdl) abort
     " regexp for pattern specifier
     let pattern = '/%(\\.|/@!&.)*/=|\?%(\\.|\?@!&.)*\?='
     if !len(specifier.addresses)
-      " \& is not supported
-      let address = matchstrpos(a:cmdl[0], '\v^%(\d+|\.|\$|\%|\*|''.|'. pattern . '|\\\/|\\\?)')
+      let address = matchstrpos(a:cmdl[0], '\v^%(\d+|\.|\$|\%|\*|''.|'. pattern . '|\\\/|\\\?|\\\&)')
     else
       let address = matchstrpos(a:cmdl[0], '\v^%(' . pattern . ')' )
     endif
@@ -248,6 +247,16 @@ function! s:address_to_num(address, last_pos) abort
     let query = s:search([s:last_pattern, 'nb', 0, s:s_timeout], a:last_pos, 1)
     if !query | let result.valid = 0 | endif
     call add(result.range, query)
+    let s:buf[s:nr].show_range = 1
+
+  elseif a:address.str ==# '\&'
+    call cursor(a:last_pos, 1)
+    try
+      silent \&
+    catch
+      let result.valid = 0
+    endtry
+    call add(result.range, getpos('.')[1])
     let s:buf[s:nr].show_range = 1
   endif
 

@@ -4,21 +4,21 @@ Version 1.1.0
 
 CONTENTS					*traces-contents*
 
-1. Introduction			|traces-introduction|
-2. Requirements			|traces-requirements|
-3. Options 			|traces-options|
-					|g:traces_enabled|
-					|g:traces_preserve_view_state|
-					|g:traces_substitute_preview|
-					|g:traces_skip_modifiers|
-					|g:traces_num_range_preview|
-					|g:traces_timeout|
-					|g:traces_search_timeout|
-4. Highlights			|traces-highlights|
-					|hl-TracesSearch|
-					|hl-TracesReplace|
-5. Bugs				|traces-bugs|
-6. Changelog			|traces-changelog|
+1. Introduction		|traces-introduction|
+2. Requirements		|traces-requirements|
+3. Options 		|traces-options|
+				|g:traces_enabled|
+				|g:traces_preserve_view_state|
+				|g:traces_substitute_preview|
+				|g:traces_skip_modifiers|
+				|g:traces_num_range_preview|
+				|g:traces_timeout|
+				|g:traces_search_timeout|
+4. Highlights		|traces-highlights|
+				|hl-TracesSearch|
+				|hl-TracesReplace|
+5. Bugs			|traces-bugs|
+6. Changelog		|traces-changelog|
 
 ==============================================================================
 INTRODUCTION					*traces-introduction*
@@ -129,12 +129,8 @@ Example: >
 ==============================================================================
 BUGS						*traces-bugs*
 
- - \& range specifier is not supported
- - if range is one blank line it will not be highlighted
  - highlighting is disabled for |:terminal| windows because of redrawing
    issues
- - on Windows, cursor is not blinking because of high frequency timer this
-   plugin is using (does not apply if Vim has |CmdlineChanged| event)
 
 
  - If you have any problems or suggestions, please let me know at:
