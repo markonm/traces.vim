@@ -252,7 +252,7 @@ function! s:address_to_num(address, last_pos) abort
   elseif a:address.str ==# '\&'
     call cursor(a:last_pos, 1)
     try
-      silent \&
+      noautocmd keeppatterns keepjumps silent \&
     catch
       let result.valid = 0
     endtry
