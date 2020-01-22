@@ -6,6 +6,7 @@ let s:timeout = s:timeout > 200 ? s:timeout : 200
 let s:s_timeout = get(g:, 'traces_search_timeout', 500)
 let s:s_timeout = s:s_timeout > s:timeout - 100 ? s:timeout - 100 : s:s_timeout
 
+let s:has_matchdelete_win = has('patch-8.1.1741')
 let s:cmd_pattern = '\v\C^%('
                 \ . 'g%[lobal][[:alnum:]]@!\!=|'
                 \ . 's%[ubstitute][[:alnum:]]@!|'
@@ -618,28 +619,37 @@ function! s:highlight(group, pattern, priority) abort
 
   " add matches
   for id in windows
-    if empty(getcmdwintype())
+    if empty(getcmdwintype()) && !s:has_matchdelete_win
       noautocmd call win_gotoid(id)
     endif
     let win = s:buf[s:nr].win[id]
     let win.matches = get(win, 'matches', {})
     if !exists('win.matches[a:group]')
-      silent! let match_id = matchadd(a:group, a:pattern, a:priority)
+      if s:has_matchdelete_win
+        silent! let match_id = matchadd(a:group, a:pattern, a:priority, -1, {'window': id})
+      else
+        silent! let match_id = matchadd(a:group, a:pattern, a:priority)
+      endif
       let win.matches[a:group] = {'match_id': match_id, 'pattern': a:pattern}
       let s:redraw_later = 1
       if a:group ==# 'Conceal'
-        noautocmd let &l:conceallevel=2
-        noautocmd let &l:concealcursor='c'
+        call setwinvar(id, '&conceallevel', 2)
+        call setwinvar(id, '&concealcursor', 'c')
       endif
     else
-      silent! call matchdelete(win.matches[a:group].match_id)
-      silent! let match_id = matchadd(a:group, a:pattern, a:priority)
+      if s:has_matchdelete_win
+        silent! call matchdelete(win.matches[a:group].match_id, id)
+        silent! let match_id = matchadd(a:group, a:pattern, a:priority, -1, {'window': id})
+      else
+        silent! call matchdelete(win.matches[a:group].match_id)
+        silent! let match_id = matchadd(a:group, a:pattern, a:priority)
+      endif
       let win.matches[a:group] = {'match_id': match_id, 'pattern': a:pattern}
       let s:redraw_later = 1
     endif
   endfor
 
-  if empty(getcmdwintype())
+  if empty(getcmdwintype()) && !s:has_matchdelete_win
     noautocmd call win_gotoid(s:buf[s:nr].cur_win)
   endif
 endfunction
@@ -793,16 +803,20 @@ function! traces#cmdl_leave() abort
 
   " clear highlights
   for id in keys(s:buf[s:nr].win)
-    if empty(getcmdwintype())
+    if empty(getcmdwintype()) && !s:has_matchdelete_win
       noautocmd call win_gotoid(id)
     endif
     for group in keys(get(s:buf[s:nr].win[id], 'matches', {}))
-      silent! call matchdelete(s:buf[s:nr].win[id].matches[group].match_id)
+      if s:has_matchdelete_win
+        silent! call matchdelete(s:buf[s:nr].win[id].matches[group].match_id, id)
+      else
+        silent! call matchdelete(s:buf[s:nr].win[id].matches[group].match_id)
+      endif
     endfor
   endfor
 
   " restore previous window <c-w>p
-  if empty(getcmdwintype())
+  if empty(getcmdwintype()) && !s:has_matchdelete_win
     let winrestcmd = winrestcmd()
     noautocmd call win_gotoid(s:buf[s:nr].alt_win)
     noautocmd call win_gotoid(s:buf[s:nr].cur_win)
