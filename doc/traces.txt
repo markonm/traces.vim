@@ -14,6 +14,7 @@ CONTENTS					*traces-contents*
 				|g:traces_num_range_preview|
 				|g:traces_timeout|
 				|g:traces_search_timeout|
+				|g:traces_preview_window|
 4. Highlights		|traces-highlights|
 				|hl-TracesSearch|
 				|hl-TracesReplace|
@@ -111,6 +112,32 @@ g:traces_search_timeout number (default 500)
                 gets disabled until new character is passed to Command-line.
                 Cannot be higher than |g:traces_timeout|.
 
+                                                *g:traces_preview_window*
+g:traces_preview_window string (default empty)
+                Window used to show off-screen matches.
+
+                Set the option to Ex command which will be used to open a new
+                window.  Use a combination of Ex commands |:new| or |:vnew| and
+                command modifiers |vertical|, |leftabove|, |aboveleft|,
+                |rightbelow|, |belowright|, |topleft| and |botright|.  Prepend
+                "new" or "vnew" with a number to specify height or width of the
+                window.  Preview window is opened only when selected range
+                exceeds visible viewport.
+
+                Example: >
+                  let g:traces_preview_window = "botright 10new"
+                  let g:traces_preview_window = "vertical botright new"
+                  let g:traces_preview_window = "topleft 15new"
+<
+                As a fallback the string is evaluated with |eval()| which
+                permits the following:
+
+                Example: >
+                  " If window width is greater than 160 columns, open vertical
+                  " window or else open horizontal window
+                  let g:traces_preview_window =
+                        \ "winwidth('%') > 160 ? 'bot vnew' : 'bot 10new'"
+<
 ==============================================================================
 HIGHLIGHTS					*traces-highlights*
 

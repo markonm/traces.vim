@@ -17,16 +17,18 @@ or
  - this plugin is not compatible with [inccommand](https://neovim.io/doc/user/options.html#'inccommand'), please turn it off if you want to use this plugin
 
 
+## Feature comparison
 **Note**: some of the features provided by this plugin are already present in Vim/Neovim.
 
 |                                                    | traces.vim  | Vim*  | Neovim |
-| ---------------------------------------------      | :---------: | :---: | :---:  |
+|----------------------------------------------------| :---------: | :---: | :---:  |
 | `:substitute` preview                              | ✓           |       | ✓      |
 | pattern preview for `:substitute`                  | ✓           | ✓     | ✓      |
 | pattern preview for `:global`, `:vglobal`, `:sort` | ✓           | ✓     |        |
 | pattern preview for `:vimgrep`                     |             | ✓     |        |
 | range preview                                      | ✓           |       |        |
-| partial off-screen results in a preview window     |             |       | ✓      |
+| preview window for `:substitute`                   | ✓           |       | ✓      |
+| preview window for `:global`, `:vglobal`, `:sort`  | ✓           |       |        |
 
 \* added by patch [v8.1.0271](https://github.com/vim/vim/commit/b0acacd767a2b0618a7f3c08087708f4329580d0)
 

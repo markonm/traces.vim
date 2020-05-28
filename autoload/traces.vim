@@ -131,20 +131,18 @@ function! s:offset_to_num(string) abort
   return offset
 endfunction
 
-function! s:search(args, last_pos, shouldCache) abort
-  if !has_key(s:buf[s:nr].cache, 'patterns')
-    let s:buf[s:nr].cache.patterns = {}
+function! s:search(...) abort
+  let cache = s:buf[s:nr].search_cache
+  let key = string(a:000) . string(getcurpos())
+  if has_key(cache, key)
+    if a:0 is 1 || a:0 >= 2 && a:2 !~# 'n'
+      call setpos('.', cache[key].curpos)
+    endif
+    return cache[key].lnum
   endif
-  let patterns = s:buf[s:nr].cache.patterns
-  let key = join(a:args) . a:last_pos
-  if has_key(patterns, key)
-    return patterns[key]
-  endif
-  silent! let pos = call('search', a:args)
-  if a:shouldCache
-    let patterns[key] = pos
-  endif
-  return pos
+  silent! let lnum = call('search', a:000)
+  let cache[key] = {'lnum': lnum, 'curpos': getcurpos()}
+  return lnum
 endfunction
 
 function! s:address_to_num(address, last_pos) abort
@@ -206,7 +204,7 @@ function! s:address_to_num(address, last_pos) abort
       endif
     endif
     let s:buf[s:nr].show_range = 1
-    let query = s:search([pattern, 'nc', 0, s:s_timeout], a:last_pos, closed)
+    let query = s:search(pattern, 'nc', 0, s:s_timeout)
     if !query | let result.valid = 0 | endif
     if !closed | let result.regex = pattern | endif
     call add(result.range, query)
@@ -224,7 +222,7 @@ function! s:address_to_num(address, last_pos) abort
     endif
     call cursor(a:last_pos, 1)
     let s:buf[s:nr].show_range = 1
-    let query = s:search([pattern, 'nb', 0, s:s_timeout], a:last_pos, closed)
+    let query = s:search(pattern, 'nb', 0, s:s_timeout)
     if !query | let result.valid = 0 | endif
     if !closed | let result.regex = pattern | endif
     call add(result.range, query)
@@ -238,14 +236,14 @@ function! s:address_to_num(address, last_pos) abort
         let result.valid = 0
       endif
     endif
-    let query = s:search([s:last_pattern, 'nc', 0, s:s_timeout], a:last_pos, 1)
+    let query = s:search(s:last_pattern, 'nc', 0, s:s_timeout)
     if !query | let result.valid = 0 | endif
     call add(result.range, query)
     let s:buf[s:nr].show_range = 1
 
   elseif a:address.str ==# '\?'
     call cursor(a:last_pos, 1)
-    let query = s:search([s:last_pattern, 'nb', 0, s:s_timeout], a:last_pos, 1)
+    let query = s:search(s:last_pattern, 'nb', 0, s:s_timeout)
     if !query | let result.valid = 0 | endif
     call add(result.range, query)
     let s:buf[s:nr].show_range = 1
@@ -494,16 +492,6 @@ function! s:pos_pattern(pattern, range, delimiter, type) abort
     return
   endif
 
-  " restore position from cache
-  if has_key(s:buf[s:nr].cache, 'pattern')
-    let cache = s:buf[s:nr].cache.pattern
-    if cache.state ==# a:
-      call winrestview(cache.view)
-      let s:moved = 1
-      return
-    endif
-  endif
-
   let stopline = 0
   if len(a:range) > 1 && !get(s:, 'entire_file')
     if a:delimiter ==# '?'
@@ -521,37 +509,18 @@ function! s:pos_pattern(pattern, range, delimiter, type) abort
     endif
   endif
   if a:delimiter ==# '?'
-    silent! let position = search(a:pattern, 'cb', stopline, s:s_timeout)
+    let position = s:search(a:pattern, 'cb', stopline, s:s_timeout)
   else
-    silent! let position = search(a:pattern, 'c', stopline, s:s_timeout)
+    let position = s:search(a:pattern, 'c', stopline, s:s_timeout)
   endif
   if position !=# 0
     let s:moved = 1
   endif
-
-  " save position to cache
-  let cache = {}
-  let cache.state = deepcopy(a:)
-  let cache.view = winsaveview()
-  let s:buf[s:nr].cache.pattern = cache
 endfunction
 
 function! s:pos_range(end, pattern) abort
   if g:traces_preserve_view_state || empty(a:end)
     return
-  endif
-
-  " restore position from cache
-  if has_key(s:buf[s:nr].cache, 'range')
-    let cache = s:buf[s:nr].cache.range
-    if cache.state ==# a:
-      call winrestview(cache.view)
-      let s:moved = 1
-      return
-    elseif has_key(s:buf[s:nr].cache, 'pattern')
-      " drop unvalid cache
-      unlet s:buf[s:nr].cache.pattern
-    endif
   endif
 
   if exists('s:buf[s:nr].pre_cmdl_view')
@@ -564,15 +533,9 @@ function! s:pos_range(end, pattern) abort
   endif
   call cursor([a:end, 1])
   if !empty(a:pattern)
-    silent! call search(a:pattern, 'c', a:end, s:s_timeout)
+    call s:search(a:pattern, 'c', a:end, s:s_timeout)
   endif
   let s:moved = 1
-
-  " save position to cache
-  let cache = {}
-  let cache.state = deepcopy(a:)
-  let cache.view = winsaveview()
-  let s:buf[s:nr].cache.range = cache
 endfunction
 
 function! s:highlight(group, pattern, priority) abort
@@ -654,43 +617,156 @@ function! s:highlight(group, pattern, priority) abort
   endif
 endfunction
 
-function! s:format_command(cmdl) abort
-  let c = ''
+function! s:format_range(cmdl) abort
+  let range_str = ''
   if len(a:cmdl.range.abs) == 0
-    let c .= s:buf[s:nr].cur_init_pos[0]
+    let range_str .= s:buf[s:nr].cur_init_pos[0]
   elseif len(a:cmdl.range.abs) == 1
-    let c .= a:cmdl.range.abs[0]
+    let range_str .= a:cmdl.range.abs[0]
   else
     if substitute(a:cmdl.cmd.args.pattern_org, '\\\\', '', 'g') =~# '\v(\\n|\\_\.|\\_\[|\\_[iIkKfFpPsSdDxXoOwWhHaAlLuU])'
-      let c .= a:cmdl.range.abs[-2]
-      let c .= ';'
-      let c .= a:cmdl.range.abs[-1]
+      let range_str .= a:cmdl.range.abs[-2]
+      let range_str .= ';'
+      let range_str .= a:cmdl.range.abs[-1]
     else
-      let c .= max([a:cmdl.range.abs[-2], line("w0")])
-      let c .= ';'
-      let c .= min([a:cmdl.range.abs[-1], line("w$")])
+      let range_str .= max([a:cmdl.range.abs[-2], line("w0")])
+      let range_str .= ';'
+      let range_str .= min([a:cmdl.range.abs[-1], line("w$")])
     end
   endif
-  let c .= a:cmdl.cmd.name
-  let c .= a:cmdl.cmd.args.delimiter
-  let c .= a:cmdl.cmd.args.pattern_org
-  let c .= a:cmdl.cmd.args.delimiter
+  return range_str
+endfunction
+
+function! s:format_command(cmdl) abort
+  let cmd_str = ''
+  let cmd_str .= a:cmdl.cmd.name
+  let cmd_str .= a:cmdl.cmd.args.delimiter
+  let cmd_str .= a:cmdl.cmd.args.pattern_org
+  let cmd_str .= a:cmdl.cmd.args.delimiter
   let s_mark = s:buf[s:nr].s_mark
   if a:cmdl.cmd.args.string =~# '^\\='
-    let c .= printf("\\='%s' . printf('%%s', %s) . '%s'",
+    let cmd_str .= printf("\\='%s' . printf('%%s', %s) . '%s'",
           \ s_mark, empty(a:cmdl.cmd.args.string[2:]) ?
           \ '''''' : a:cmdl.cmd.args.string[2:], s_mark)
   else
     " make ending single backslash literal or else it will escape s_mark
     if substitute(a:cmdl.cmd.args.string, '\\\\', '', 'g') =~# '\\$'
-      let c .= s_mark . a:cmdl.cmd.args.string . '\' . s_mark
+      let cmd_str .= s_mark . a:cmdl.cmd.args.string . '\' . s_mark
     else
-      let c .= s_mark . a:cmdl.cmd.args.string . s_mark
+      let cmd_str .= s_mark . a:cmdl.cmd.args.string . s_mark
     endif
   endif
-  let c .= a:cmdl.cmd.args.delimiter
-  let c .= substitute(a:cmdl.cmd.args.flags, '[^giI]', '', 'g')
-  return c
+  let cmd_str .= a:cmdl.cmd.args.delimiter
+  let cmd_str .= substitute(a:cmdl.cmd.args.flags, '[^giI]', '', 'g')
+  return cmd_str
+endfunction
+
+function! s:preview_window(range, pattern, type, preview_cmd) abort
+  " TODO add test
+  if !empty(getcmdwintype())
+    return
+  endif
+
+  let winopen_pattern = '\v^\s*((('
+                    \ . 'vert%[ical]|'
+                    \ . 'lefta%[bove]|'
+                    \ . 'abo%[veleft]|'
+                    \ . 'rightb%[elow]|'
+                    \ . 'bel%[owright]|'
+                    \ . 'to%[pleft]|'
+                    \ . 'bo%[tright]'
+                    \ . ')\s+)+)=(\d+\s*)=v=new\s*$'
+  let winopen = ''
+  try
+    if g:traces_preview_window =~# winopen_pattern
+      let winopen = g:traces_preview_window
+    elseif eval(g:traces_preview_window) =~# winopen_pattern
+      let winopen = eval(g:traces_preview_window)
+    else
+      return
+    endif
+  catch
+    return
+  endtry
+
+  let range = a:range
+  if a:type is 'g' && empty(range)
+    let range = [0, line('$')]
+  endif
+  if empty(range) || empty(a:pattern)
+                \ || range[0] >= line('w0') && range[1] <= line('w$')
+    if exists('s:buf[s:nr].preview_window')
+      noautocmd call win_gotoid(s:buf[s:nr].preview_window.winid)
+      noautocmd %delete
+      noautocmd call win_gotoid(s:buf[s:nr].alt_win)
+      noautocmd call win_gotoid(s:buf[s:nr].cur_win)
+    endif
+    return
+  endif
+
+  " prepare preview window
+  if !exists('s:buf[s:nr].preview_window')
+    execute 'noautocmd noswapfile' winopen
+    noautocmd setlocal undolevels=-1 nobuflisted buftype=nofile bufhidden=wipe
+    let s:buf[s:nr].preview_window = {}
+    let s:buf[s:nr].preview_window.bufnr = bufnr('%')
+    let s:buf[s:nr].preview_window.winid = win_getid()
+    call matchadd('TracesReplace', s:buf[s:nr].s_mark . '\_.\{-}' . s:buf[s:nr].s_mark, 101, -1,)
+    call matchadd('Conceal', s:buf[s:nr].s_mark . '\|' . s:buf[s:nr].s_mark, 102, -1)
+    noautocmd setlocal conceallevel=2
+    noautocmd setlocal concealcursor=c
+    noautocmd setlocal nocursorline nocursorcolumn nonumber norelativenumber
+    noautocmd call win_gotoid(s:buf[s:nr].alt_win)
+    noautocmd call win_gotoid(s:buf[s:nr].cur_win)
+  endif
+
+  " gather lines for preview window
+  let view = winsaveview()
+  let wintop = line('w0')
+  let winbot = line('w$')
+  let filtered = []
+  let currentline = max([range[0], 1])
+  let stopline = range[1]
+  let max = getwininfo(s:buf[s:nr].preview_window.winid)[0].height
+  let start = reltime()
+  while currentline <= stopline && len(filtered) < max
+        \ && reltimefloat(reltime(start)) * 1000 < s:s_timeout
+    call cursor(currentline, 1)
+    let matchstart = s:search(a:pattern, 'c', stopline, s:s_timeout)
+    if matchstart
+      let matchend = s:search(a:pattern, 'cen', stopline, s:s_timeout)
+      let currentline = matchend + 1
+      if matchstart < wintop || matchstart > winbot
+        call extend(filtered, getbufline('%', matchstart, matchend))
+      endif
+    else
+      break
+    endif
+  endwhile
+  call winrestview(view)
+
+  " fill and highlight preview window
+  noautocmd call win_gotoid(s:buf[s:nr].preview_window.winid)
+  noautocmd %delete
+  noautocmd call append(0, filtered)
+  silent! call matchdelete(s:buf[s:nr].preview_window.match_id)
+  if a:type is 's' && !empty(a:preview_cmd)
+    execute 'silent! %' a:preview_cmd
+  else
+    silent! let s:buf[s:nr].preview_window.match_id =
+          \ matchadd('TracesSearch', a:pattern, 101, -1)
+  endif
+  normal! Gddgg
+  noautocmd call win_gotoid(s:buf[s:nr].alt_win)
+  noautocmd call win_gotoid(s:buf[s:nr].cur_win)
+endfunction
+
+function! s:preview_window_close()
+  if !exists('s:buf[s:nr].preview_window')
+    return
+  endif
+  execute 'noautocmd bwipe! ' s:buf[s:nr].preview_window.bufnr
+  unlet s:buf[s:nr].preview_window
 endfunction
 
 function! s:preview_substitute(cmdl) abort
@@ -707,6 +783,7 @@ function! s:preview_substitute(cmdl) abort
 
   if !g:traces_substitute_preview || &readonly || !&modifiable || empty(str)
     call s:highlight('TracesSearch', s:add_hl_guard(ptrn, range, 's'), 101)
+    call s:preview_window(range, ptrn, 's', '')
     return
   endif
 
@@ -714,10 +791,14 @@ function! s:preview_substitute(cmdl) abort
 
   if s:buf[s:nr].undo_file is 0
     call s:highlight('TracesSearch', s:add_hl_guard(ptrn, range, 's'), 101)
+    call s:preview_window(range, ptrn, 's', '')
     return
   endif
 
-  let cmd = 'noautocmd keepjumps keeppatterns ' . s:format_command(a:cmdl)
+  let range_str = s:format_range(a:cmdl)
+  let cmd_str = s:format_command(a:cmdl)
+  call s:preview_window(range, ptrn, 's', cmd_str)
+  let cmd = 'noautocmd keepjumps keeppatterns ' . range_str . cmd_str
   let tick = b:changedtick
 
   let lines = line('$')
@@ -755,6 +836,7 @@ function! s:preview_global(cmdl) abort
     let range = a:cmdl.range.abs
     call s:highlight('TracesSearch', s:add_hl_guard(pattern, range, 'g'), 101)
     call s:pos_pattern(pattern, range, a:cmdl.cmd.args.delimiter, 0)
+    call s:preview_window(range, pattern, 'g', '')
   endif
 endfunction
 
@@ -764,12 +846,13 @@ function! s:preview_sort(cmdl) abort
     let range = a:cmdl.range.abs
     call s:highlight('TracesSearch', s:add_hl_guard(pattern, range, 'g'), 101)
     call s:pos_pattern(pattern, range, a:cmdl.cmd.args.delimiter, 0)
+    call s:preview_window(range, pattern, 'g', '')
   endif
 endfunction
 
 function! s:cmdl_enter(view) abort
   let s:buf[s:nr] = {}
-  let s:buf[s:nr].cache = {}
+  let s:buf[s:nr].search_cache = {}
   let s:buf[s:nr].view = winsaveview()
   let s:buf[s:nr].show_range = 0
   let s:buf[s:nr].duration = 0
@@ -847,6 +930,8 @@ function! traces#cmdl_leave() abort
   if winsaveview() !=# s:buf[s:nr].view
     call winrestview(s:buf[s:nr].view)
   endif
+
+  call s:preview_window_close()
 
   unlet s:buf[s:nr]
 endfunction
@@ -1037,7 +1122,10 @@ function! traces#init(cmdl, view) abort
     if empty(cmdl.cmd.name) && empty(cmdl.range.specifier)
           \ || !empty(cmdl.cmd.name) && empty(cmdl.cmd.args)
       call s:highlight('TracesSearch', '', 101)
+      call s:preview_window_close()
     endif
+  else
+    call s:preview_window_close()
   endif
 
   " move to starting position if necessary
