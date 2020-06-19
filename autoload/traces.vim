@@ -732,8 +732,9 @@ function! s:preview_window(range, pattern, type, preview_cmd) abort
   while currentline <= stopline && len(filtered) < max
         \ && reltimefloat(reltime(start)) * 1000 < s:s_timeout
     call cursor(currentline, 1)
-    let matchstart = s:search(a:pattern, 'c', stopline, s:s_timeout)
+    let matchstart = s:search(a:pattern, 'cn', stopline, s:s_timeout)
     if matchstart
+      call cursor(matchstart, 1)
       let matchend = s:search(a:pattern, 'cen', stopline, s:s_timeout)
       let currentline = matchend + 1
       if matchstart < wintop || matchstart > winbot
