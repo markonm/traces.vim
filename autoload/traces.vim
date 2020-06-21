@@ -554,9 +554,6 @@ function! s:highlight(group, pattern, priority) abort
   noautocmd let &winheight = &winminheight
 
   let windows = filter(win_findbuf(s:nr), {_, val -> win_id2win(val)})
-  " skip minimized windows
-  let windows = filter(windows, 'getwininfo(v:val)[0].height isnot 0'
-        \ . ' && getwininfo(v:val)[0].width isnot 0')
 
   if empty(s:buf[s:nr].win)
     " save local options
@@ -582,6 +579,10 @@ function! s:highlight(group, pattern, priority) abort
 
   " add matches
   for id in windows
+    if getwininfo(id)[0].height is 0 || getwininfo(id)[0].width is 0
+      " skip minimized windows
+      continue
+    endif
     if empty(getcmdwintype()) && !s:has_matchdelete_win
       noautocmd call win_gotoid(id)
     endif
