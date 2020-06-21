@@ -699,7 +699,6 @@ function! s:preview_window(range, pattern, type, preview_cmd) abort
     if exists('s:buf[s:nr].preview_window')
       noautocmd call win_gotoid(s:buf[s:nr].preview_window.winid)
       noautocmd %delete
-      noautocmd call win_gotoid(s:buf[s:nr].alt_win)
       noautocmd call win_gotoid(s:buf[s:nr].cur_win)
     endif
     return
@@ -717,7 +716,6 @@ function! s:preview_window(range, pattern, type, preview_cmd) abort
     noautocmd setlocal conceallevel=2
     noautocmd setlocal concealcursor=c
     noautocmd setlocal nocursorline nocursorcolumn nonumber norelativenumber
-    noautocmd call win_gotoid(s:buf[s:nr].alt_win)
     noautocmd call win_gotoid(s:buf[s:nr].cur_win)
   endif
 
@@ -759,7 +757,6 @@ function! s:preview_window(range, pattern, type, preview_cmd) abort
           \ matchadd('TracesSearch', a:pattern, 101, -1)
   endif
   normal! Gddgg
-  noautocmd call win_gotoid(s:buf[s:nr].alt_win)
   noautocmd call win_gotoid(s:buf[s:nr].cur_win)
 endfunction
 
@@ -901,7 +898,7 @@ function! traces#cmdl_leave() abort
   endfor
 
   " restore previous window <c-w>p
-  if empty(getcmdwintype()) && !s:has_matchdelete_win
+  if empty(getcmdwintype()) && win_getid(winnr('#')) isnot s:buf[s:nr].alt_win
     let winrestcmd = winrestcmd()
     noautocmd call win_gotoid(s:buf[s:nr].alt_win)
     noautocmd call win_gotoid(s:buf[s:nr].cur_win)
