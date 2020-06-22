@@ -926,11 +926,11 @@ function! traces#cmdl_leave() abort
     noautocmd let &winheight = s:buf[s:nr].winheight
   endif
 
+  call s:preview_window_close()
+
   if winsaveview() !=# s:buf[s:nr].view
     call winrestview(s:buf[s:nr].view)
   endif
-
-  call s:preview_window_close()
 
   unlet s:buf[s:nr]
 endfunction
