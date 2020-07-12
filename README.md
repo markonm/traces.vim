@@ -11,9 +11,9 @@ It also provides live preview for the following Ex commands:
 ```
 
 ## Requirements
-### Vim v8.0.1206+
+### Vim 8.1
 or
-### Neovim v0.2.3+
+### Neovim 0.2.3
  - this plugin is not compatible with [inccommand](https://neovim.io/doc/user/options.html#'inccommand'), please turn it off if you want to use this plugin
 
 

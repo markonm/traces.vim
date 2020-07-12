@@ -55,11 +55,11 @@ Live preview is implemented for the following Ex commands:
 ==============================================================================
 REQUIREMENTS					*traces-requirements*
 
-Vim v8.0.1206+
+Vim 8.1
 
 or
 
-Neovim v0.2.3+
+Neovim 0.2.3
   - Note: this plugin is not compatible with |inccommand|, please turn it
     off if you want to use this plugin
 
