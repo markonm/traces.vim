@@ -3,8 +3,8 @@ set cpo&vim
 
 let s:timeout = get(g:, 'traces_timeout', 1000)
 let s:timeout = s:timeout > 200 ? s:timeout : 200
-let s:s_timeout = get(g:, 'traces_search_timeout', 500)
-let s:s_timeout = s:s_timeout > s:timeout - 100 ? s:timeout - 100 : s:s_timeout
+let s:search_timeout = get(g:, 'traces_search_timeout', 500)
+let s:search_timeout = s:search_timeout > s:timeout - 100 ? s:timeout - 100 : s:search_timeout
 
 let s:has_matchdelete_win = has('patch-8.1.1741')
 let s:cmd_pattern = '\v\C^%('
@@ -133,14 +133,17 @@ endfunction
 
 function! s:search(...) abort
   let cache = s:buf[s:nr].search_cache
-  let key = string(a:000) . string(getcurpos())
+  let key = string(a:000[0:2]) . string(getcurpos())
   if has_key(cache, key)
     if a:0 is 1 || a:0 >= 2 && a:2 !~# 'n'
       call setpos('.', cache[key].curpos)
     endif
     return cache[key].lnum
   endif
+  let start = reltime()
   silent! let lnum = call('search', a:000)
+  let time = reltimefloat(reltime(start)) * 1000
+  let s:search_timeout_remaining -= float2nr(ceil(time))
   let cache[key] = {'lnum': lnum, 'curpos': getcurpos()}
   return lnum
 endfunction
@@ -204,7 +207,7 @@ function! s:address_to_num(address, last_pos) abort
       endif
     endif
     let s:buf[s:nr].show_range = 1
-    let query = s:search(pattern, 'nc', 0, s:s_timeout)
+    let query = s:search(pattern, 'nc', 0, s:search_timeout_remaining)
     if !query | let result.valid = 0 | endif
     if !closed | let result.regex = pattern | endif
     call add(result.range, query)
@@ -222,7 +225,7 @@ function! s:address_to_num(address, last_pos) abort
     endif
     call cursor(a:last_pos, 1)
     let s:buf[s:nr].show_range = 1
-    let query = s:search(pattern, 'nb', 0, s:s_timeout)
+    let query = s:search(pattern, 'nb', 0, s:search_timeout_remaining)
     if !query | let result.valid = 0 | endif
     if !closed | let result.regex = pattern | endif
     call add(result.range, query)
@@ -236,14 +239,14 @@ function! s:address_to_num(address, last_pos) abort
         let result.valid = 0
       endif
     endif
-    let query = s:search(s:last_pattern, 'nc', 0, s:s_timeout)
+    let query = s:search(s:last_pattern, 'nc', 0, s:search_timeout_remaining)
     if !query | let result.valid = 0 | endif
     call add(result.range, query)
     let s:buf[s:nr].show_range = 1
 
   elseif a:address.str ==# '\?'
     call cursor(a:last_pos, 1)
-    let query = s:search(s:last_pattern, 'nb', 0, s:s_timeout)
+    let query = s:search(s:last_pattern, 'nb', 0, s:search_timeout_remaining)
     if !query | let result.valid = 0 | endif
     call add(result.range, query)
     let s:buf[s:nr].show_range = 1
@@ -509,9 +512,9 @@ function! s:pos_pattern(pattern, range, delimiter, type) abort
     endif
   endif
   if a:delimiter ==# '?'
-    let position = s:search(a:pattern, 'cb', stopline, s:s_timeout)
+    let position = s:search(a:pattern, 'cb', stopline, s:search_timeout_remaining)
   else
-    let position = s:search(a:pattern, 'c', stopline, s:s_timeout)
+    let position = s:search(a:pattern, 'c', stopline, s:search_timeout_remaining)
   endif
   if position !=# 0
     let s:moved = 1
@@ -533,7 +536,7 @@ function! s:pos_range(end, pattern) abort
   endif
   call cursor([a:end, 1])
   if !empty(a:pattern)
-    call s:search(a:pattern, 'c', a:end, s:s_timeout)
+    call s:search(a:pattern, 'c', a:end, s:search_timeout_remaining)
   endif
   let s:moved = 1
 endfunction
@@ -727,14 +730,12 @@ function! s:preview_window(range, pattern, type, preview_cmd) abort
   let currentline = max([range[0], 1])
   let stopline = range[1]
   let max = getwininfo(s:buf[s:nr].preview_window.winid)[0].height
-  let start = reltime()
   while currentline <= stopline && len(filtered) < max
-        \ && reltimefloat(reltime(start)) * 1000 < s:s_timeout
     call cursor(currentline, 1)
-    let matchstart = s:search(a:pattern, 'cn', stopline, s:s_timeout)
+    let matchstart = s:search(a:pattern, 'cn', stopline, s:search_timeout_remaining)
     if matchstart
       call cursor(matchstart, 1)
-      let matchend = s:search(a:pattern, 'cen', stopline, s:s_timeout)
+      let matchend = s:search(a:pattern, 'cen', stopline, s:search_timeout_remaining)
       let currentline = matchend + 1
       if matchstart < wintop || matchstart > winbot
         call extend(filtered, getbufline('%', matchstart, matchend))
@@ -1079,6 +1080,7 @@ function! traces#init(cmdl, view) abort
   let s:last_pattern = @/
   let s:specifier_delimiter = 0
   let s:wundo_time = 0
+  let s:search_timeout_remaining = s:search_timeout
 
   if s:buf[s:nr].duration < s:timeout
     let start_time = reltime()
