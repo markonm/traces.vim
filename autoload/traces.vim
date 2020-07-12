@@ -670,6 +670,11 @@ function! s:preview_window(range, pattern, type, preview_cmd) abort
   if !empty(getcmdwintype())
     return
   endif
+  " skip when arguments are unchanged
+  if exists('s:buf[s:nr].preview_window.args')
+        \ && s:buf[s:nr].preview_window.args ==# string(a:)
+    return
+  endif
 
   let winopen_pattern = '\v^\s*((('
                     \ . 'vert%[ical]|'
@@ -721,6 +726,7 @@ function! s:preview_window(range, pattern, type, preview_cmd) abort
     noautocmd setlocal nocursorline nocursorcolumn nonumber norelativenumber
     noautocmd call win_gotoid(s:buf[s:nr].cur_win)
   endif
+  let s:buf[s:nr].preview_window.args = string(a:)
 
   " gather lines for preview window
   let view = winsaveview()
