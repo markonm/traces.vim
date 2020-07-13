@@ -140,6 +140,9 @@ function! s:search(...) abort
     endif
     return cache[key].lnum
   endif
+  if s:search_timeout_remaining <= 0
+    return 0
+  endif
   let start = reltime()
   silent! let lnum = call('search', a:000)
   let time = reltimefloat(reltime(start)) * 1000
