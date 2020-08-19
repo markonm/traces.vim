@@ -708,6 +708,7 @@ function! s:preview_window(range, pattern, type, preview_cmd) abort
   if empty(range) || empty(a:pattern)
                 \ || range[0] >= line('w0') && range[1] <= line('w$')
     if exists('s:buf[s:nr].preview_window')
+      let s:buf[s:nr].preview_window.args = string(a:)
       noautocmd call win_gotoid(s:buf[s:nr].preview_window.winid)
       noautocmd %delete
       noautocmd call win_gotoid(s:buf[s:nr].cur_win)
@@ -1112,6 +1113,7 @@ function! traces#init(cmdl, view) abort
           \ && !get(s:, 'entire_file')
       call s:highlight('Visual', cmdl.range.pattern, 100)
       if empty(cmdl.cmd.name)
+        call s:preview_window_close()
         call s:highlight('TracesSearch', cmdl.range.specifier, 101)
       endif
       call s:pos_range(cmdl.range.end, cmdl.range.specifier)
