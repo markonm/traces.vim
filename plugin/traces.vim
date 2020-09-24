@@ -91,12 +91,13 @@ augroup traces_augroup
   " visual mode
   autocmd CursorMoved * let s:view = extend(winsaveview(), {'mode': mode()})
 
+  " 'incsearch' is not compatible with traces.vim, turn it off temporarily
+  " when in Command-line mode
   " https://github.com/vim/vim/commit/b0acacd767a2b0618a7f3c08087708f4329580d0
-  if has("patch-8.1.0271")
-    autocmd CmdlineEnter,CmdwinLeave : let s:incsearch = &incsearch
-          \| noautocmd let &incsearch = 0
-    autocmd CmdlineLeave,CmdwinEnter : noautocmd let &incsearch = s:incsearch
-  endif
+  " https://github.com/neovim/neovim/pull/12721/commits/e8a8b9ed08405c830a049c4e43910c5ce9cdb669
+  autocmd CmdlineEnter,CmdwinLeave : let s:incsearch = &incsearch
+        \| noautocmd let &incsearch = 0
+  autocmd CmdlineLeave,CmdwinEnter : noautocmd let &incsearch = s:incsearch
 augroup END
 
 highlight default link TracesSearch Search
