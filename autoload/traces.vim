@@ -10,6 +10,7 @@ let s:has_matchdelete_win = has('patch-8.1.1741')
 let s:cmd_pattern = '\v\C^%('
                 \ . 'g%[lobal][[:alnum:]]@!\!=|'
                 \ . 's%[ubstitute][[:alnum:]]@!|'
+                \ . '(Subvert|S)[[:alnum:]]@!|'
                 \ . 'sm%[agic][[:alnum:]]@!|'
                 \ . 'sno%[magic][[:alnum:]]@!|'
                 \ . 'sor%[t][[:alnum:]]@!\!=|'
@@ -470,6 +471,29 @@ function! s:parse_substitute(cmdl) abort
   return args
 endfunction
 
+function! s:parse_subvert(cmdl) abort
+  if !exists("g:loaded_abolish")
+    return {}
+  endif
+  " https://stackoverflow.com/a/39216373
+  " 'dirty trick' to accesss local functions
+  let a = '<SNR>' . matchstr(matchstr(split(execute('scriptnames'), "\n"), 'abolish.vim'), '^\s*\zs\d\+') . '_'
+  call s:trim(a:cmdl.string)
+  let a:cmdl.cmd.name = 'substitute'
+  let pattern = '\v^([[:graph:]]&[^[:alnum:]\\"|])(%(\\.|\1@!&.)*)%((\1)%((%(\\.|\1@!&.)*)%((\1)([aviw&cegiInp#lr]+)=)=)=)=$'
+  let args = {}
+  let r = matchlist(a:cmdl.string[0], pattern)
+  if len(r) && !empty(r[2])
+    let args.delimiter        = r[1]
+    let args.pattern_org      = substitute({a}substitute_command('', r[2], r[4], r[6])[1:], '\/\\=Abolished.*', '', '')
+    let args.pattern          = args.pattern_org
+    let args.string           = !empty(r[4]) ? '\=Abolished()' : ''
+    let args.last_delimiter   = r[5]
+    let args.flags            = substitute(r[6], '\C[avIiw]', '', 'g')
+  endif
+  return args
+endfunction
+
 function! s:parse_sort(cmdl) abort
   call s:trim(a:cmdl.string)
   let pattern = '\v^.{-}([[:graph:]]&[^[:alnum:]\\"|])(%(\\.|.){-})%((\1)|$)'
@@ -490,6 +514,8 @@ function! s:parse_command(cmdl) abort
     let a:cmdl.cmd.args = s:parse_substitute(a:cmdl)
   elseif a:cmdl.cmd.name =~# '\v^%(sor%[t]\!=)$'
     let a:cmdl.cmd.args = s:parse_sort(a:cmdl)
+  elseif a:cmdl.cmd.name =~# '\v^(Subvert|S)$'
+    let a:cmdl.cmd.args = s:parse_subvert(a:cmdl)
   endif
 endfunction
 
