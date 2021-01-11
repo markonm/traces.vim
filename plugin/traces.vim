@@ -97,7 +97,7 @@ augroup traces_augroup
   " https://github.com/neovim/neovim/pull/12721/commits/e8a8b9ed08405c830a049c4e43910c5ce9cdb669
   autocmd CmdlineEnter,CmdwinLeave : let s:incsearch = &incsearch
         \| noautocmd let &incsearch = 0
-  autocmd CmdlineLeave,CmdwinEnter : noautocmd let &incsearch = s:incsearch
+  autocmd CmdlineLeave,CmdwinEnter : if exists('s:incsearch') | noautocmd let &incsearch = s:incsearch | endif
 augroup END
 
 highlight default link TracesSearch Search
