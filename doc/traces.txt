@@ -15,6 +15,7 @@ CONTENTS					*traces-contents*
 				|g:traces_timeout|
 				|g:traces_search_timeout|
 				|g:traces_preview_window|
+				|g:traces_abolish_integration|
 4. Highlights		|traces-highlights|
 				|hl-TracesSearch|
 				|hl-TracesReplace|
@@ -138,6 +139,11 @@ g:traces_preview_window string (default empty)
                   let g:traces_preview_window =
                         \ "winwidth('%') > 160 ? 'bot vnew' : 'bot 10new'"
 <
+
+                                                *g:traces_abolish_integration*
+g:traces_abolish_integration boolean (default 0)
+                If value is 1, |:Subvert| from abolish.vim will be previewed.
+
 ==============================================================================
 HIGHLIGHTS					*traces-highlights*
 

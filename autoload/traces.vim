@@ -10,6 +10,7 @@ let s:has_matchdelete_win = has('patch-8.1.1741')
 let s:cmd_pattern = '\v\C^%('
                 \ . 'g%[lobal][[:alnum:]]@!\!=|'
                 \ . 's%[ubstitute][[:alnum:]]@!|'
+                \ . '(Subvert|S)[[:alnum:]]@!|'
                 \ . 'sm%[agic][[:alnum:]]@!|'
                 \ . 'sno%[magic][[:alnum:]]@!|'
                 \ . 'sor%[t][[:alnum:]]@!\!=|'
@@ -470,6 +471,38 @@ function! s:parse_substitute(cmdl) abort
   return args
 endfunction
 
+function! s:parse_subvert(cmdl) abort
+  if !exists("g:loaded_abolish") || !g:traces_abolish_integration
+    return {}
+  endif
+  if !exists('s:abolishID')
+    " https://stackoverflow.com/a/39216373
+    " 'dirty trick' to access script-local functions
+    let s:abolishID = '<SNR>' . matchstr(matchstr(split(execute('scriptnames'), "\n"), 'abolish.vim'), '^\s*\zs\d\+') . '_'
+  endif
+  if !exists('*' . s:abolishID . 'substitute_command')
+    return {}
+  endif
+  call s:trim(a:cmdl.string)
+  let a:cmdl.cmd.name = 'substitute'
+  let pattern = '\v^([[:graph:]]&[^[:alnum:]\\"|])(%(\\.|\1@!&.)*)%((\1)%((%(\\.|\1@!&.)*)%((\1)([aviw&cegiInp#lr]+)=)=)=)=$'
+  let args = {}
+  let r = matchlist(a:cmdl.string[0], pattern)
+  if len(r) && !empty(r[2])
+    " String is always '\=Abolished()', unlet to update preview window
+    if exists('s:buf[s:nr].preview_window.args')
+      unlet s:buf[s:nr].preview_window.args
+    endif
+    let args.delimiter        = r[1]
+    let args.pattern_org      = substitute({s:abolishID}substitute_command('', r[2], r[4], r[6])[1:], '\/\\=Abolished.*', '', '')
+    let args.pattern          = args.pattern_org
+    let args.string           = !empty(r[4]) ? '\=Abolished()' : ''
+    let args.last_delimiter   = r[5]
+    let args.flags            = substitute(r[6], '\C[avIiw]', '', 'g')
+  endif
+  return args
+endfunction
+
 function! s:parse_sort(cmdl) abort
   call s:trim(a:cmdl.string)
   let pattern = '\v^.{-}([[:graph:]]&[^[:alnum:]\\"|])(%(\\.|.){-})%((\1)|$)'
@@ -490,6 +523,8 @@ function! s:parse_command(cmdl) abort
     let a:cmdl.cmd.args = s:parse_substitute(a:cmdl)
   elseif a:cmdl.cmd.name =~# '\v^%(sor%[t]\!=)$'
     let a:cmdl.cmd.args = s:parse_sort(a:cmdl)
+  elseif a:cmdl.cmd.name =~# '\v^(Subvert|S)$'
+    let a:cmdl.cmd.args = s:parse_subvert(a:cmdl)
   endif
 endfunction
 
@@ -1146,7 +1181,7 @@ function! traces#init(cmdl, view) abort
   endif
 
   " redraw screen if necessary
-  if s:redraw_later
+  if s:redraw_later && !wildmenumode()
     call s:adjust_cmdheight()
     if has('nvim')
       redraw

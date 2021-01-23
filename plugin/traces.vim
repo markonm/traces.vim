@@ -12,6 +12,7 @@ let g:traces_substitute_preview  = get(g:, 'traces_substitute_preview', 1)
 let g:traces_num_range_preview   = get(g:, 'traces_num_range_preview', 0)
 let g:traces_skip_modifiers      = get(g:, 'traces_skip_modifiers', 1)
 let g:traces_preview_window      = get(g:, 'traces_preview_window', '')
+let g:traces_abolish_integration = get(g:, 'traces_abolish_integration', 0)
 let s:view                       = {}
 
 function! s:track_cmdl(...) abort
