@@ -2,13 +2,7 @@
 
 ## Overview
 This plugin highlights patterns and ranges for Ex commands in Command-line mode.
-
-It also provides live preview for the following Ex commands:
-```
-:substitute
-:smagic
-:snomagic
-```
+It also provides live preview for `:substitute` and `:normal`.
 
 ## Requirements
 ### Vim 8.1
@@ -22,6 +16,7 @@ or
 
 |                                                              | traces.vim   | Vim               | Neovim            |
 |--------------------------------------------------------------| :----------: | :---------------: | :---------------: |
+| `:normal` preview                                            | ✓            |                   |                   |
 | `:substitute` preview                                        | ✓            |                   | ✓                 |
 | pattern preview for `:substitute`                            | ✓            | ✓<sup>[1]</sup>   | ✓                 |
 | pattern preview for `:global`, `:vglobal`, `:sort`           | ✓            | ✓<sup>[1]</sup>   | ✓<sup>[2]</sup>   |
@@ -37,19 +32,13 @@ or
 ![example](img/traces_example.gif?raw=true)
 
 ## Installation
+Use plugin/runtimepath manager of choice or install manually with the following command:
+
 ### Linux
-`git clone https://github.com/markonm/traces.vim ~/.vim/pack/plugins/start/traces.vim`
-
-Run the `:helptags` command to generate the doc/tags file.
-
-`:helptags ~/.vim/pack/plugins/start/traces.vim/doc`
+`git clone --depth 1 https://github.com/markonm/traces.vim ~/.vim/pack/plugins/start/traces.vim`
 
 ### Windows
-`git clone https://github.com/markonm/traces.vim %HOMEPATH%/vimfiles/pack/plugins/start/traces.vim`
-
-Run the `:helptags` command to generate the doc/tags file.
-
-`:helptags ~/vimfiles/pack/plugins/start/traces.vim/doc`
+`git clone --depth 1 https://github.com/markonm/traces.vim %HOMEPATH%/vimfiles/pack/plugins/start/traces.vim`
 
 ## Inspiration
  - [vim-over](https://github.com/osyo-manga/vim-over)

@@ -9,6 +9,7 @@ CONTENTS					*traces-contents*
 3. Options 		|traces-options|
 				|g:traces_enabled|
 				|g:traces_preserve_view_state|
+				|g:traces_normal_preview|
 				|g:traces_substitute_preview|
 				|g:traces_skip_modifiers|
 				|g:traces_num_range_preview|
@@ -52,6 +53,7 @@ Live preview is implemented for the following Ex commands:
   |:substitute|
   |:smagic|
   |:snomagic|
+  |:normal|
 
 ==============================================================================
 REQUIREMENTS					*traces-requirements*
@@ -76,6 +78,11 @@ g:traces_enabled	boolean (default 1)
 g:traces_preserve_view_state boolean (default 0)
                 If value is 1, view position  will not be changed when
                 highlighting ranges or patterns outside initial view position.
+
+                                                *g:traces_normal_preview*
+g:traces_normal_preview boolean (default 0)
+                If value is 1, |:normal| will be previewed.
+                Works only on Vim with patch 8.2.2961.
 
                                                 *g:traces_substitute_preview*
 g:traces_substitute_preview boolean (default 1)
@@ -139,7 +146,6 @@ g:traces_preview_window string (default empty)
                   let g:traces_preview_window =
                         \ "winwidth('%') > 160 ? 'bot vnew' : 'bot 10new'"
 <
-
                                                 *g:traces_abolish_integration*
 g:traces_abolish_integration boolean (default 0)
                 If value is 1, |:Subvert| from abolish.vim will be previewed.

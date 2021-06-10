@@ -14,6 +14,7 @@ let s:cmd_pattern = '\v\C^%('
                 \ . 'sm%[agic][[:alnum:]]@!|'
                 \ . 'sno%[magic][[:alnum:]]@!|'
                 \ . 'sor%[t][[:alnum:]]@!\!=|'
+                \ . 'norm%[al][[:alnum:]]@!\!=|'
                 \ . 'v%[global][[:alnum:]]@!'
                 \ . ')'
 
@@ -515,6 +516,13 @@ function! s:parse_sort(cmdl) abort
   return args
 endfunction
 
+function! s:parse_normal(cmdl) abort
+  let args = {}
+  call s:trim(a:cmdl.string)
+  let args.string = a:cmdl.string
+  return args
+endfunction
+
 function! s:parse_command(cmdl) abort
   let a:cmdl.cmd.name = s:get_command(a:cmdl.string)
   if a:cmdl.cmd.name =~# '\v^%(g%[lobal]\!=|v%[global])$'
@@ -523,6 +531,8 @@ function! s:parse_command(cmdl) abort
     let a:cmdl.cmd.args = s:parse_substitute(a:cmdl)
   elseif a:cmdl.cmd.name =~# '\v^%(sor%[t]\!=)$'
     let a:cmdl.cmd.args = s:parse_sort(a:cmdl)
+  elseif a:cmdl.cmd.name =~# '\v^norm%[al]\!=$'
+    let a:cmdl.cmd.args = s:parse_normal(a:cmdl)
   elseif a:cmdl.cmd.name =~# '\v^(Subvert|S)$'
     let a:cmdl.cmd.args = s:parse_subvert(a:cmdl)
   endif
@@ -704,7 +714,6 @@ function! s:format_command(cmdl) abort
 endfunction
 
 function! s:preview_window(range, pattern, type, preview_cmd) abort
-  " TODO add test
   if !empty(getcmdwintype())
     return
   endif
@@ -895,6 +904,58 @@ function! s:preview_sort(cmdl) abort
   endif
 endfunction
 
+function! s:clear_cursors() abort
+  if exists('g:traces_cursors')
+    call map(g:traces_cursors, 'matchdelete(v:val)')
+    unlet g:traces_cursors
+  endif
+endfunction
+
+function! s:preview_normal(cmdl) abort
+  let str = a:cmdl.cmd.args.string[0]
+  if !g:traces_normal_preview || &readonly || !&modifiable || empty(str)
+        \ || !has("patch-8.2.2961")
+    call s:clear_cursors()
+    return
+  endif
+
+  let cmd = a:cmdl.cmd.name
+  let range = ''
+  if len(a:cmdl.range.abs) == 0
+    let range .= s:buf[s:nr].cur_init_pos[0]
+  elseif len(a:cmdl.range.abs) == 1
+    let range .= a:cmdl.range.abs[0]
+  else
+    let range .= max([a:cmdl.range.abs[-2], line("w0")])
+    let range .= ';'
+    let range .= min([a:cmdl.range.abs[-1], line("w$")])
+  endif
+
+  call s:save_undo_history()
+
+  if exists('g:traces_cursors') && !empty(g:traces_cursors)
+    call map(g:traces_cursors, 'matchdelete(v:val)')
+  endif
+
+  let g:traces_cursors = []
+  let tick = b:changedtick
+  let view = winsaveview()
+  let ul = &l:undolevels
+  noautocmd let &l:undolevels = 0
+  silent execute 'noautocmd keepjumps' range . cmd str . "\<cmd>call add(g:traces_cursors, matchaddpos('TracesCursor', [getcurpos()[1:2]], 101))\<cr>"
+  noautocmd let &l:undolevels = ul
+  call winrestview(view)
+
+  " required to highlight EOL with matchaddpos()
+  noautocmd setlocal list
+  noautocmd setlocal listchars=eol:\ ,tab:\ \ 
+
+  if tick == b:changedtick
+    return
+  endif
+  let s:buf[s:nr].changed = 1
+endfunction
+
 function! s:cmdl_enter(view) abort
   let s:buf[s:nr] = {}
   let s:buf[s:nr].search_cache = {}
@@ -916,6 +977,8 @@ function! s:cmdl_enter(view) abort
   let s:buf[s:nr].alt_win = win_getid(winnr('#'))
   let s:buf[s:nr].winwidth = &winwidth
   let s:buf[s:nr].winheight = &winheight
+  let s:buf[s:nr].list = &l:list
+  let s:buf[s:nr].listchars = &l:listchars
   let s:buf[s:nr].pre_cmdl_view = a:view
   let s:buf[s:nr].win = {}
   call s:save_marks()
@@ -972,6 +1035,10 @@ function! traces#cmdl_leave() abort
     noautocmd let &winheight = s:buf[s:nr].winheight
   endif
 
+  noautocmd let &l:list = s:buf[s:nr].list
+  noautocmd let &l:listchars = s:buf[s:nr].listchars
+
+  call s:clear_cursors()
   call s:preview_window_close()
 
   if winsaveview() !=# s:buf[s:nr].view
@@ -1164,12 +1231,15 @@ function! traces#init(cmdl, view) abort
       call s:preview_global(cmdl)
     elseif cmdl.cmd.name =~# '\v^%(sor%[t]\!=)$'
       call s:preview_sort(cmdl)
+    elseif cmdl.cmd.name =~# '\v^norm%[al]\!=$'
+      call s:preview_normal(cmdl)
     endif
 
     if empty(cmdl.cmd.name) && empty(cmdl.range.specifier)
           \ || !empty(cmdl.cmd.name) && empty(cmdl.cmd.args)
       call s:highlight('TracesSearch', '', 101)
       call s:preview_window_close()
+      call s:clear_cursors()
     endif
   else
     call s:preview_window_close()

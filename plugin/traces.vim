@@ -9,6 +9,7 @@ set cpo&vim
 let g:traces_enabled             = get(g:, 'traces_enabled', 1)
 let g:traces_preserve_view_state = get(g:, 'traces_preserve_view_state')
 let g:traces_substitute_preview  = get(g:, 'traces_substitute_preview', 1)
+let g:traces_normal_preview      = get(g:, 'traces_normal_preview', 0)
 let g:traces_num_range_preview   = get(g:, 'traces_num_range_preview', 0)
 let g:traces_skip_modifiers      = get(g:, 'traces_skip_modifiers', 1)
 let g:traces_preview_window      = get(g:, 'traces_preview_window', '')
@@ -103,6 +104,11 @@ augroup END
 
 highlight default link TracesSearch Search
 highlight default link TracesReplace TracesSearch
+if has('gui_running')
+  highlight default link TracesCursor Cursor
+else
+  highlight default link TracesCursor DiffAdd
+endif
 
 let &cpo = s:cpo_save
 unlet s:cpo_save

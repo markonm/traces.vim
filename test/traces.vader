@@ -3,6 +3,7 @@ Execute (Setup):
   \ &listchars, &hlsearch, &cursorline, &cursorline, &encoding
   let g:traces_preserve_view_state = 0
   let g:traces_substitute_preview  = 1
+  let g:traces_normal_preview  = 1
   let g:traces_skip_modifiers = 1
   let g:traces_num_range_preview = 0
   let g:traces_preview_window = ''
@@ -500,6 +501,22 @@ Execute (Substitute):
   call traces#init(',''}s', {})
   call traces#init(',''}s/', {})
   AssertEqual '\%>0l\%<5l\_.', Group('Visual')
+
+#######################
+# Test normal         #
+#######################
+Given (Three lines):
+  one
+  two
+  three
+
+Execute (Normal):
+  call traces#init('%normal! Iline ', {})
+
+Expect:
+  line one
+  line two
+  line three
 
 #######################
 # Test substitute     #
