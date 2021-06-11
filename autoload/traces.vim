@@ -906,7 +906,7 @@ endfunction
 
 function! s:clear_cursors() abort
   if exists('g:traces_cursors')
-    call map(g:traces_cursors, 'matchdelete(v:val)')
+    silent! call map(g:traces_cursors, 'matchdelete(v:val)')
     unlet g:traces_cursors
   endif
 endfunction
@@ -934,15 +934,17 @@ function! s:preview_normal(cmdl) abort
   call s:save_undo_history()
 
   if exists('g:traces_cursors') && !empty(g:traces_cursors)
-    call map(g:traces_cursors, 'matchdelete(v:val)')
+    silent! call map(g:traces_cursors, 'matchdelete(v:val)')
   endif
 
   let g:traces_cursors = []
   let tick = b:changedtick
+  let winid = win_getid()
   let view = winsaveview()
   let ul = &l:undolevels
   noautocmd let &l:undolevels = 0
   silent execute 'noautocmd keepjumps' range . cmd str . "\<cmd>call add(g:traces_cursors, matchaddpos('TracesCursor', [getcurpos()[1:2]], 101))\<cr>"
+  noautocmd call win_gotoid(winid)
   noautocmd let &l:undolevels = ul
   call winrestview(view)
 
