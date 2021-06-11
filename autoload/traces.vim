@@ -951,12 +951,13 @@ function! s:preview_normal(cmdl) abort
   " required to highlight EOL with matchaddpos()
   noautocmd setlocal list
   noautocmd setlocal listchars=eol:\ ,tab:\ \ 
+  noautocmd let &hlsearch = 0
+  let s:redraw_later = 1
 
   if tick == b:changedtick
     return
   endif
   let s:buf[s:nr].changed = 1
-  let s:redraw_later = 1
 endfunction
 
 function! s:cmdl_enter(view) abort

@@ -104,11 +104,7 @@ augroup END
 
 highlight default link TracesSearch Search
 highlight default link TracesReplace TracesSearch
-if has('gui_running')
-  highlight default link TracesCursor Cursor
-else
-  highlight default link TracesCursor DiffAdd
-endif
+highlight default link TracesCursor TracesSearch
 
 let &cpo = s:cpo_save
 unlet s:cpo_save
