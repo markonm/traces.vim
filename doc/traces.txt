@@ -81,6 +81,7 @@ g:traces_preserve_view_state boolean (default 0)
 
                                                 *g:traces_normal_preview*
 g:traces_normal_preview boolean (default 0)
+                Note: Experimental. Enable only to test.
                 If value is 1, |:normal| will be previewed.
                 Works only on Vim with patch 8.2.2961.
 
