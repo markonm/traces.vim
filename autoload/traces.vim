@@ -956,6 +956,7 @@ function! s:preview_normal(cmdl) abort
     return
   endif
   let s:buf[s:nr].changed = 1
+  let s:redraw_later = 1
 endfunction
 
 function! s:cmdl_enter(view) abort
