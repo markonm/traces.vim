@@ -921,11 +921,9 @@ function! s:preview_normal(cmdl) abort
 
   let cmd = a:cmdl.cmd.name
   let range = ''
-  if len(a:cmdl.range.abs) == 0
-    let range .= s:buf[s:nr].cur_init_pos[0]
-  elseif len(a:cmdl.range.abs) == 1
+  if len(a:cmdl.range.abs) == 1
     let range .= a:cmdl.range.abs[0]
-  else
+  elseif len(a:cmdl.range.abs) > 1
     let range .= max([a:cmdl.range.abs[-2], line("w0")])
     let range .= ';'
     let range .= min([a:cmdl.range.abs[-1], line("w$")])
