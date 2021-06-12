@@ -518,6 +518,15 @@ Expect:
   line two
   line three
 
+Execute (Normal):
+  call cursor(2, 3)
+  call traces#init('normal! a foobar', {})
+
+Expect:
+  one
+  two foobar
+  three
+
 #######################
 # Test substitute     #
 #######################
