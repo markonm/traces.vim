@@ -914,7 +914,7 @@ endfunction
 function! s:preview_normal(cmdl) abort
   let str = a:cmdl.cmd.args.string[0]
   if !g:traces_normal_preview || &readonly || !&modifiable || empty(str)
-        \ || !has("patch-8.2.2961")
+        \ || (!has("patch-8.2.2961") && !has('nvim'))
     call s:clear_cursors()
     return
   endif
