@@ -44,3 +44,4 @@ Use plugin/runtimepath manager of choice or install manually with the following 
  - [vim-over](https://github.com/osyo-manga/vim-over)
  - [incsearch.vim](https://github.com/haya14busa/incsearch.vim)
  - [inccommand](https://neovim.io/doc/user/options.html#'inccommand')
+ - [nvim-incnormal](https://github.com/bfredl/nvim-incnormal)
