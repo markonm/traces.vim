@@ -951,6 +951,7 @@ function! s:preview_normal(cmdl) abort
   noautocmd setlocal listchars=eol:\ ,tab:\ \ 
   noautocmd let &hlsearch = 0
   let s:redraw_later = 1
+  call s:restore_marks()
 
   if tick == b:changedtick
     return
@@ -1069,7 +1070,7 @@ endfunction
 
 function! s:save_marks() abort
   if !exists('s:buf[s:nr].marks')
-    let types = ['[', ']']
+    let types = ['[', ']', '<', '>']
     let s:buf[s:nr].marks  = {}
     for mark in types
       let s:buf[s:nr].marks[mark] = getpos("'" . mark)

@@ -527,6 +527,17 @@ Expect:
   two foobar
   three
 
+Execute (Normal):
+  execute "normal ggVG\<esc>"
+  call traces#init('''<,''>normal! ve', {})
+  call traces#cmdl_leave()
+  call traces#init('''<,''>normal! veA word', {})
+
+Expect:
+  one word
+  two word
+  three word
+
 #######################
 # Test substitute     #
 #######################
