@@ -538,6 +538,17 @@ Expect:
   two word
   three word
 
+Execute (Normal with an error):
+  3d
+  call traces#init('%normal! isomething:asdf', {})
+  call traces#cmdl_leave()
+  u
+
+Expect:
+  one
+  two
+  three
+
 #######################
 # Test substitute     #
 #######################

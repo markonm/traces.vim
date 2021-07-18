@@ -941,7 +941,10 @@ function! s:preview_normal(cmdl) abort
   let view = winsaveview()
   let ul = &l:undolevels
   noautocmd let &l:undolevels = 0
-  silent execute 'noautocmd keepjumps' range . cmd str . "\<cmd>call add(g:traces_cursors, matchaddpos('TracesCursor', [getcurpos()[1:2]], 101))\<cr>"
+  try
+    silent execute 'noautocmd keepjumps' range . cmd str . "\<cmd>call add(g:traces_cursors, matchaddpos('TracesCursor', [getcurpos()[1:2]], 101))\<cr>"
+  catch
+  endtry
   noautocmd call win_gotoid(winid)
   noautocmd let &l:undolevels = ul
   call winrestview(view)
