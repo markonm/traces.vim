@@ -945,7 +945,7 @@ function! s:preview_normal(cmdl) abort
     execute 'noautocmd keepjumps' range . cmd str . "\<cmd>call add(g:traces_cursors, matchaddpos('TracesCursor', [getcurpos()[1:2]], 101))\<cr>"
   catch
   finally
-    execute "normal! \<esc>\<esc>"
+    execute "noautocmd keepjumps normal! \<esc>\<esc>"
   endtry
   noautocmd call win_gotoid(winid)
   noautocmd let &l:undolevels = ul
