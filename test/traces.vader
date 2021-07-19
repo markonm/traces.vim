@@ -549,6 +549,11 @@ Expect:
   two
   three
 
+Execute (Normal with an error):
+  call traces#init('%normal! vfX', {})
+  call traces#cmdl_leave()
+  AssertEqual 'n', mode()
+
 #######################
 # Test substitute     #
 #######################
