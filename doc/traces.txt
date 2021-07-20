@@ -9,7 +9,6 @@ CONTENTS					*traces-contents*
 3. Options 		|traces-options|
 				|g:traces_enabled|
 				|g:traces_preserve_view_state|
-				|g:traces_normal_preview|
 				|g:traces_substitute_preview|
 				|g:traces_skip_modifiers|
 				|g:traces_num_range_preview|
@@ -17,6 +16,7 @@ CONTENTS					*traces-contents*
 				|g:traces_search_timeout|
 				|g:traces_preview_window|
 				|g:traces_abolish_integration|
+				|g:traces_normal_preview|
 4. Highlights		|traces-highlights|
 				|hl-TracesSearch|
 				|hl-TracesReplace|
@@ -78,12 +78,6 @@ g:traces_enabled	boolean (default 1)
 g:traces_preserve_view_state boolean (default 0)
                 If value is 1, view position  will not be changed when
                 highlighting ranges or patterns outside initial view position.
-
-                                                *g:traces_normal_preview*
-g:traces_normal_preview boolean (default 0)
-                WARNING: experimental, unstable
-                If value is 1, |:normal| will be previewed.
-                Requires patch 8.2.2961 on Vim.
 
                                                 *g:traces_substitute_preview*
 g:traces_substitute_preview boolean (default 1)
@@ -150,6 +144,17 @@ g:traces_preview_window string (default empty)
                                                 *g:traces_abolish_integration*
 g:traces_abolish_integration boolean (default 0)
                 If value is 1, |:Subvert| from abolish.vim will be previewed.
+
+                                                *g:traces_normal_preview*
+g:traces_normal_preview boolean (default 0)
+                WARNING: experimental, unstable
+                The following actions performed during the preview might break
+                the preview or lose the undo history.
+                  - opening, closing or switching buffers or windows
+                  - |u| (undo) or |CTRL-R| (redo) commands
+
+                If value is 1, |:normal| will be previewed.
+                Requires patch 8.2.2961 on Vim.
 
 ==============================================================================
 HIGHLIGHTS					*traces-highlights*
