@@ -151,7 +151,6 @@ g:traces_normal_preview boolean (default 0)
                 The following actions performed during the preview might break
                 the preview or lose the undo history.
                   - opening, closing or switching buffers or windows
-                  - |u| (undo) or |CTRL-R| (redo) commands
 
                 If value is 1, |:normal| will be previewed.
                 Requires patch 8.2.2961 on Vim.
