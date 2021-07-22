@@ -912,6 +912,9 @@ function! s:clear_cursors() abort
 endfunction
 
 function! s:preview_normal(cmdl) abort
+  if !empty(getcmdwintype())
+    return
+  endif
   let str = a:cmdl.cmd.args.string[0]
   if !g:traces_normal_preview || &readonly || !&modifiable || empty(str)
         \ || (!has("patch-8.2.2961") && !has('nvim'))
