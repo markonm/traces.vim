@@ -1186,13 +1186,6 @@ function! s:skip_modifiers(cmdl) abort
 endfunction
 
 function! traces#init(cmdl, view) abort
-  if &buftype ==# 'terminal' || (has('nvim') && !empty(&inccommand))
-    if exists('s:track_cmdl_timer')
-      call timer_stop(s:track_cmdl_timer)
-    endif
-    return
-  endif
-
   let s:nr =  bufnr('%')
   if !exists('s:buf[s:nr]')
     call s:cmdl_enter(a:view)

@@ -8,8 +8,6 @@ It also provides live preview for `:substitute`.
 ### Vim 8.1
 or
 ### Neovim 0.2.3
- - this plugin is not compatible with [inccommand](https://neovim.io/doc/user/options.html#'inccommand'), please turn it off if you want to use this plugin
-
 
 ## Feature comparison
 **Note**: some of the features provided by this plugin are already present in Vim/Neovim.

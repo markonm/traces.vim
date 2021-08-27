@@ -63,8 +63,6 @@ Vim 8.1
 or
 
 Neovim 0.2.3
-  - Note: this plugin is not compatible with |inccommand|, please turn it
-    off if you want to use this plugin
 
 ==============================================================================
 OPTIONS 					*traces-options*
