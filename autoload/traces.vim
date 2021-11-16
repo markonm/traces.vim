@@ -676,15 +676,9 @@ function! s:format_range(cmdl) abort
   elseif len(a:cmdl.range.abs) == 1
     let range_str .= a:cmdl.range.abs[0]
   else
-    if substitute(a:cmdl.cmd.args.pattern_org, '\\\\', '', 'g') =~# '\v(\\n|\\_\.|\\_\[|\\_[iIkKfFpPsSdDxXoOwWhHaAlLuU])'
-      let range_str .= a:cmdl.range.abs[-2]
-      let range_str .= ';'
-      let range_str .= a:cmdl.range.abs[-1]
-    else
-      let range_str .= max([a:cmdl.range.abs[-2], line("w0")])
-      let range_str .= ';'
-      let range_str .= min([a:cmdl.range.abs[-1], line("w$")])
-    end
+    let range_str .= max([a:cmdl.range.abs[-2], line("w0")])
+    let range_str .= ';'
+    let range_str .= min([a:cmdl.range.abs[-1], line("w$")])
   endif
   return range_str
 endfunction
