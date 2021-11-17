@@ -256,6 +256,12 @@ Execute (Range, test invalid pattern):
   call traces#init('?bazbar', {})
   Assert line('.') == 6
 
+Execute (Substitute, no range):
+  11
+  call traces#init('s/bar', {})
+  Assert line('.') == 11
+  Assert col('.') == 9
+
 Given (Ten lines):
   1   one
   2   two

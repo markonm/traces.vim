@@ -556,7 +556,7 @@ function! s:pos_pattern(pattern, range, delimiter, type) abort
   else
     call cursor(s:buf[s:nr].cur_init_pos)
     if a:type && empty(a:range)
-      let stopline = s:buf[s:nr].cur_init_pos
+      let stopline = s:buf[s:nr].cur_init_pos[0]
     endif
   endif
   if a:delimiter ==# '?'
