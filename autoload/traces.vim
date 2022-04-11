@@ -601,8 +601,8 @@ function! s:highlight(group, pattern, priority) abort
   if a:group ==# 'TracesSearch' || a:group ==# 'TracesReplace'
     noautocmd let &hlsearch = 0
   endif
-  noautocmd let &winwidth = &winminwidth
-  noautocmd let &winheight = &winminheight
+  noautocmd let &winwidth = max([1, &winminwidth])
+  noautocmd let &winheight = max([1, &winminheight])
 
   let windows = filter(win_findbuf(s:nr), {_, val -> win_id2win(val)})
 

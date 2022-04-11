@@ -1,6 +1,7 @@
 Execute (Setup):
   Save g:traces_preserve_view_state, g:traces_substitute_preview,
-  \ &listchars, &hlsearch, &cursorline, &cursorline, &encoding
+  \ &listchars, &hlsearch, &cursorline, &cursorline, &encoding,
+  \ &winminwidth, &winminheight
   let g:traces_preserve_view_state = 0
   let g:traces_substitute_preview  = 1
   let g:traces_normal_preview  = 1
@@ -689,6 +690,11 @@ Given (Three lines):
   one
   two
   three
+
+Execute (Test winminwidth):
+  let &winminwidth = 0
+  let &winminheight = 0
+  call traces#init('%s/.', {})
 
 Execute (Test eol):
   let &listchars = ''
