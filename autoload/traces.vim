@@ -968,9 +968,9 @@ function! s:cmdl_enter(view) abort
   let s:buf[s:nr].show_range = 0
   let s:buf[s:nr].duration = 0
   let s:buf[s:nr].hlsearch = &hlsearch
-  let s:buf[s:nr].cword = expand('<cword>')
-  let s:buf[s:nr].cWORD = expand('<cWORD>')
-  let s:buf[s:nr].cfile = expand('<cfile>')
+  silent let s:buf[s:nr].cword = expand('<cword>')
+  silent let s:buf[s:nr].cWORD = expand('<cWORD>')
+  silent let s:buf[s:nr].cfile = expand('<cfile>')
   let s:buf[s:nr].cur_init_pos = [line('.'), col('.')]
   let s:buf[s:nr].seq_last = undotree().seq_last
   let s:buf[s:nr].empty_undotree = empty(undotree().entries)
